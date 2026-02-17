@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import axios from "../../api/axios";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check } from "lucide-react";
 import { APP_POINTS } from "@/api/apiConfig";
 import { useNavigate } from "react-router";
+import assort_api from "../../api/axios";
 
 const fallbackPlans = [
   {
@@ -56,7 +56,7 @@ const PricingSection = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios
+    assort_api
       .get(APP_POINTS.SUBSCRIPTIONS + "plans/")
       .then((res) => {
         const data = res.data?.results || res.data;

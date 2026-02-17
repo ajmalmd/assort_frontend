@@ -1,62 +1,66 @@
-import AuthLayout from "@/components/common/AuthLayout";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router";
+import AuthLayout from "@/components/common/AuthLayout";
+import { useAuthFlow } from "@/hooks/useAuthFlow";
+import { APP_POINTS } from "@/api/apiConfig";
+import assort_api from "../../api/axios";
 
 export default function OTPVerificationPage() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
-  const [timer, setTimer] = useState(30);
-  const [isCounting, setIsCounting] = useState(true);
+  const [error, setError] = useState("");
+  const [timer, setTimer] = useState(0);
 
   const inputRefs = useRef([]);
   const navigate = useNavigate();
 
-  const RESEND_INTERVAL = 30; // seconds
+  const {
+    setVerificationToken,
+    getFlow,
+    getRemainingOtpTime,
+    resetOtpTimer,
+    requireStep,
+  } = useAuthFlow();
+
+  const flow = requireStep("otp");
+
+  const RESEND_INTERVAL = 30;
+
+  /* ---------------------------
+     INITIAL GUARD + TIMER SETUP
+  ----------------------------*/
+  useEffect(() => {
+    if (!flow) {
+      navigate("/create-organization", { replace: true });
+    }
+
+    const remaining = getRemainingOtpTime(RESEND_INTERVAL);
+    setTimer(remaining);
+  }, []);
+
+  /* ---------------------------
+     TIMER COUNTDOWN
+  ----------------------------*/
+  useEffect(() => {
+    if (timer <= 0) return;
+
+    const interval = setInterval(() => {
+      setTimer((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [timer]);
 
   useEffect(() => {
     inputRefs.current[0]?.focus();
   }, []);
 
-  useEffect(() => {
-    const sentTime = localStorage.getItem("otp_sent_time");
-
-    if (!sentTime) return;
-
-    const sentTimestamp = parseInt(sentTime, 10);
-    const now = Date.now();
-
-    const diffInSeconds = Math.floor((now - sentTimestamp) / 1000);
-    const remaining = RESEND_INTERVAL - diffInSeconds;
-
-    if (remaining > 0) {
-      setTimer(remaining);
-      setIsCounting(true);
-    } else {
-      localStorage.removeItem("otp_sent_time");
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!isCounting) return;
-
-    const interval = setInterval(() => {
-      setTimer((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setIsCounting(false);
-          localStorage.removeItem("otp_sent_time");
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [isCounting]);
-
+  /* ---------------------------
+     OTP INPUT HANDLING
+  ----------------------------*/
   const handleChange = (value, index) => {
-    if (!/^\d*$/.test(value)) return;
+    if (!/^\d?$/.test(value)) return;
 
     const newOtp = [...otp];
     newOtp[index] = value;
@@ -73,48 +77,83 @@ export default function OTPVerificationPage() {
     }
   };
 
+  /* ---------------------------
+     VERIFY OTP
+  ----------------------------*/
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!flow) return;
+
     const otpValue = otp.join("");
 
     if (otpValue.length !== 6) {
-      alert("Please enter all 6 digits");
+      setError("Please enter all 6 digits.");
       return;
     }
 
     setLoading(true);
+    setError("");
 
     try {
-      console.log("Verify OTP:", otpValue);
+      const response = await assort_api.post(
+        APP_POINTS.ORGANIZATIONS + "verify-otp/",
+        {
+          email: flow.email,
+          otp: otpValue,
+        },
+      );
 
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
+      setVerificationToken(response.data.verification_token);
       navigate("/set-password");
-    } catch (error) {
-      console.error("Error:", error);
+    } catch (err) {
+      setOtp(["", "", "", "", "", ""]);
+      inputRefs.current[0]?.focus();
+
+      const { status, data } = err.response || {};
+
+      if (status === 429) {
+        setError(data?.detail);
+        return;
+      }
+
+      if (data?.error_code === "OTP_EXPIRED") {
+        setError("OTP expired. Please request a new one.");
+        return;
+      }
+
+      setError(data?.detail || "Invalid OTP. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
+  /* ---------------------------
+     RESEND OTP
+  ----------------------------*/
   const handleResendOTP = async () => {
-    if (isCounting) return;
+    if (!flow || timer > 0) return;
 
     setResendLoading(true);
+    setError("");
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await assort_api.post(APP_POINTS.ORGANIZATIONS + "resend-otp/", {
+        email: flow.email,
+      });
 
+      resetOtpTimer();
+      setTimer(RESEND_INTERVAL);
       setOtp(["", "", "", "", "", ""]);
       inputRefs.current[0]?.focus();
+    } catch (err) {
+      const { status, data } = err.response || {};
 
-      // Store new sent time
-      localStorage.setItem("otp_sent_time", Date.now().toString());
-
-      setTimer(RESEND_INTERVAL);
-      setIsCounting(true);
-    } catch (error) {
-      console.error(error);
+      if (status === 429) {
+        setError(data?.detail);
+      } else {
+        setError(data?.detail || "Unable to resend OTP. Please try again.");
+      }
     } finally {
       setResendLoading(false);
     }
@@ -131,6 +170,10 @@ export default function OTPVerificationPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {error && (
+            <div className="text-sm text-red-600 text-center">{error}</div>
+          )}
+
           {/* OTP Inputs */}
           <div className="flex gap-3 justify-center">
             {otp.map((digit, index) => (
@@ -143,6 +186,7 @@ export default function OTPVerificationPage() {
                 onChange={(e) => handleChange(e.target.value, index)}
                 onKeyDown={(e) => handleKeyDown(e, index)}
                 maxLength={1}
+                disabled={loading}
                 className="w-12 h-12 text-center text-lg font-bold bg-gray-900 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-700 border border-gray-800"
               />
             ))}
@@ -152,7 +196,7 @@ export default function OTPVerificationPage() {
           <div className="flex justify-between items-center text-sm">
             <span className="text-gray-600">Didn’t receive the code?</span>
 
-            {isCounting ? (
+            {timer > 0 ? (
               <span className="text-gray-400 font-medium">
                 Resend in {timer}s
               </span>

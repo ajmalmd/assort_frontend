@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { Eye, EyeOff } from "lucide-react";
 import AuthLayout from "@/components/common/AuthLayout";
+import { useAuthFlow } from "@/hooks/useAuthFlow";
+import { APP_POINTS } from "@/api/apiConfig";
+import assort_api from "../../api/axios";
 
 export default function SetPasswordPage() {
   const [password, setPassword] = useState("");
@@ -12,6 +15,15 @@ export default function SetPasswordPage() {
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
+  const { requireStep, clearFlow } = useAuthFlow();
+
+  const flow = requireStep("password");
+
+  useEffect(() => {
+    if (!flow) {
+      navigate("/verify-otp", { replace: true });
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,16 +42,34 @@ export default function SetPasswordPage() {
     setLoading(true);
 
     try {
-      console.log("Set password");
+      await assort_api.post(APP_POINTS.ORGANIZATIONS + "set-password/", {
+        email: flow.email,
+        title: flow.title,
+        verification_token: flow.verificationToken,
+        password: password,
+        confirm_password: confirmPassword,
+      });
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Navigate to dashboard/home
+      clearFlow();
       navigate("/");
     } catch (err) {
-      console.error(err);
-      setError("An error occurred. Please try again.");
+      if (!err.response) {
+        setError("Network error. Please try again.");
+      } else {
+        const { status, data } = err.response;
+
+        if (status === 429) {
+          setError(data?.detail);
+          return;
+        }
+
+        if (data?.error_code === "TOKEN_EXPIRED") {
+          navigate("/create-organization", { replace: true });
+          return;
+        }
+
+        setError(data?.detail || "An error occurred. Please try again.");
+      }
     } finally {
       setLoading(false);
     }

@@ -1,8 +1,8 @@
 import axios from "axios";
 import { BASE_URL } from "./apiConfig";
 
-const instance = axios.create({
+const assort_api = axios.create({
   baseURL: BASE_URL,
 });
 
-export default instance;
+export default assort_api;
