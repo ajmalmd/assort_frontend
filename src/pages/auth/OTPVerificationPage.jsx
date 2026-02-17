@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { useLocation, useNavigate } from "react-router";
 import AuthLayout from "@/components/common/AuthLayout";
 import { useAuthFlow } from "@/hooks/useAuthFlow";
 import { APP_POINTS } from "@/api/apiConfig";
@@ -14,6 +14,7 @@ export default function OTPVerificationPage() {
 
   const inputRefs = useRef([]);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const {
     setVerificationToken,
@@ -25,14 +26,18 @@ export default function OTPVerificationPage() {
 
   const flow = requireStep("otp");
 
-  const RESEND_INTERVAL = 30;
+  const RESEND_INTERVAL = 60;
 
   /* ---------------------------
      INITIAL GUARD + TIMER SETUP
   ----------------------------*/
   useEffect(() => {
     if (!flow) {
-      navigate("/create-organization", { replace: true });
+      if (location.state.type === "organization") {
+        navigate("/create-organization", { replace: true });
+      } else if (location.state.type === "forgot-password") {
+        navigate("/login", { replace: true });
+      }
     }
 
     const remaining = getRemainingOtpTime(RESEND_INTERVAL);
@@ -55,6 +60,29 @@ export default function OTPVerificationPage() {
   useEffect(() => {
     inputRefs.current[0]?.focus();
   }, []);
+
+  /* ---------------------------
+     URL
+  ----------------------------*/
+  const { verifyUrl, resendUrl } = useMemo(() => {
+    if (!flow) return {};
+
+    if (flow.type === "organization") {
+      return {
+        verifyUrl: APP_POINTS.ORGANIZATIONS + "verify-otp/",
+        resendUrl: APP_POINTS.ORGANIZATIONS + "resend-otp/",
+      };
+    }
+
+    if (flow.type === "forgot-password") {
+      return {
+        verifyUrl: APP_POINTS.AUTH + "verify-otp/",
+        resendUrl: APP_POINTS.AUTH + "resend-otp/",
+      };
+    }
+
+    return {};
+  }, [flow]);
 
   /* ---------------------------
      OTP INPUT HANDLING
@@ -96,13 +124,10 @@ export default function OTPVerificationPage() {
     setError("");
 
     try {
-      const response = await assort_api.post(
-        APP_POINTS.ORGANIZATIONS + "verify-otp/",
-        {
-          email: flow.email,
-          otp: otpValue,
-        },
-      );
+      const response = await assort_api.post(verifyUrl, {
+        email: flow.email,
+        otp: otpValue,
+      });
 
       setVerificationToken(response.data.verification_token);
       navigate("/set-password");
@@ -138,7 +163,7 @@ export default function OTPVerificationPage() {
     setError("");
 
     try {
-      await assort_api.post(APP_POINTS.ORGANIZATIONS + "resend-otp/", {
+      await assort_api.post(resendUrl, {
         email: flow.email,
       });
 

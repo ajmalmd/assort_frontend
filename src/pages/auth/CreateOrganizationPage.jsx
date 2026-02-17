@@ -64,12 +64,11 @@ const CreateOrganizationPage = () => {
       startFlow({
         email: normalizedEmail,
         title: trimmedTitle,
-        type: "create",
+        type: "organization",
       });
 
-      navigate("/verify-otp");
+      navigate("/verify-otp", { state: { type: "organization" } });
     } catch (error) {
-
       if (!error.response) {
         setErrors({ general: "Network error. Please try again." });
       } else {

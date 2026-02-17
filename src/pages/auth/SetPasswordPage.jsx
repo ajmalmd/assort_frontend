@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Eye, EyeOff } from "lucide-react";
 import AuthLayout from "@/components/common/AuthLayout";
@@ -25,6 +25,23 @@ export default function SetPasswordPage() {
     }
   }, []);
 
+  /* ---------------------------
+       URL
+    ----------------------------*/
+  const setPasswordUrl = useMemo(() => {
+    if (!flow) return {};
+
+    if (flow.type === "organization") {
+      return APP_POINTS.ORGANIZATIONS + "set-password/";
+    }
+
+    if (flow.type === "forgot-password") {
+      return APP_POINTS.AUTH + "set-password/";
+    }
+
+    return "";
+  }, [flow]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -41,14 +58,18 @@ export default function SetPasswordPage() {
 
     setLoading(true);
 
+    const reqBody = {
+      email: flow.email,
+      verification_token: flow.verificationToken,
+      password: password,
+      confirm_password: confirmPassword,
+    };
+    if (flow.type === "organization") {
+      reqBody.title = flow.title;
+    }
+
     try {
-      await assort_api.post(APP_POINTS.ORGANIZATIONS + "set-password/", {
-        email: flow.email,
-        title: flow.title,
-        verification_token: flow.verificationToken,
-        password: password,
-        confirm_password: confirmPassword,
-      });
+      await assort_api.post(setPasswordUrl, reqBody);
 
       clearFlow();
       navigate("/");

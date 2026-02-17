@@ -14,7 +14,7 @@ export const useAuthFlow = () => {
     const flowData = {
       email,
       title,
-      type, // "create" or "forgot"
+      type, // "organization" or "forgot-password"
       otpSentTime: Date.now(),
       verificationToken: null,
     };
