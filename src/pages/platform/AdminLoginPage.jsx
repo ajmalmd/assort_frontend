@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router";
-import { APP_POINTS } from "@/api/apiConfig";
 import assort_api from "@/api/axios";
+import { APP_POINTS } from "@/api/apiConfig";
 import AuthLayout from "@/components/common/AuthLayout";
-import { setAccessToken } from "@/api/authStore";
+import { setAccessToken, clearAccessToken } from "@/api/authStore";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const LoginPage = () => {
+const AdminLoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -44,27 +44,25 @@ const LoginPage = () => {
     setError("");
 
     try {
-      const response = await assort_api.post(APP_POINTS.AUTH + "login/", {
+      const response = await assort_api.post(APP_POINTS.PLATFORM + "login/", {
         email: normalizedEmail,
         password,
       });
 
-      // store token
+      // store token securely
       if (response.status === 200) {
         const { access, is_admin } = response.data;
 
         setAccessToken(access, is_admin);
 
-        navigate("/");
+        navigate("/platform", { replace: true });
       }
     } catch (error) {
+      
       if (!error.response) {
         setError("Network error.");
       } else {
-        setError(
-          error.response.data.detail ||
-            "Something went wrong. Please try again.",
-        );
+        setError(error.response.data.detail || "Something went wrong. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -79,11 +77,8 @@ const LoginPage = () => {
       <div className="space-y-6">
         <div>
           <h2 className="text-3xl font-normal text-gray-900 mb-2">
-            Welcome back
+            Admin Login
           </h2>
-          <p className="text-gray-600 text-sm">
-            Enter your credentials to access your account
-          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -136,16 +131,6 @@ const LoginPage = () => {
             </div>
           </div>
 
-          {/* Forgot Password */}
-          <div className="flex justify-end">
-            <Link
-              to="/forgot-password"
-              className="text-sm font-medium text-gray-900 hover:underline"
-            >
-              Forgot Password?
-            </Link>
-          </div>
-
           {/* Submit */}
           <button
             type="submit"
@@ -155,22 +140,9 @@ const LoginPage = () => {
             {loading ? "Signing in..." : "SIGN IN"}
           </button>
         </form>
-
-        {/* Create Org */}
-        <div className="border-t border-gray-200 pt-6">
-          <p className="text-gray-600 text-sm text-center">
-            Do you want to manage your projects?{" "}
-            <Link
-              to="/create-organization"
-              className="font-semibold text-gray-900 hover:underline"
-            >
-              Create Organization
-            </Link>
-          </p>
-        </div>
       </div>
     </AuthLayout>
   );
 };
 
-export default LoginPage;
+export default AdminLoginPage;

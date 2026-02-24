@@ -57,7 +57,7 @@ export default function ForgotPasswordPage() {
           return;
         }
 
-        setError("Something went wrong. Please try again.");
+        setError(data.detail || "Something went wrong. Please try again.");
       }
     } finally {
       setLoading(false);
