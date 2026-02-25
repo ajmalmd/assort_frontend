@@ -80,7 +80,7 @@ export default function SetPasswordPage() {
         const { status, data } = err.response;
 
         if (status === 429) {
-          setError(data?.detail);
+          setError(data?.message);
           return;
         }
 
@@ -89,7 +89,7 @@ export default function SetPasswordPage() {
           return;
         }
 
-        setError(data?.detail || "An error occurred. Please try again.");
+        setError(data?.message || "An error occurred. Please try again.");
       }
     } finally {
       setLoading(false);

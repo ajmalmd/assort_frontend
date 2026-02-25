@@ -75,12 +75,12 @@ const CreateOrganizationPage = () => {
         const { status, data } = error.response;
 
         if (status === 429) {
-          setErrors({ general: data.detail });
+          setErrors({ general: data.message });
           return;
         }
 
         setErrors({
-          general: data?.detail || "Something went wrong. Please try again.",
+          general: data?.message || "Something went wrong. Please try again.",
         });
       }
     } finally {

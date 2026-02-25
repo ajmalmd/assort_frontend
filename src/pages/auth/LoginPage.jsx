@@ -62,7 +62,7 @@ const LoginPage = () => {
         setError("Network error.");
       } else {
         setError(
-          error.response.data.detail ||
+          error.response.data.message ||
             "Something went wrong. Please try again.",
         );
       }

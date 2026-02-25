@@ -53,11 +53,11 @@ export default function ForgotPasswordPage() {
         const { status, data } = error.response;
 
         if (status === 429) {
-          setError(data.detail);
+          setError(data.message);
           return;
         }
 
-        setError(data.detail || "Something went wrong. Please try again.");
+        setError(data.message || "Something went wrong. Please try again.");
       }
     } finally {
       setLoading(false);

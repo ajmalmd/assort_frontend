@@ -138,7 +138,7 @@ export default function OTPVerificationPage() {
       const { status, data } = err.response || {};
 
       if (status === 429) {
-        setError(data?.detail);
+        setError(data?.message);
         return;
       }
 
@@ -147,7 +147,7 @@ export default function OTPVerificationPage() {
         return;
       }
 
-      setError(data?.detail || "Invalid OTP. Please try again.");
+      setError(data?.message || "Invalid OTP. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -175,9 +175,9 @@ export default function OTPVerificationPage() {
       const { status, data } = err.response || {};
 
       if (status === 429) {
-        setError(data?.detail);
+        setError(data?.message);
       } else {
-        setError(data?.detail || "Unable to resend OTP. Please try again.");
+        setError(data?.message || "Unable to resend OTP. Please try again.");
       }
     } finally {
       setResendLoading(false);

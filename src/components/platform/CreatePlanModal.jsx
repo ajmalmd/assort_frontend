@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { X, GripVertical, Plus, Trash2 } from "lucide-react";
+import Select from "react-select";
 
 export function CreatePlanModal({ isOpen, onClose, onCreatePlan }) {
   const [planName, setPlanName] = useState("");
-  const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
-  const [duration, setDuration] = useState("monthly");
+  const [duration, setDuration] = useState("YEARLY");
   const [features, setFeatures] = useState([{ id: "1", name: "" }]);
   const [maxProjects, setMaxProjects] = useState("");
   const [maxMembers, setMaxMembers] = useState("");
@@ -18,6 +18,11 @@ export function CreatePlanModal({ isOpen, onClose, onCreatePlan }) {
     );
     setFeatures([...features, { id: newId, name: "" }]);
   };
+
+  const durationOptions = [
+    { value: "MONTHLY", label: "Monthly" },
+    { value: "YEARLY", label: "Yearly" },
+  ];
 
   const handleRemoveFeature = (id) => {
     if (features.length > 1) {
@@ -55,14 +60,13 @@ export function CreatePlanModal({ isOpen, onClose, onCreatePlan }) {
     e.preventDefault();
 
     onCreatePlan({
-      planName,
-      description,
+      name: planName,
       price: parseFloat(price),
-      duration,
-      features: features.filter((f) => f.name.trim()),
-      maxProjects: maxProjects ? parseInt(maxProjects) : null,
-      maxMembers: maxMembers ? parseInt(maxMembers) : null,
-      storage: storage ? parseInt(storage) : null,
+      billing_cycle: duration,
+      max_projects: maxProjects ? parseInt(maxProjects) : null,
+      max_members: maxMembers ? parseInt(maxMembers) : null,
+      storage_limit_gb: storage ? parseInt(storage) : null,
+      features_json: features.map((f) => f.name.trim()),
     });
 
     resetForm();
@@ -70,9 +74,8 @@ export function CreatePlanModal({ isOpen, onClose, onCreatePlan }) {
 
   const resetForm = () => {
     setPlanName("");
-    setDescription("");
     setPrice("");
-    setDuration("monthly");
+    setDuration("Yearly");
     setFeatures([{ id: "1", name: "" }]);
     setMaxProjects("");
     setMaxMembers("");
@@ -82,7 +85,7 @@ export function CreatePlanModal({ isOpen, onClose, onCreatePlan }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white">
@@ -114,25 +117,11 @@ export function CreatePlanModal({ isOpen, onClose, onCreatePlan }) {
             />
           </div>
 
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
-              Description
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Brief description of the plan"
-              rows={3}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
-            />
-          </div>
-
           {/* Price and Duration */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-900 mb-2">
-                Price ($)
+                Price (₹)
               </label>
               <input
                 type="number"
@@ -149,14 +138,45 @@ export function CreatePlanModal({ isOpen, onClose, onCreatePlan }) {
               <label className="block text-sm font-medium text-gray-900 mb-2">
                 Duration
               </label>
-              <select
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 cursor-pointer"
-              >
-                <option value="monthly">Monthly</option>
-                <option value="yearly">Yearly</option>
-              </select>
+              <Select
+                options={durationOptions}
+                value={durationOptions.find((opt) => opt.value === duration)}
+                onChange={(selectedOption) => setDuration(selectedOption.value)}
+                isSearchable={false}
+                className="w-full"
+                styles={{
+                  control: (base, state) => ({
+                    ...base,
+                    borderRadius: "0.5rem",
+                    padding: "2px",
+                    borderColor: state.isFocused ? "black" : "#D1D5DB",
+                    boxShadow: state.isFocused ? "0 0 0 2px black" : "none",
+                    "&:hover": {
+                      borderColor: "black",
+                    },
+                  }),
+                  menu: (base) => ({
+                    ...base,
+                    borderRadius: "0.5rem",
+                    overflow: "hidden",
+                  }),
+                  option: (base, state) => ({
+                    ...base,
+                    backgroundColor: state.isSelected
+                      ? "black"
+                      : state.isFocused
+                        ? "black"
+                        : "white",
+                    color:
+                      state.isSelected || state.isFocused ? "white" : "black",
+                    cursor: "pointer",
+                  }),
+                  singleValue: (base) => ({
+                    ...base,
+                    color: "black",
+                  }),
+                }}
+              />
             </div>
           </div>
 
@@ -245,7 +265,7 @@ export function CreatePlanModal({ isOpen, onClose, onCreatePlan }) {
               </div>
               <div>
                 <label className="block text-xs text-gray-600 mb-1">
-                  Storage (MB)
+                  Storage (GB)
                 </label>
                 <input
                   type="number"

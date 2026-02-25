@@ -1,34 +1,42 @@
 import axios from "axios";
-import { BASE_URL, APP_POINTS } from "./apiConfig";
-import { getAccessToken, setAccessToken, clearAccessToken } from "./authStore";
-import { getAdminStatus } from "./authStore";
+import { clearAccessToken, getAccessToken, getAdminStatus, setAccessToken } from "./authStore";
+import { APP_POINTS, BASE_URL } from "./apiConfig";
 
 const assort_api = axios.create({
   baseURL: BASE_URL,
   withCredentials: true,
 });
 
-// Attach access token automatically
+let isRefreshing = false;
+let refreshSubscribers = [];
+
+function subscribeTokenRefresh(cb) {
+  refreshSubscribers.push(cb);
+}
+
+function onRefreshed(newToken) {
+  refreshSubscribers.forEach((cb) => cb(newToken));
+  refreshSubscribers = [];
+}
+
+// Attach access token
 assort_api.interceptors.request.use((config) => {
   const token = getAccessToken();
-
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-
   return config;
 });
 
-// Auto refresh logic
+// Response interceptor
 assort_api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
     const isLoginRequest = originalRequest.url?.includes("login");
-
     const isRefreshRequest = originalRequest.url?.includes(
-      APP_POINTS.REFRESH_TOKEN,
+      APP_POINTS.REFRESH_TOKEN
     );
 
     if (
@@ -37,24 +45,38 @@ assort_api.interceptors.response.use(
       !isLoginRequest &&
       !isRefreshRequest
     ) {
+      if (isRefreshing) {
+        return new Promise((resolve) => {
+          subscribeTokenRefresh((newToken) => {
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            resolve(assort_api(originalRequest));
+          });
+        });
+      }
+
       originalRequest._retry = true;
+      isRefreshing = true;
 
       try {
-        const response = await assort_api.post(APP_POINTS.REFRESH_TOKEN);
+        const response = await axios.post(
+          BASE_URL + APP_POINTS.REFRESH_TOKEN,
+          {},
+          { withCredentials: true }
+        );
 
-        const newAccess = response.data.access;
-        const isAdmin = response.data.is_admin;
+        const { access, is_admin } = response.data;
 
-        setAccessToken(newAccess, isAdmin);
+        setAccessToken(access, is_admin);
+        isRefreshing = false;
+        onRefreshed(access);
 
-        originalRequest.headers.Authorization = `Bearer ${newAccess}`;
-
+        originalRequest.headers.Authorization = `Bearer ${access}`;
         return assort_api(originalRequest);
       } catch (refreshError) {
-        const isAdmin = getAdminStatus();
-
+        isRefreshing = false;
         clearAccessToken();
 
+        const isAdmin = getAdminStatus();
         if (isAdmin) {
           window.location.href = "/platform/login";
         } else {
@@ -64,7 +86,7 @@ assort_api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  },
+  }
 );
 
 export default assort_api;

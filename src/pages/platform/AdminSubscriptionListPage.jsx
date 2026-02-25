@@ -5,41 +5,8 @@ import { APP_POINTS } from "@/api/apiConfig";
 import assort_api from "@/api/axios";
 import { CreatePlanModal } from "@/components/platform/CreatePlanModal";
 
-const mockPlans = [
-  {
-    id: "1",
-    planName: "Starter",
-    price: 29,
-    duration: "monthly",
-    maxProjects: 5,
-    maxMembers: 10,
-    storage: 10240,
-    subscriptionsCount: 12,
-  },
-  {
-    id: "2",
-    planName: "Professional",
-    price: 79,
-    duration: "monthly",
-    maxProjects: 25,
-    maxMembers: 50,
-    storage: 102400,
-    subscriptionsCount: 28,
-  },
-  {
-    id: "3",
-    planName: "Enterprise",
-    price: 199,
-    duration: "monthly",
-    maxProjects: 999,
-    maxMembers: 999,
-    storage: 1024000,
-    subscriptionsCount: 15,
-  },
-];
-
 const AdminSubscriptionListPage = () => {
-  const [plans, setPlans] = useState(mockPlans);
+  const [plans, setPlans] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -49,29 +16,29 @@ const AdminSubscriptionListPage = () => {
     const fetchData = async () => {
       try {
         const response = await assort_api.get(APP_POINTS.PLATFORM + "plans/");
-        console.log(response.data);
+        if (response.data.results) {
+          setPlans(response.data.results);
+        }
       } catch (error) {
         console.error(error);
       }
     };
 
-    // fetchData();
+    fetchData();
   }, []);
 
-  const handleCreatePlan = (planData) => {
-    const newPlan = {
-      id: String(Math.max(...plans.map((p) => parseInt(p.id)), 0) + 1),
-      planName: planData.planName,
-      price: planData.price,
-      duration: planData.duration,
-      maxProjects: planData.maxProjects,
-      maxMembers: planData.maxMembers,
-      storage: planData.storage,
-      subscriptionsCount: 0,
-    };
+  const handleCreatePlan = async (planData) => {
+    try {
+      const response = await assort_api.post(
+        APP_POINTS.PLATFORM + "plans/",
+        planData,
+      );
 
-    setPlans([...plans, newPlan]);
-    setIsModalOpen(false);
+      setPlans((prev) => [...prev, response.data]);
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error(error.response?.data || error);
+    }
   };
 
   const handleDeletePlan = (id) => {
@@ -79,18 +46,8 @@ const AdminSubscriptionListPage = () => {
   };
 
   const filteredPlans = plans.filter((plan) =>
-    plan.planName.toLowerCase().includes(searchTerm.toLowerCase()),
+    plan.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
-
-  const formatStorage = (mb) => {
-    if (!mb) return "Unlimited";
-    if (mb >= 1024) return `${(mb / 1024).toFixed(0)}GB`;
-    return `${mb}MB`;
-  };
-
-  const formatLimit = (limit) => {
-    return limit ? limit.toLocaleString() : "Unlimited";
-  };
 
   return (
     <>
@@ -154,25 +111,25 @@ const AdminSubscriptionListPage = () => {
                   className="border-b border-gray-200 hover:bg-gray-50"
                 >
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                    {plan.planName}
+                    {plan.name}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700">
-                    ${plan.price.toFixed(2)}
+                    ₹{plan.price}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700 capitalize">
-                    {plan.duration}
+                    {plan.billing_cycle}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700">
-                    {formatLimit(plan.maxProjects)}
+                    {plan.max_projects}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700">
-                    {formatLimit(plan.maxMembers)}
+                    {plan.max_members}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700">
-                    {formatStorage(plan.storage)}
+                    {plan.storage_limit_gb}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700 font-medium">
-                    {plan.subscriptionsCount}
+                    {plan.subscription_count}
                   </td>
                   <td className="px-6 py-4 text-sm">
                     <div className="flex items-center gap-2">

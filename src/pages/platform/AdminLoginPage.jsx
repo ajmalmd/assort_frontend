@@ -62,7 +62,7 @@ const AdminLoginPage = () => {
       if (!error.response) {
         setError("Network error.");
       } else {
-        setError(error.response.data.detail || "Something went wrong. Please try again.");
+        setError(error.response.data.message || "Something went wrong. Please try again.");
       }
     } finally {
       setLoading(false);
