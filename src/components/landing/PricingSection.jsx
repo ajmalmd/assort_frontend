@@ -5,50 +5,8 @@ import { Check } from "lucide-react";
 import { APP_POINTS } from "@/api/apiConfig";
 import { useNavigate } from "react-router";
 import assort_api from "../../api/axios";
+import { formatEnum } from "@/appFunctions";
 
-const fallbackPlans = [
-  {
-    name: "Basic",
-    price: "299",
-    currency: "₹",
-    period: "",
-    description: "Perfect for Startups",
-    popular: false,
-    features: [
-      "Chat and messaging",
-      "Video calls",
-      "File sharing",
-      "Up to 3 projects",
-      "5GB storage",
-    ],
-  },
-  {
-    name: "Standard",
-    price: "799",
-    currency: "₹",
-    period: "/month",
-    description: "For growing mid level organizations",
-    popular: true,
-    features: [
-      "Everything in Basic, plus:",
-      "Up to 10 projects",
-      "50 GB storage",
-    ],
-  },
-  {
-    name: "Premium",
-    price: "1999",
-    currency: "₹",
-    period: "",
-    description: "For large organizations",
-    popular: false,
-    features: [
-      "Everything in Standard, plus:",
-      "Unlimited projects",
-      "750 GB storage",
-    ],
-  },
-];
 
 const PricingSection = () => {
   const [plans, setPlans] = useState([]);
@@ -64,11 +22,11 @@ const PricingSection = () => {
         if (Array.isArray(data) && data.length > 0) {
           setPlans(data);
         } else {
-          setPlans(fallbackPlans);
+          setPlans([]);
         }
       })
       .catch(() => {
-        setPlans(fallbackPlans);
+        setPlans([]);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -81,9 +39,6 @@ const PricingSection = () => {
           <h2 className="text-4xl font-bold text-gray-900">
             Simple, Transparent Pricing
           </h2>
-          <p className="text-lg text-gray-600">
-            Start free. Pay only for what you need.
-          </p>
         </div>
 
         {/* Loading State */}
@@ -133,8 +88,8 @@ const PricingSection = () => {
                       <span className="text-4xl font-bold text-gray-900">
                         ₹{plan.price}
                       </span>
-                      {plan.period && (
-                        <span className="text-gray-600">{plan.period}</span>
+                      {plan.billing_cycle && (
+                        <span className="text-gray-600">{formatEnum(plan.billing_cycle)}</span>
                       )}
                     </div>
                   </div>
@@ -148,9 +103,9 @@ const PricingSection = () => {
                   </Button>
 
                   {/* Features */}
-                  {Array.isArray(plan.features) && (
+                  {Array.isArray(plan.features_json) && (
                     <div className="space-y-4">
-                      {plan.features.map((feature, featureIndex) => (
+                      {plan.features_json.map((feature, featureIndex) => (
                         <div
                           key={featureIndex}
                           className="flex items-start gap-3"

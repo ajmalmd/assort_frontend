@@ -4,6 +4,7 @@ import Select from "react-select";
 
 export function CreatePlanModal({ isOpen, onClose, onCreatePlan }) {
   const [planName, setPlanName] = useState("");
+  const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [duration, setDuration] = useState("YEARLY");
   const [features, setFeatures] = useState([{ id: "1", name: "" }]);
@@ -61,6 +62,7 @@ export function CreatePlanModal({ isOpen, onClose, onCreatePlan }) {
 
     onCreatePlan({
       name: planName,
+      description,
       price: parseFloat(price),
       billing_cycle: duration,
       max_projects: maxProjects ? parseInt(maxProjects) : null,
@@ -74,8 +76,9 @@ export function CreatePlanModal({ isOpen, onClose, onCreatePlan }) {
 
   const resetForm = () => {
     setPlanName("");
+    setDescription("");
     setPrice("");
-    setDuration("Yearly");
+    setDuration("YEARLY");
     setFeatures([{ id: "1", name: "" }]);
     setMaxProjects("");
     setMaxMembers("");
@@ -114,6 +117,20 @@ export function CreatePlanModal({ isOpen, onClose, onCreatePlan }) {
               placeholder="e.g., Pro Plan"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
               required
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-2">
+              Description
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Brief description of the plan"
+              rows={3}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
             />
           </div>
 

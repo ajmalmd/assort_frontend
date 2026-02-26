@@ -4,6 +4,7 @@ import { Edit, Trash2, Eye } from "lucide-react";
 import { APP_POINTS } from "@/api/apiConfig";
 import assort_api from "@/api/axios";
 import { CreatePlanModal } from "@/components/platform/CreatePlanModal";
+import { formatEnum } from "@/appFunctions";
 
 const AdminSubscriptionListPage = () => {
   const [plans, setPlans] = useState([]);
@@ -33,7 +34,7 @@ const AdminSubscriptionListPage = () => {
         APP_POINTS.PLATFORM + "plans/",
         planData,
       );
-
+      response.data.subscription_count = 0
       setPlans((prev) => [...prev, response.data]);
       setIsModalOpen(false);
     } catch (error) {
@@ -117,7 +118,7 @@ const AdminSubscriptionListPage = () => {
                     ₹{plan.price}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700 capitalize">
-                    {plan.billing_cycle}
+                    {formatEnum(plan.billing_cycle)}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700">
                     {plan.max_projects}
