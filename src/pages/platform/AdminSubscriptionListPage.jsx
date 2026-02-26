@@ -84,7 +84,7 @@ const AdminSubscriptionListPage = () => {
                   Price
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-900">
-                  Duration
+                  Billing
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-900">
                   Max Projects
