@@ -1,5 +1,11 @@
 import axios from "axios";
-import { clearAccessToken, getAccessToken, getAdminStatus, setAccessToken } from "./authStore";
+import {
+  clearAccessToken,
+  getAccessToken,
+  getActiveOrgId,
+  getAdminStatus,
+  setAccessToken,
+} from "./authStore";
 import { APP_POINTS, BASE_URL } from "./apiConfig";
 
 const assort_api = axios.create({
@@ -22,9 +28,24 @@ function onRefreshed(newToken) {
 // Attach access token
 assort_api.interceptors.request.use((config) => {
   const token = getAccessToken();
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  const url = config.url || "";
+
+  const isOrgRequest =
+    url.startsWith("/api/organizations") || url.startsWith("/api/invitations");
+
+  if (isOrgRequest) {
+    const orgId = getActiveOrgId();
+
+    if (orgId) {
+      config.headers["X-ORG-ID"] = orgId;
+    }
+  }
+
   return config;
 });
 
@@ -36,7 +57,7 @@ assort_api.interceptors.response.use(
 
     const isLoginRequest = originalRequest.url?.includes("login");
     const isRefreshRequest = originalRequest.url?.includes(
-      APP_POINTS.REFRESH_TOKEN
+      APP_POINTS.REFRESH_TOKEN,
     );
 
     if (
@@ -61,7 +82,7 @@ assort_api.interceptors.response.use(
         const response = await axios.post(
           BASE_URL + APP_POINTS.REFRESH_TOKEN,
           {},
-          { withCredentials: true }
+          { withCredentials: true },
         );
 
         const { access, is_admin } = response.data;
@@ -74,19 +95,25 @@ assort_api.interceptors.response.use(
         return assort_api(originalRequest);
       } catch (refreshError) {
         isRefreshing = false;
-        clearAccessToken();
 
         const isAdmin = getAdminStatus();
+
+        clearAccessToken();
+
+        onRefreshed(null);
+
         if (isAdmin) {
-          window.location.href = "/platform/login";
+          window.location.replace("/platform/login");
         } else {
-          window.location.href = "/login";
+          window.location.replace("/login");
         }
+
+        return Promise.reject(refreshError);
       }
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default assort_api;

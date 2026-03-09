@@ -1,10 +1,15 @@
 import { useState } from "react";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
-import { Link, useNavigate } from "react-router";
+import { Link, Navigate, useNavigate } from "react-router";
 import { APP_POINTS } from "@/api/apiConfig";
 import assort_api from "@/api/axios";
 import AuthLayout from "@/components/common/AuthLayout";
-import { setAccessToken } from "@/api/authStore";
+import {
+  getAccessToken,
+  getAdminStatus,
+  setAccessToken,
+} from "@/api/authStore";
+import { useAuth } from "@/context/authContext";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -14,8 +19,19 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const token = getAccessToken();
+  const isAdmin = getAdminStatus();
+
+  if (token) {
+    if (isAdmin) {
+      return <Navigate to="/platform" replace />;
+    }
+    return <Navigate to="/app" replace />;
+  }
 
   const navigate = useNavigate();
+
+  const { setLoginData } = useAuth();
 
   const validateForm = () => {
     const normalizedEmail = email.trim().toLowerCase();
@@ -51,11 +67,22 @@ const LoginPage = () => {
 
       // store token
       if (response.status === 200) {
-        const { access, is_admin } = response.data;
+        const { access, user, organizations } = response.data;
+        const is_admin = false;
 
         setAccessToken(access, is_admin);
 
-        navigate("/");
+        // store data in context api
+        setLoginData({
+          user,
+          organizations,
+        });
+
+        if (organizations.length > 1) {
+          navigate("/workspaces");
+        } else {
+          navigate("/app");
+        }
       }
     } catch (error) {
       if (!error.response) {

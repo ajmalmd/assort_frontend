@@ -25,17 +25,20 @@ const PlatformLayout = () => {
     "Platform";
 
   return (
-    <div className="flex">
+    <div className="min-h-screen flex">
+      {/* Sidebar */}
       <PlatformSidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         isCollapsed={sidebarCollapsed}
       />
 
+      {/* Main Content */}
       <div
-        className={`flex-1 transition-all duration-300 ${
-          sidebarCollapsed ? "lg:ml-20" : "lg:ml-48"
-        }`}
+        className={`
+          flex-1 transition-all duration-300
+          pl-0 lg:pl-${sidebarCollapsed ? "20" : "48"} 
+        `}
       >
         <PlatformTopBar
           title={title}
@@ -44,7 +47,7 @@ const PlatformLayout = () => {
           sidebarCollapsed={sidebarCollapsed}
         />
 
-        <main className="pt-20 pb-8 px-4 lg:px-8">
+        <main className="pt-24 px-4 lg:px-8 pb-8">
           <Outlet />
         </main>
       </div>

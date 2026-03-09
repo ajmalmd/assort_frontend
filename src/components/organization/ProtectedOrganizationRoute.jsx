@@ -5,17 +5,17 @@ import {
   getAdminStatus,
 } from "@/api/authStore";
 
-const ProtectedPlatformRoute = () => {
+const ProtectedOrganizationRoute = () => {
   const token = getAccessToken();
   const isAdmin = getAdminStatus();
 
-  if (token && !isAdmin) return <Navigate to="/app" replace />;
+  if (token && isAdmin) return <Navigate to="/platform" replace />;
   if (!token) {
     clearAccessToken();
-    return <Navigate to="/platform/login" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return <Outlet />;
 };
 
-export default ProtectedPlatformRoute;
+export default ProtectedOrganizationRoute;

@@ -1,13 +1,18 @@
-import { useNavigate } from "react-router";
-
 const FLOW_KEY = "auth_flow";
 
 export const useAuthFlow = () => {
-  const navigate = useNavigate();
-
+  const FLOW_EXPIRY = 10 * 60 * 1000; // 10 minutes
   const getFlow = () => {
     const data = sessionStorage.getItem(FLOW_KEY);
-    return data ? JSON.parse(data) : null;
+    if (!data) return null;
+
+    const flow = JSON.parse(data);
+
+    if (Date.now() - flow.otpSentTime > FLOW_EXPIRY) {
+      sessionStorage.removeItem(FLOW_KEY);
+      return null;
+    }
+    return flow;
   };
 
   const startFlow = ({ email, title = null, type }) => {
@@ -32,16 +37,19 @@ export const useAuthFlow = () => {
 
   const requireStep = (step) => {
     const flow = getFlow();
-
     if (!flow) return null;
 
-    if (step === "otp" && !flow.email) return null;
+    if (step === "otp") {
+      if (!flow.email) return null;
+    }
 
-    if (step === "password" && !flow.verificationToken) return null;
+    if (step === "password") {
+      if (!flow.email || !flow.verificationToken) return null;
+    }
 
     return flow;
   };
-  
+
   const clearFlow = () => {
     sessionStorage.removeItem(FLOW_KEY);
   };

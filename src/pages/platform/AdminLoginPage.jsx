@@ -5,6 +5,7 @@ import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
 import AuthLayout from "@/components/common/AuthLayout";
 import { setAccessToken, clearAccessToken } from "@/api/authStore";
+import { useAuth } from "@/context/authContext";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -16,6 +17,8 @@ const AdminLoginPage = () => {
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
+
+  const { setLoginData } = useAuth();
 
   const validateForm = () => {
     const normalizedEmail = email.trim().toLowerCase();
@@ -51,18 +54,21 @@ const AdminLoginPage = () => {
 
       // store token securely
       if (response.status === 200) {
-        const { access, is_admin } = response.data;
+        const { access, is_admin, user } = response.data;
 
         setAccessToken(access, is_admin);
+        setLoginData({ user, organizations: [] });
 
         navigate("/platform", { replace: true });
       }
     } catch (error) {
-      
       if (!error.response) {
         setError("Network error.");
       } else {
-        setError(error.response.data.message || "Something went wrong. Please try again.");
+        setError(
+          error.response.data.message ||
+            "Something went wrong. Please try again.",
+        );
       }
     } finally {
       setLoading(false);

@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
         type: "forgot-password",
       });
 
-      navigate("/verify-otp", { state: { type: "organization" } });
+      navigate("/verify-otp", { state: { type: "forgot-password" } });
     } catch (error) {
       if (!error.response) {
         setError("Network error. Please try again.");

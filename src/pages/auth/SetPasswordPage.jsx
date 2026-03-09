@@ -72,7 +72,7 @@ export default function SetPasswordPage() {
       await assort_api.post(setPasswordUrl, reqBody);
 
       clearFlow();
-      navigate("/");
+      navigate("/login");
     } catch (err) {
       if (!err.response) {
         setError("Network error. Please try again.");

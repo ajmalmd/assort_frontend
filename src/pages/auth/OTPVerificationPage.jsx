@@ -32,12 +32,19 @@ export default function OTPVerificationPage() {
      INITIAL GUARD + TIMER SETUP
   ----------------------------*/
   useEffect(() => {
+    if (!location.state) {
+      navigate("/app", { replace: true });
+      return;
+    }
     if (!flow) {
       if (location.state.type === "organization") {
         navigate("/create-organization", { replace: true });
       } else if (location.state.type === "forgot-password") {
         navigate("/login", { replace: true });
+      } else {
+        navigate("/", { replace: true });
       }
+      return
     }
 
     const remaining = getRemainingOtpTime(RESEND_INTERVAL);
