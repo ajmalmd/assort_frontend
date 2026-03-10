@@ -20,7 +20,7 @@ const PlatformLayout = () => {
   const title =
     TITLE_MAP[pathname] ||
     Object.entries(TITLE_MAP).find(([path]) =>
-      pathname.startsWith(path + "/")
+      pathname.startsWith(path + "/"),
     )?.[1] ||
     "Platform";
 
@@ -35,10 +35,9 @@ const PlatformLayout = () => {
 
       {/* Main Content */}
       <div
-        className={`
-          flex-1 transition-all duration-300
-          pl-0 lg:pl-${sidebarCollapsed ? "20" : "48"} 
-        `}
+        className={`flex-1 transition-all duration-300 ${
+          sidebarCollapsed ? "lg:ml-20" : "lg:ml-48"
+        }`}
       >
         <PlatformTopBar
           title={title}

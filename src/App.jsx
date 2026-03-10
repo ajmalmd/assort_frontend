@@ -5,7 +5,7 @@ import assort_api from "./api/axios";
 import { APP_POINTS } from "./api/apiConfig";
 import { clearAccessToken, setAccessToken } from "./api/authStore";
 import { useAuth } from "./context/authContext";
-
+import { Toaster } from "react-hot-toast";
 
 import Landing from "./pages/Landing";
 
@@ -63,57 +63,60 @@ function App() {
 
   if (!authReady) return null;
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Landing />} />
+    <>
+      <Toaster position="top-right" reverseOrder={false} />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Landing />} />
 
-        {/* Public only routes */}
-        <Route element={<PublicOnlyRoute />}>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/platform/login" element={<AdminLoginPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route
-            path="/create-organization"
-            element={<CreateOrganizationPage />}
-          />
-          <Route path="/verify-otp" element={<OTPVerificationPage />} />
-          <Route path="/set-password" element={<SetPasswordPage />} />
-        </Route>
-
-        {/* Organization Pages */}
-        <Route element={<ProtectedOrganizationRoute />}>
-          <Route path="/workspaces" element={<SwitchOrganizationPage />} />
-          <Route path="/app" element={<OrganizationLayout />}>
-            <Route index element={<OrgDashboard />} />
-            <Route path="members" element={<MembersPage />} />
-            <Route path="departments" element={<DepartmentsPage />} />
-            <Route path="projects" element={<ProjectsPage />} />
-            <Route path="roles" element={<RolesPage />} />
-            <Route path="jobs" element={<JobsPage />} />
-            <Route path="timesheet" element={<TimesheetPage />} />
-            <Route path="chats" element={<ChatsPage />} />
-          </Route>
-        </Route>
-
-        {/* Platform Pages */}
-        <Route element={<ProtectedPlatformRoute />}>
-          <Route path="/platform" element={<PlatformLayout />}>
-            {/* Default page */}
-            <Route index element={<AdminDashboard />} />
-            <Route path="users" element={<AdminUserListPage />} />
+          {/* Public only routes */}
+          <Route element={<PublicOnlyRoute />}>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/platform/login" element={<AdminLoginPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route
-              path="organizations"
-              element={<AdminOrganizationListPage />}
+              path="/create-organization"
+              element={<CreateOrganizationPage />}
             />
-            <Route path="tickets" element={<AdminTicketsPage />} />
-            <Route
-              path="subscription-plans"
-              element={<AdminSubscriptionListPage />}
-            />
+            <Route path="/verify-otp" element={<OTPVerificationPage />} />
+            <Route path="/set-password" element={<SetPasswordPage />} />
           </Route>
-        </Route>
-      </Routes>
-    </BrowserRouter>
+
+          {/* Organization Pages */}
+          <Route element={<ProtectedOrganizationRoute />}>
+            <Route path="/workspaces" element={<SwitchOrganizationPage />} />
+            <Route path="/app" element={<OrganizationLayout />}>
+              <Route index element={<OrgDashboard />} />
+              <Route path="members" element={<MembersPage />} />
+              <Route path="departments" element={<DepartmentsPage />} />
+              <Route path="projects" element={<ProjectsPage />} />
+              <Route path="roles" element={<RolesPage />} />
+              <Route path="jobs" element={<JobsPage />} />
+              <Route path="timesheet" element={<TimesheetPage />} />
+              <Route path="chats" element={<ChatsPage />} />
+            </Route>
+          </Route>
+
+          {/* Platform Pages */}
+          <Route element={<ProtectedPlatformRoute />}>
+            <Route path="/platform" element={<PlatformLayout />}>
+              {/* Default page */}
+              <Route index element={<AdminDashboard />} />
+              <Route path="users" element={<AdminUserListPage />} />
+              <Route
+                path="organizations"
+                element={<AdminOrganizationListPage />}
+              />
+              <Route path="tickets" element={<AdminTicketsPage />} />
+              <Route
+                path="subscription-plans"
+                element={<AdminSubscriptionListPage />}
+              />
+            </Route>
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </>
   );
 }
 

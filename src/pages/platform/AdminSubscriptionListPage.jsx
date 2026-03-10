@@ -1,17 +1,20 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
 import { Edit, Trash2, Eye } from "lucide-react";
+import toast from "react-hot-toast";
 import { APP_POINTS } from "@/api/apiConfig";
 import assort_api from "@/api/axios";
 import { CreatePlanModal } from "@/components/platform/CreatePlanModal";
 import { formatEnum } from "@/appFunctions";
+import { ViewPlanModal } from "@/components/platform/ViewPlanModal";
+import { EditPlanModal } from "@/components/platform/EditPlanModal";
 
 const AdminSubscriptionListPage = () => {
   const [plans, setPlans] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [viewPlan, setViewPlan] = useState(null);
+  const [editPlan, setEditPlan] = useState(null);
 
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -21,7 +24,7 @@ const AdminSubscriptionListPage = () => {
           setPlans(response.data.results);
         }
       } catch (error) {
-        console.error(error);
+        toast.error("Network Error")
       }
     };
 
@@ -34,7 +37,7 @@ const AdminSubscriptionListPage = () => {
         APP_POINTS.PLATFORM + "plans/",
         planData,
       );
-      response.data.subscription_count = 0
+      response.data.subscription_count = 0;
       setPlans((prev) => [...prev, response.data]);
       setIsModalOpen(false);
     } catch (error) {
@@ -42,7 +45,23 @@ const AdminSubscriptionListPage = () => {
     }
   };
 
-  const handleDeletePlan = (id) => {
+  const handleUpdatePlan = async (id, data) => {
+    const res = await assort_api.patch(
+      APP_POINTS.PLATFORM + `plans/${id}/`,
+      data,
+    );
+
+    setPlans((prev) => prev.map((p) => (p.id === id ? res.data : p)));
+
+    setEditPlan(null);
+    toast.success("Plan updated successfully!");
+  };
+
+  const handleDeletePlan = async (id) => {
+    const res = await assort_api.delete(
+      APP_POINTS.PLATFORM + `plans/${id}/`
+    );
+    toast.success("Plan Deactivated")
     setPlans(plans.filter((p) => p.id !== id));
   };
 
@@ -135,6 +154,7 @@ const AdminSubscriptionListPage = () => {
                   <td className="px-6 py-4 text-sm">
                     <div className="flex items-center gap-2">
                       <button
+                        onClick={() => setViewPlan(plan)}
                         className="p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
                         title="View"
                       >
@@ -142,6 +162,7 @@ const AdminSubscriptionListPage = () => {
                       </button>
 
                       <button
+                        onClick={() => setEditPlan(plan)}
                         className="p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
                         title="Edit"
                       >
@@ -175,6 +196,18 @@ const AdminSubscriptionListPage = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onCreatePlan={handleCreatePlan}
+      />
+      <ViewPlanModal
+        isOpen={!!viewPlan}
+        plan={viewPlan}
+        onClose={() => setViewPlan(null)}
+      />
+
+      <EditPlanModal
+        isOpen={!!editPlan}
+        plan={editPlan}
+        onClose={() => setEditPlan(null)}
+        onUpdatePlan={handleUpdatePlan}
       />
     </>
   );

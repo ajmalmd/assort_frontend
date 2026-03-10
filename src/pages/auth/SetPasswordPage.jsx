@@ -5,6 +5,7 @@ import AuthLayout from "@/components/common/AuthLayout";
 import { useAuthFlow } from "@/hooks/useAuthFlow";
 import { APP_POINTS } from "@/api/apiConfig";
 import assort_api from "../../api/axios";
+import toast from "react-hot-toast";
 
 export default function SetPasswordPage() {
   const [password, setPassword] = useState("");
@@ -70,7 +71,7 @@ export default function SetPasswordPage() {
 
     try {
       await assort_api.post(setPasswordUrl, reqBody);
-
+      toast.success("Organization created successfully")
       clearFlow();
       navigate("/login");
     } catch (err) {

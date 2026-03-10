@@ -113,7 +113,7 @@ const LoginPage = () => {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} autoComplete="on" className="space-y-5">
           {error && <div className="text-sm text-red-600">{error}</div>}
 
           {/* Email */}
@@ -129,6 +129,8 @@ const LoginPage = () => {
               <input
                 type="email"
                 value={email}
+                name="email"
+                autoComplete="username"
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your@email.com"
                 className="w-full pl-12 pr-4 py-3 bg-gray-50 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 border border-gray-200"
@@ -149,6 +151,8 @@ const LoginPage = () => {
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
+                name="password"
+                autoComplete="current-password"
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 className="w-full pl-12 pr-12 py-3 bg-gray-50 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 border border-gray-200"
