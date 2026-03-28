@@ -33,17 +33,44 @@ assort_api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
-  const url = config.url || "";
+  const url = (config.baseURL || "") + (config.url || "");
 
-  const isOrgRequest =
-    url.startsWith("/api/organizations") || url.startsWith("/api/invitations");
+  // PUBLIC ROUTES (no token, no org)
+  const PUBLIC_ROUTES = [
+    "/api/auth/login",
+    "/api/auth/token-refresh",
+    "/api/auth/logout",
 
-  if (isOrgRequest) {
+    "/api/auth/forgot-password",
+    "/api/auth/verify-otp",
+    "/api/auth/resend-otp",
+    "/api/auth/set-password",
+
+    "/api/organizations/create",
+    "/api/organizations/verify-otp",
+    "/api/organizations/resend-otp",
+    "/api/organizations/set-password",
+
+    "/api/subscriptions/plans",
+  ];
+
+  const isPublicRoute = PUBLIC_ROUTES.some((path) => url.includes(path));
+
+  // PLATFORM ADMIN ROUTES (token required, NO org)
+  const isPlatformRoute = url.includes("/api/platform/");
+
+  // Skip org header for public + platform routes
+  if (!isPublicRoute && !isPlatformRoute) {
     const orgId = getActiveOrgId();
 
-    if (orgId) {
-      config.headers["X-ORG-ID"] = orgId;
+    if (!orgId) {
+      return Promise.reject({
+        message: "Organization context missing",
+        code: "ORG_REQUIRED",
+      });
     }
+
+    config.headers["X-ORG-ID"] = orgId;
   }
 
   return config;
@@ -70,6 +97,12 @@ assort_api.interceptors.response.use(
         return new Promise((resolve) => {
           subscribeTokenRefresh((newToken) => {
             originalRequest.headers.Authorization = `Bearer ${newToken}`;
+
+            const orgId = getActiveOrgId();
+            if (orgId) {
+              originalRequest.headers["X-ORG-ID"] = orgId;
+            }
+
             resolve(assort_api(originalRequest));
           });
         });
@@ -92,6 +125,12 @@ assort_api.interceptors.response.use(
         onRefreshed(access);
 
         originalRequest.headers.Authorization = `Bearer ${access}`;
+
+        const orgId = getActiveOrgId();
+        if (orgId) {
+          originalRequest.headers["X-ORG-ID"] = orgId;
+        }
+
         return assort_api(originalRequest);
       } catch (refreshError) {
         isRefreshing = false;

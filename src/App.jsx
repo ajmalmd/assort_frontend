@@ -17,6 +17,9 @@ import OTPVerificationPage from "./pages/auth/OTPVerificationPage";
 import SetPasswordPage from "./pages/auth/SetPasswordPage";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 
+import CompleteProfilePage from "./pages/onboarding/CompleteProfilePage";
+import { SubscriptionRoute } from "./components/organization/SubscriptionRoute";
+
 import ProtectedPlatformRoute from "./components/platform/ProtectedPlatformRoute";
 import PlatformLayout from "./components/platform/PlatformLayout";
 import AdminDashboard from "./pages/platform/AdminDashboard";
@@ -84,6 +87,14 @@ function App() {
 
           {/* Organization Pages */}
           <Route element={<ProtectedOrganizationRoute />}>
+            <Route
+              path="/onboarding/profile"
+              element={<CompleteProfilePage />}
+            />
+            <Route
+              path="/onboarding/subscription"
+              element={<SubscriptionRoute />}
+            />
             <Route path="/workspaces" element={<SwitchOrganizationPage />} />
             <Route path="/app" element={<OrganizationLayout />}>
               <Route index element={<OrgDashboard />} />

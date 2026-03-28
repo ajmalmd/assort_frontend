@@ -6,6 +6,7 @@ export const logout = async (isAdmin = false) => {
   try {
     await assort_api.post(APP_POINTS.AUTH + "logout/");
   } catch (err) {
+    console.log(err)
     // ignore errors (token may already be invalid)
   } finally {
     clearAccessToken();
