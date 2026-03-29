@@ -60,7 +60,7 @@ export function ProfileMenu({ user, canSwitch }) {
                 setIsOpen(false);
                 navigate("/workspaces");
               }}
-              className="flex items-center justify-between px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors mb-4 text-white font-semibold"
+              className="flex w-full items-center justify-between px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors mb-4 text-white font-semibold"
             >
               <span>Switch workspace</span>
               <ChevronRight size={18} />
@@ -70,7 +70,7 @@ export function ProfileMenu({ user, canSwitch }) {
           {/* Logout */}
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors text-white font-semibold"
+            className="flex w-full items-center gap-2 px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors text-white font-semibold"
           >
             <LogOut size={18} />
             <span>Logout</span>

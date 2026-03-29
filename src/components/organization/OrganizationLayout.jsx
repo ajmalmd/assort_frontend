@@ -37,6 +37,10 @@ const OrganizationLayout = () => {
     }
   }, [activeOrganization]);
 
+  const isSubscriptionBlocked =
+    activeOrganization?.role === "OWNER" &&
+    ["NONE", "EXPIRED"].includes(activeOrganization?.subscription_status);
+
   const title =
     TITLE_MAP[pathname] ||
     Object.entries(TITLE_MAP).find(([path]) =>
@@ -73,6 +77,7 @@ const OrganizationLayout = () => {
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
           isCollapsed={sidebarCollapsed}
+          disabled={isSubscriptionBlocked}
         />
 
         {/* Main Content */}

@@ -8,7 +8,6 @@ import { Badge } from "lucide-react";
 import { Button } from "../ui/button";
 import { Check } from "lucide-react";
 import toast from "react-hot-toast";
-import { logout } from "@/api/utility";
 
 export const SubscriptionModal = ({
   isOpen,
@@ -133,22 +132,15 @@ export const SubscriptionModal = ({
       setIsSaving(false);
     }
   };
-  const handleLogout = async () => await logout(false);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+    <div className="fixed top-16 left-0 right-0 bottom-0 z-50 flex items-center justify-center bg-black/40 px-4">
       <div className="bg-white w-full max-w-5xl rounded-2xl shadow-xl p-6 md:p-10 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="text-center mb-10">
           <h2 className="text-3xl font-bold text-gray-900">{title}</h2>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-100 border border-gray-300 rounded-lg bg-gray-800 hover:bg-gray-100 hover:text-gray-900 transition-colors"
-          >
-            Logout
-          </button>
           <p className="text-gray-600 mt-2">
             {description ||
               (activeOrganization.subscription_status === "NONE"

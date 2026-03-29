@@ -44,7 +44,12 @@ const ROLE_MENU = {
   ],
 };
 
-export function OrganizationSidebar({ isOpen, onClose, isCollapsed = false }) {
+export function OrganizationSidebar({
+  isOpen,
+  onClose,
+  isCollapsed = false,
+  disabled = false,
+}) {
   const { pathname } = useLocation();
 
   const { activeOrganization } = useAuth();
@@ -65,7 +70,7 @@ export function OrganizationSidebar({ isOpen, onClose, isCollapsed = false }) {
       {isOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={onClose}
+          onClick={!disabled ? onClose : undefined}
         />
       )}
 
@@ -114,15 +119,21 @@ export function OrganizationSidebar({ isOpen, onClose, isCollapsed = false }) {
             return (
               <NavLink
                 key={to}
-                to={to}
-                onClick={onClose}
+                to={disabled ? "#" : to}
+                onClick={(e) => {
+                  if (disabled) {
+                    e.preventDefault();
+                    return;
+                  }
+                  onClose();
+                }}
                 className={`flex items-center ${
                   isCollapsed ? "justify-center" : "gap-3"
                 } px-4 py-3 rounded-lg transition-colors ${
                   active
                     ? "bg-gray-900 text-white"
                     : "text-gray-700 hover:bg-gray-100"
-                }`}
+                } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
                 title={isCollapsed ? label : undefined}
               >
                 <Icon size={20} />
