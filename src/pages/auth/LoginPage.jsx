@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
-import { Link, Navigate, useNavigate } from "react-router";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router";
 import { APP_POINTS } from "@/api/apiConfig";
 import assort_api from "@/api/axios";
 import AuthLayout from "@/components/common/AuthLayout";
@@ -21,6 +21,9 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const token = getAccessToken();
   const isAdmin = getAdminStatus();
+
+  const [searchParams] = useSearchParams();
+  const inviteToken = searchParams.get("invite_token");
 
   if (token) {
     if (isAdmin) {
@@ -73,10 +76,12 @@ const LoginPage = () => {
         setAccessToken(access, is_admin);
 
         // store data in context api
-        setLoginData({
-          user,
-          organizations,
-        });
+        setLoginData({ user, organizations });
+
+        if (inviteToken) {
+          navigate(`/accept-invite/${inviteToken}`);
+          return;
+        }
 
         if (organizations.length > 1) {
           navigate("/workspaces");

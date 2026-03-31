@@ -3,7 +3,11 @@ import { BrowserRouter, Routes, Route } from "react-router";
 
 import assort_api from "./api/axios";
 import { APP_POINTS } from "./api/apiConfig";
-import { clearAccessToken, setAccessToken } from "./api/authStore";
+import {
+  clearAccessToken,
+  getActiveOrgId,
+  setAccessToken,
+} from "./api/authStore";
 import { useAuth } from "./context/authContext";
 import { Toaster } from "react-hot-toast";
 
@@ -16,6 +20,9 @@ import CreateOrganizationPage from "./pages/auth/CreateOrganizationPage";
 import OTPVerificationPage from "./pages/auth/OTPVerificationPage";
 import SetPasswordPage from "./pages/auth/SetPasswordPage";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
+
+import AcceptInvitationPage from "./pages/onboarding/AcceptInvitationPage";
+import SignupPage from "./pages/onboarding/SignupPage";
 
 import CompleteProfilePage from "./pages/onboarding/CompleteProfilePage";
 import { SubscriptionRoute } from "./components/organization/SubscriptionRoute";
@@ -32,6 +39,7 @@ import ProtectedOrganizationRoute from "./components/organization/ProtectedOrgan
 import OrganizationLayout from "./components/organization/OrganizationLayout";
 import OrgDashboard from "./pages/organization/OrgDashboard";
 import MembersPage from "./pages/organization/MembersPage";
+import MemberViewPage from "./pages/organization/MemberViewPage";
 import DepartmentsPage from "./pages/organization/DepartmentsPage";
 import ProjectsPage from "./pages/organization/ProjectsPage";
 import RolesPage from "./pages/organization/RolesPage";
@@ -42,7 +50,7 @@ import SwitchOrganizationPage from "./pages/organization/SwitchOrganizationPage"
 
 function App() {
   const [authReady, setAuthReady] = useState(false);
-  const { setLoginData } = useAuth();
+  const { setLoginData, activeOrganization, setActiveOrganization } = useAuth();
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -54,6 +62,14 @@ function App() {
           user,
           organizations: organizations ? organizations : [],
         });
+
+        //handle users having multiple organizations
+        const activeOrgId = getActiveOrgId();
+        if (activeOrgId && !activeOrganization && organizations.length > 1) {
+          setActiveOrganization(
+            organizations.find((org) => org.id === Number(activeOrgId)),
+          );
+        }
       } catch {
         clearAccessToken();
       } finally {
@@ -71,6 +87,11 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Landing />} />
+          <Route
+            path="/accept-invite/:inviteToken"
+            element={<AcceptInvitationPage />}
+          />
+          <Route path="/signup" element={<SignupPage />} />
 
           {/* Public only routes */}
           <Route element={<PublicOnlyRoute />}>
@@ -99,6 +120,7 @@ function App() {
             <Route path="/app" element={<OrganizationLayout />}>
               <Route index element={<OrgDashboard />} />
               <Route path="members" element={<MembersPage />} />
+              <Route path="members/:id" element={<MemberViewPage />} />
               <Route path="departments" element={<DepartmentsPage />} />
               <Route path="projects" element={<ProjectsPage />} />
               <Route path="roles" element={<RolesPage />} />

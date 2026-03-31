@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }) => {
 
     if (organizations.length === 1) {
       setActiveOrganization(organizations[0]);
-      setActiveOrgId(organizations[0].id);
+      setActiveOrgId(organizations[0].id); //authStore
     }
   };
 
@@ -35,6 +35,7 @@ export const AuthProvider = ({ children }) => {
         activeOrganization,
         setLoginData,
         switchOrganization,
+        setActiveOrganization,
       }}
     >
       {children}

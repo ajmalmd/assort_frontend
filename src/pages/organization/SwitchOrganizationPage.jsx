@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useState } from "react";
 import { useAuth } from "@/context/authContext";
+import { useNavigate } from "react-router";
 import { ArrowRight, Briefcase } from "lucide-react";
 
 export default function SwitchOrganizationPage() {
@@ -8,10 +8,6 @@ export default function SwitchOrganizationPage() {
 
   const { organizations, switchOrganization } = useAuth();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    console.log("Organizations", organizations);
-  }, []);
 
   const handleSwitch = () => {
     switchOrganization(selectedOrg.id);

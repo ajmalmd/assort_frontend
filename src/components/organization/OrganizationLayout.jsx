@@ -17,6 +17,10 @@ const TITLE_MAP = {
   "/app/timesheet": "Timesheet",
 };
 
+const DYNAMIC_TITLES = [
+  { match: (p) => p.startsWith("/app/members/"), title: "Member Details" },
+];
+
 const OrganizationLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -41,13 +45,15 @@ const OrganizationLayout = () => {
     activeOrganization?.role === "OWNER" &&
     ["NONE", "EXPIRED"].includes(activeOrganization?.subscription_status);
 
+  const dynamicMatch = DYNAMIC_TITLES.find((r) => r.match(pathname));
+
   const title =
     TITLE_MAP[pathname] ||
-    Object.entries(TITLE_MAP).find(([path]) =>
-      pathname.startsWith(path + "/"),
-    )?.[1] ||
+    dynamicMatch?.title ||
+    Object.entries(TITLE_MAP)
+      .sort((a, b) => b[0].length - a[0].length)
+      .find(([path]) => pathname.startsWith(path + "/"))?.[1] ||
     "Organization";
-
   return (
     <>
       {/* Subscription Modal */}
@@ -67,7 +73,7 @@ const OrganizationLayout = () => {
       />
 
       <div
-        className="min-h-screen flex bg-repeat"
+        className="min-h-screen flex bg-repeat bg-gray-400"
         style={{
           backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url(${DotsBg})`,
         }}

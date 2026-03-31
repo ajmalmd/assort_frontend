@@ -9,6 +9,7 @@ import { SubscriptionModal } from "@/components/organization/SubscriptionModal";
 import { APP_POINTS } from "@/api/apiConfig";
 import assort_api from "@/api/axios";
 import toast from "react-hot-toast";
+import { useEffect } from "react";
 
 export default function CompleteProfilePage() {
   const navigate = useNavigate();
@@ -20,6 +21,11 @@ export default function CompleteProfilePage() {
     country: activeOrganization.country || "",
     logo: activeOrganization.logo,
   });
+
+  useEffect(() => {
+    if (!activeOrganization.role === "OWNER")
+      navigate("/app", { replace: true });
+  }, [activeOrganization]);
 
   const [isSaving, setIsSaving] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);

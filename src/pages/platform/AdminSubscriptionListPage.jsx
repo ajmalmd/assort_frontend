@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Edit, Trash2, Eye } from "lucide-react";
+import { Edit, Eye, ToggleLeft, ToggleRight } from "lucide-react";
 import toast from "react-hot-toast";
 import { APP_POINTS } from "@/api/apiConfig";
 import assort_api from "@/api/axios";
@@ -15,7 +15,6 @@ const AdminSubscriptionListPage = () => {
   const [viewPlan, setViewPlan] = useState(null);
   const [editPlan, setEditPlan] = useState(null);
 
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -24,7 +23,7 @@ const AdminSubscriptionListPage = () => {
           setPlans(response.data.results);
         }
       } catch (error) {
-        toast.error("Network Error")
+        toast.error("Network Error");
       }
     };
 
@@ -57,12 +56,19 @@ const AdminSubscriptionListPage = () => {
     toast.success("Plan updated successfully!");
   };
 
-  const handleDeletePlan = async (id) => {
-    const res = await assort_api.delete(
-      APP_POINTS.PLATFORM + `plans/${id}/`
-    );
-    toast.success("Plan Deactivated")
-    setPlans(plans.filter((p) => p.id !== id));
+  const toggleStatus = async (plan) => {
+    try {
+      const res = await assort_api.patch(
+        APP_POINTS.PLATFORM + `plans/${plan.id}/`,
+        { is_active: !plan.is_active },
+      );
+
+      setPlans((prev) => prev.map((p) => (p.id === plan.id ? res.data : p)));
+
+      toast.success(plan.is_active ? "Plan deactivated" : "Plan activated");
+    } catch (err) {
+      toast.error("Failed to update status");
+    }
   };
 
   const filteredPlans = plans.filter((plan) =>
@@ -85,7 +91,7 @@ const AdminSubscriptionListPage = () => {
 
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-900 text-white hover:bg-gray-800 rounded-lg transition-colors font-medium"
+          className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-900 text-white hover:bg-gray-800 rounded-lg transition-colors text-sm font-normal"
         >
           + Create Plan
         </button>
@@ -100,25 +106,28 @@ const AdminSubscriptionListPage = () => {
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-900">
                   Plan Name
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-900">
+                <th className="px-6 py-3 text-center text-xs font-semibold text-gray-900">
                   Price
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-900">
                   Billing
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-900">
+                <th className="px-6 py-3 text-center text-xs font-semibold text-gray-900">
                   Max Projects
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-900">
+                <th className="px-6 py-3 text-center text-xs font-semibold text-gray-900">
                   Max Members
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-900">
+                <th className="px-6 py-3 text-center text-xs font-semibold text-gray-900">
                   Storage
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-900">
+                <th className="px-6 py-3 text-center text-xs font-semibold text-gray-900">
                   Subscriptions
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-900">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-semibold text-gray-900">
                   Actions
                 </th>
               </tr>
@@ -133,23 +142,26 @@ const AdminSubscriptionListPage = () => {
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">
                     {plan.name}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-700">
+                  <td className="px-6 py-4 text-sm text-gray-700 text-center">
                     ₹{plan.price}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700 capitalize">
                     {formatEnum(plan.billing_cycle)}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-700">
+                  <td className="px-6 py-4 text-sm text-gray-700 text-center">
                     {plan.max_projects}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-700">
+                  <td className="px-6 py-4 text-sm text-gray-700 text-center">
                     {plan.max_members}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-700">
+                  <td className="px-6 py-4 text-sm text-gray-700 text-center">
                     {plan.storage_limit_gb}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-700 font-medium">
+                  <td className="px-6 py-4 text-sm text-gray-700 font-medium text-center">
                     {plan.subscription_count}
+                  </td>
+                  <td className="px-6 py-4 text-sm">
+                    {plan.is_active ? "Active" : "Inactive"}
                   </td>
                   <td className="px-6 py-4 text-sm">
                     <div className="flex items-center gap-2">
@@ -169,12 +181,21 @@ const AdminSubscriptionListPage = () => {
                         <Edit size={16} />
                       </button>
 
+                      {/* Toggle Switch */}
                       <button
-                        onClick={() => handleDeletePlan(plan.id)}
-                        className="p-1 text-gray-600 hover:text-red-600 hover:bg-gray-100 rounded transition-colors"
-                        title="Delete"
+                        onClick={() => toggleStatus(plan)}
+                        className={`p-1 rounded transition-colors ${
+                          plan.is_active
+                            ? "text-green-600 hover:bg-green-100"
+                            : "text-gray-600 hover:bg-gray-100"
+                        }`}
+                        title={plan.is_active ? "Deactivate" : "Activate"}
                       >
-                        <Trash2 size={16} />
+                        {plan.is_active ? (
+                          <ToggleRight size={20} />
+                        ) : (
+                          <ToggleLeft size={20} />
+                        )}
                       </button>
                     </div>
                   </td>

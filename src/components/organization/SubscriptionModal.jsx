@@ -60,6 +60,13 @@ export const SubscriptionModal = ({
       );
 
       const { order_id, amount, currency, key } = orderRes.data;
+      const rpLoaded = await loadRazorpay();
+
+      if (!rpLoaded) {
+        toast.error("Razorpay SDK failed to load");
+        setIsSaving(false);
+        return;
+      }
 
       // Open Razorpay Checkout
       const options = {
@@ -106,6 +113,12 @@ export const SubscriptionModal = ({
       };
 
       const rzp = new window.Razorpay(options);
+
+      rzp.on("payment.failed", function (response) {
+        console.error(response.error);
+        toast.error("Payment failed. Please try again.");
+      });
+
       rzp.open();
     } catch (err) {
       console.error(err);

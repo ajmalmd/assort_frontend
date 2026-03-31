@@ -25,6 +25,27 @@ function onRefreshed(newToken) {
   refreshSubscribers = [];
 }
 
+// PUBLIC ROUTES (no token, no org)
+const PUBLIC_ROUTES = [
+  "/api/auth/login",
+  "/api/auth/token-refresh",
+  "/api/auth/logout",
+  "api/auth/signup",
+
+  "/api/auth/forgot-password",
+  "/api/auth/verify-otp",
+  "/api/auth/resend-otp",
+  "/api/auth/set-password",
+
+  "/api/organizations/create",
+  "/api/organizations/verify-otp",
+  "/api/organizations/resend-otp",
+  "/api/organizations/set-password",
+
+  "/api/subscriptions/plans",
+  "/api/invitations/invitation",
+];
+
 // Attach access token
 assort_api.interceptors.request.use((config) => {
   const token = getAccessToken();
@@ -34,25 +55,6 @@ assort_api.interceptors.request.use((config) => {
   }
 
   const url = (config.baseURL || "") + (config.url || "");
-
-  // PUBLIC ROUTES (no token, no org)
-  const PUBLIC_ROUTES = [
-    "/api/auth/login",
-    "/api/auth/token-refresh",
-    "/api/auth/logout",
-
-    "/api/auth/forgot-password",
-    "/api/auth/verify-otp",
-    "/api/auth/resend-otp",
-    "/api/auth/set-password",
-
-    "/api/organizations/create",
-    "/api/organizations/verify-otp",
-    "/api/organizations/resend-otp",
-    "/api/organizations/set-password",
-
-    "/api/subscriptions/plans",
-  ];
 
   const isPublicRoute = PUBLIC_ROUTES.some((path) => url.includes(path));
 
