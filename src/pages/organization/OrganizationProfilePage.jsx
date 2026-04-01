@@ -1,27 +1,79 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AlertTriangle, Upload } from "lucide-react";
 import { getInitials } from "@/appFunctions";
+import assort_api from "@/api/axios";
+import { APP_POINTS } from "@/api/apiConfig";
 
 const OrganizationProfilePage = () => {
   const [profile, setProfile] = useState({
-    logo: "AC",
-    orgName: "Acme Corporation",
-    email: "contact@acmecorp.com",
-    city: "New York",
-    country: "United States",
-    totalMembers: 24,
-    activeProjects: 8,
-    departments: 3,
-    customRoles: 5,
-    currentPlan: "Standard",
-    planStatus: "Active",
-    billingCycle: "Monthly",
-    renewalDate: "Feb 05, 2025",
-    membersLimit: "24/50",
-    monthlyCost: "$99.00",
+    logo: "",
+    orgName: "",
+    email: "",
+    city: "",
+    country: "",
+    totalMembers: 0,
+    activeProjects: 0,
+    departments: 0,
+    currentPlan: "",
+    planStatus: "",
+    billingCycle: "",
+    endDate: "",
+    membersCount: 0,
+    membersLimit: 0,
+    monthlyCost: "",
   });
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await assort_api.get(
+          APP_POINTS.ORGANIZATIONS + "profile",
+        );
+
+        const data = response.data;
+
+        setProfile((prev) => {
+          const org = data.organization || {};
+          const stats = data.statistics || {};
+          const sub = data.subscription || {};
+
+          return {
+            ...prev,
+
+            // Organization Info
+            logo: org.logo ?? prev.logo,
+            orgName: org.title ?? prev.orgName,
+            email: org.email ?? prev.email,
+            city: org.city ?? prev.city,
+            country: org.country ?? prev.country,
+
+            // Stats
+            totalMembers: stats.members_count ?? prev.totalMembers,
+
+            // keep static values if API not available
+            activeProjects: prev.activeProjects,
+            departments: prev.departments,
+
+            // Subscription
+            currentPlan: sub.current_plan ?? prev.currentPlan,
+            planStatus: sub.status ?? prev.planStatus,
+            billingCycle: sub.billing_cycle ?? prev.billingCycle,
+            endDate: sub.end_date ?? prev.endDate,
+
+            membersLimit: sub.members_limit ? sub.members_limit : 0,
+
+            monthlyCost: sub.plan_cost != null ? `₹${sub.plan_cost}` : "",
+          };
+        });
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleChange = (field, value) => {
     setProfile({ ...profile, [field]: value });
@@ -139,22 +191,12 @@ const OrganizationProfilePage = () => {
             <p className="text-sm text-gray-600 mt-1">Total Members</p>
           </div>
           <div>
-            <p className="text-3xl font-bold text-gray-900">
-              {profile.activeProjects}
-            </p>
-            <p className="text-sm text-gray-600 mt-1">Active Projects</p>
+            <p className="text-3xl font-bold text-gray-900">0</p>
+            <p className="text-sm text-gray-600 mt-1">Projects</p>
           </div>
           <div>
-            <p className="text-3xl font-bold text-gray-900">
-              {profile.departments}
-            </p>
+            <p className="text-3xl font-bold text-gray-900">0</p>
             <p className="text-sm text-gray-600 mt-1">Departments</p>
-          </div>
-          <div>
-            <p className="text-3xl font-bold text-gray-900">
-              {profile.customRoles}
-            </p>
-            <p className="text-sm text-gray-600 mt-1">Custom Roles</p>
           </div>
         </div>
       </div>
@@ -180,9 +222,12 @@ const OrganizationProfilePage = () => {
             </div>
             <p className="text-sm text-gray-600 mt-4">Members Limit</p>
             <p className="text-lg font-semibold text-gray-900 mt-1">
-              {profile.membersLimit}
+              {profile.totalMembers}/{profile.membersLimit}
             </p>
-            <p className="text-xs text-gray-600 mt-1">26 slots available</p>
+            <p className="text-xs text-gray-600 mt-1">
+              {Number(profile.membersLimit) - Number(profile.totalMembers)}{" "}
+              slots available
+            </p>
           </div>
 
           {/* Billing Information */}
@@ -194,26 +239,26 @@ const OrganizationProfilePage = () => {
               {profile.billingCycle}
             </p>
             <p className="text-sm text-gray-600 mt-2">
-              Renewed on {profile.renewalDate}
+              Ends on {profile.endDate}
             </p>
             <p className="text-sm font-medium text-gray-700 mt-4">
               Monthly Cost
             </p>
             <p className="text-lg font-semibold text-gray-900 mt-1">
-              {profile.monthlyCost} USD
+              {profile.monthlyCost}
             </p>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-4 mt-8">
+        {/* <div className="flex gap-4 mt-8">
           <button className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
             View Plans
           </button>
           <button className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
             Manage Billing
           </button>
-        </div>
+        </div> */}
       </div>
 
       {/* Delete Organization */}

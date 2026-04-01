@@ -76,14 +76,14 @@ export function InviteMemberModal({ isOpen, onClose, onSendInvitation }) {
         APP_POINTS.INVITATIONS + "create/",
         payload,
       );
-      toast.success("Invitation sent")
+      toast.success("Invitation sent");
 
       onSendInvitation(formData); // callback to parent
       resetForm();
       onClose();
     } catch (error) {
       console.error("Failed to send invitation:", error.response || error);
-      toast.error("Failed to send invitation")
+      toast.error("Failed to send invitation");
 
       // Show backend validation errors if any
       if (error.response?.data) {
@@ -102,7 +102,7 @@ export function InviteMemberModal({ isOpen, onClose, onSendInvitation }) {
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/40 z-40"/>
+      <div className="fixed inset-0 bg-black/40 z-40" />
       <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-lg shadow-lg z-50 mx-4">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
@@ -114,7 +114,7 @@ export function InviteMemberModal({ isOpen, onClose, onSendInvitation }) {
             </p>
           </div>
           <button
-            onClick={handleClose}
+            onClick={() => onClose()}
             className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
           >
             <MinusSquareIcon size={24} />

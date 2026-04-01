@@ -1,42 +1,33 @@
-import { useState } from "react";
-import { Search } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
+import assort_api from "@/api/axios";
+import { APP_POINTS } from "@/api/apiConfig";
 import { InviteMemberModal } from "@/components/organization/InviteMemberModal";
-
-const mockMembers = [
-  {
-    id: "1",
-    name: "John Doe",
-    email: "john@company.com",
-    role: "Admin",
-    department: "Engineering",
-    status: "Active",
-  },
-  {
-    id: "2",
-    name: "Sarah Smith",
-    email: "sarah@company.com",
-    role: "Member",
-    department: "Design",
-    status: "Active",
-  },
-  {
-    id: "3",
-    name: "Mike Johnson",
-    email: "mike@company.com",
-    role: "Member",
-    department: "Engineering",
-    status: "Inactive",
-  },
-];
+import { Search } from "lucide-react";
+import { formatEnum } from "@/appFunctions";
 
 const MembersPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("All Roles");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [members, setMembers] = useState(mockMembers);
+  const [members, setMembers] = useState([]);
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await assort_api.get(
+          APP_POINTS.ORGANIZATIONS + "members/",
+        );
+        setMembers(response.data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const filteredMembers = members.filter((member) => {
     const matchesSearch =
@@ -47,14 +38,17 @@ const MembersPage = () => {
     return matchesSearch && matchesRole;
   });
 
-  const roles = ["All Roles", ...new Set(members.map((m) => m.role))];
+  const roles = [
+    "All Roles",
+    ...new Set(members.map((m) => formatEnum(m.role))),
+  ];
 
   const handleSendInvitation = (data) => {
     const newMember = {
       id: (members.length + 1).toString(),
       name: data.name,
       email: data.email,
-      department: data.department || "N/A",
+      department: data.department || "",
       role: data.role,
       status: "Active",
     };
@@ -148,17 +142,17 @@ const MembersPage = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-center text-sm text-gray-700">
-                    {member.department}
+                    {member.department ? member.department : "--"}
                   </td>
                   <td className="px-6 py-4 text-center text-sm">
                     <span
                       className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
-                        member.status === "Active"
+                        member.is_active === "Active"
                           ? "bg-green-100 text-green-800"
                           : "bg-gray-100 text-gray-800"
                       }`}
                     >
-                      {member.status}
+                      {member.is_active ? "Active" : "Inactive"}
                     </span>
                   </td>
                 </tr>
