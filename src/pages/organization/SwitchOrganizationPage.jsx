@@ -17,18 +17,20 @@ export default function SwitchOrganizationPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center px-4 py-8 lg:px-8">
       {/* Header */}
-      <div className="mb-8 text-center">
-        <div className="flex justify-center mb-4">
-          <div className="p-3 bg-gray-200 rounded-lg">
-            <Briefcase size={28} className="text-gray-700" />
-          </div>
+      <div className="mb-8 flex justify-between gap-4 items-center">
+        <div className="p-3 bg-gray-800 rounded-lg">
+          <Briefcase size={28} className="text-gray-100" />
         </div>
 
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Select Workspace
-        </h1>
+        <div>
+          <h3 className="text-2xl font-normal text-gray-900 mb-1">
+            Your Organizations
+          </h3>
 
-        <p className="text-gray-600">Select an organization to continue</p>
+          <p className="text-gray-700 text-sm">
+            Select an organization to continue
+          </p>
+        </div>
       </div>
 
       {/* Main Container */}
@@ -48,17 +50,19 @@ export default function SwitchOrganizationPage() {
           `}
             >
               <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
+                <div className="flex items-center gap-3 mb-2 justify-between">
                   <h3 className="text-lg font-semibold text-gray-900">
                     {org.title}
                   </h3>
 
-                  <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded">
+                  <span className="px-2 py-1 bg-gray-900 text-gray-100 text-xs font-medium rounded">
                     {org.role}
                   </span>
                 </div>
 
-                <p className="text-sm text-gray-600">{org.email}</p>
+                <p className="text-sm text-gray-600">
+                  Contact: <span className="text-gray-800">{org.email}</span>
+                </p>
               </div>
             </div>
           ))}

@@ -24,20 +24,23 @@ import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import AcceptInvitationPage from "./pages/onboarding/AcceptInvitationPage";
 import SignupPage from "./pages/onboarding/SignupPage";
 
-import CompleteProfilePage from "./pages/onboarding/CompleteProfilePage";
-import { SubscriptionRoute } from "./components/organization/SubscriptionRoute";
-
 import ProtectedPlatformRoute from "./components/platform/ProtectedPlatformRoute";
 import PlatformLayout from "./components/platform/PlatformLayout";
-import AdminDashboard from "./pages/platform/AdminDashboard";
+import AdminDashboardPage from "./pages/platform/AdminDashboardPage";
 import AdminUserListPage from "./pages/platform/AdminUserListPage";
 import AdminOrganizationListPage from "./pages/platform/AdminOrganizationListPage";
 import AdminSubscriptionListPage from "./pages/platform/AdminSubscriptionListPage";
 import AdminTicketsPage from "./pages/platform/AdminTicketsPage";
 
 import ProtectedOrganizationRoute from "./components/organization/ProtectedOrganizationRoute";
+
+import CompleteProfilePage from "./pages/onboarding/CompleteProfilePage";
+import { SubscriptionRoute } from "./components/organization/SubscriptionRoute";
+import SwitchOrganizationPage from "./pages/organization/SwitchOrganizationPage";
+import Profile from "./pages/organization/Profile";
+
 import OrganizationLayout from "./components/organization/OrganizationLayout";
-import OrgDashboard from "./pages/organization/OrgDashboard";
+import Dashboard from "./pages/organization/Dashboard";
 import MembersPage from "./pages/organization/MembersPage";
 import MemberViewPage from "./pages/organization/MemberViewPage";
 import DepartmentsPage from "./pages/organization/DepartmentsPage";
@@ -46,7 +49,6 @@ import RolesPage from "./pages/organization/RolesPage";
 import JobsPage from "./pages/organization/JobsPage";
 import TimesheetPage from "./pages/organization/TimesheetPage";
 import ChatsPage from "./pages/organization/ChatsPage";
-import SwitchOrganizationPage from "./pages/organization/SwitchOrganizationPage";
 
 function App() {
   const [authReady, setAuthReady] = useState(false);
@@ -117,8 +119,10 @@ function App() {
               element={<SubscriptionRoute />}
             />
             <Route path="/workspaces" element={<SwitchOrganizationPage />} />
+            <Route path="/profile" element={<Profile />} />
+
             <Route path="/app" element={<OrganizationLayout />}>
-              <Route index element={<OrgDashboard />} />
+              <Route index element={<Dashboard />} />
               <Route path="members" element={<MembersPage />} />
               <Route path="members/:id" element={<MemberViewPage />} />
               <Route path="departments" element={<DepartmentsPage />} />
@@ -134,7 +138,7 @@ function App() {
           <Route element={<ProtectedPlatformRoute />}>
             <Route path="/platform" element={<PlatformLayout />}>
               {/* Default page */}
-              <Route index element={<AdminDashboard />} />
+              <Route index element={<AdminDashboardPage />} />
               <Route path="users" element={<AdminUserListPage />} />
               <Route
                 path="organizations"

@@ -1,6 +1,6 @@
 import React from "react";
 import { useAuth } from "@/context/authContext";
-import OrgAdminDashboardPage from "./OrgAdminDashboardPage";
+import OrgAdminDashboardPage from "./OrganizationDashboardPage";
 import ManagerDashboardPage from "./ManagerDashboardPage";
 import MemberDashboardPage from "./MemberDashboardPage";
 
@@ -11,7 +11,7 @@ const Dashboards = {
   MEMBER: MemberDashboardPage,
 };
 
-const OrgDashboard = () => {
+const Dashboard = () => {
   const { activeOrganization } = useAuth();
 
   if (!activeOrganization) {
@@ -27,4 +27,4 @@ const OrgDashboard = () => {
   return <DashboardComponent />;
 };
 
-export default OrgDashboard;
+export default Dashboard;

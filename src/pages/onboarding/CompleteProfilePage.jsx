@@ -63,7 +63,7 @@ export default function CompleteProfilePage() {
     }
     try {
       const response = await assort_api.patch(
-        APP_POINTS.ORGANIZATIONS + "profile/",
+        APP_POINTS.ORGANIZATIONS + "complete-profile/",
         form,
         {
           headers: { "Content-Type": "multipart/form-data" },

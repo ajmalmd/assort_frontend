@@ -1,7 +1,7 @@
 import React from "react";
 import { Users, FolderKanban, BarChart3, AlertCircle } from "lucide-react";
 
-const OrgAdminDashboardPage = () => {
+const OrganizationDashboardPage = () => {
   return (
     <div className="space-y-6">
       {/* Stats Grid */}
@@ -109,4 +109,4 @@ const OrgAdminDashboardPage = () => {
   );
 };
 
-export default OrgAdminDashboardPage;
+export default OrganizationDashboardPage;

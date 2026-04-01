@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { LogOut, ChevronRight } from "lucide-react";
 import { logout } from "@/api/utility";
 import { useNavigate } from "react-router";
+import { getInitials } from "@/appFunctions";
 
 export function ProfileMenu({ user, canSwitch }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -34,25 +35,38 @@ export function ProfileMenu({ user, canSwitch }) {
         onClick={() => setIsOpen(!isOpen)}
         className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
       >
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white font-semibold text-sm">
-          {user.full_name.charAt(0).toUpperCase()}
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-500 to-black flex items-center justify-center text-white font-semibold text-sm">
+          {getInitials(user.full_name)}
         </div>
       </button>
 
       {isOpen && (
         <div className="absolute top-12 right-0 w-80 bg-gray-900 text-white rounded-2xl shadow-xl p-6 z-50">
-          {/* User Info */}
-          <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-700">
-            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center font-semibold text-lg">
-              {user.full_name.charAt(0).toUpperCase()}
+          <button
+            onClick={() => navigate("/profile")}
+            className="group flex w-full items-center gap-4 py-4 px-2 rounded-xl border-b border-gray-800 hover:bg-gray-800/60 transition-all duration-200"
+          >
+            {/* Avatar */}
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-500 to-black flex items-center justify-center font-semibold text-base text-white shadow-md">
+              {getInitials(user.full_name)}
             </div>
 
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-white truncate">{user.full_name}</p>
-              <p className="text-sm text-gray-400 truncate">{user.email}</p>
+            {/* User Info */}
+            <div className="flex-1 min-w-0 text-left">
+              <p className="font-semibold text-white truncate leading-none">
+                {user.full_name}
+              </p>
+              <p className="text-sm text-gray-400 truncate leading-none mt-1">
+                {user.email}
+              </p>
             </div>
-          </div>
 
+            {/* Arrow */}
+            <ChevronRight
+              size={18}
+              className="text-gray-500 group-hover:text-gray-300 group-hover:translate-x-1 transition-all"
+            />
+          </button>
           {/* Switch Workspace */}
           {canSwitch && (
             <button
