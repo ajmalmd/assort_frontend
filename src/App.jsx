@@ -12,6 +12,7 @@ import { useAuth } from "./context/authContext";
 import { Toaster } from "react-hot-toast";
 
 import Landing from "./pages/Landing";
+import LogoutPage from "./pages/auth/LogoutPage";
 
 import PublicOnlyRoute from "./components/public/PublicOnlyRoute";
 import LoginPage from "./pages/auth/LoginPage";
@@ -49,28 +50,45 @@ import RolesPage from "./pages/organization/RolesPage";
 import JobsPage from "./pages/organization/JobsPage";
 import TimesheetPage from "./pages/organization/TimesheetPage";
 import ChatsPage from "./pages/organization/ChatsPage";
+import { getPostLoginRoute } from "./utils/authRedirect";
 
 function App() {
   const [authReady, setAuthReady] = useState(false);
-  const { setLoginData, activeOrganization, setActiveOrganization } = useAuth();
+  const { setLoginData, setActiveOrganization } = useAuth();
 
   useEffect(() => {
     const initializeAuth = async () => {
       try {
         const response = await assort_api.post(APP_POINTS.REFRESH_TOKEN);
         const { access, is_admin, user, organizations } = response.data;
+
         setAccessToken(access, is_admin);
+
         setLoginData({
           user,
-          organizations: organizations ? organizations : [],
+          organizations: organizations || [],
         });
 
-        //handle users having multiple organizations
-        const activeOrgId = getActiveOrgId();
-        if (activeOrgId && !activeOrganization && organizations.length > 1) {
-          setActiveOrganization(
-            organizations.find((org) => org.id === Number(activeOrgId)),
+        // determine active org FIRST
+        let activeOrg = null;
+
+        if (organizations.length === 1) {
+          activeOrg = organizations[0];
+        } else if (organizations.length > 1) {
+          const activeOrgId = getActiveOrgId();
+
+          activeOrg = organizations.find(
+            (org) => org.id === Number(activeOrgId),
           );
+        }
+
+        if (activeOrg) {
+          setActiveOrganization(activeOrg);
+        }
+
+        if (window.location.pathname === "/login") {
+          const route = getPostLoginRoute(organizations);
+          navigate(route, { replace: true });
         }
       } catch {
         clearAccessToken();
@@ -89,6 +107,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Landing />} />
+          <Route path="/logout" element={<LogoutPage />} />
           <Route
             path="/accept-invite/:inviteToken"
             element={<AcceptInvitationPage />}

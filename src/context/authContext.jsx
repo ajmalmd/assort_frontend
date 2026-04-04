@@ -14,7 +14,9 @@ export const AuthProvider = ({ children }) => {
 
     if (organizations.length === 1) {
       setActiveOrganization(organizations[0]);
-      setActiveOrgId(organizations[0].id); //authStore
+      setActiveOrgId(organizations[0].id);
+    } else {
+      setActiveOrganization(null); // force workspace selection
     }
   };
 

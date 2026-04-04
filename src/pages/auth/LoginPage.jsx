@@ -10,6 +10,7 @@ import {
   setAccessToken,
 } from "@/api/authStore";
 import { useAuth } from "@/context/authContext";
+import { getPostLoginRoute } from "@/utils/authRedirect";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -29,7 +30,13 @@ const LoginPage = () => {
     if (isAdmin) {
       return <Navigate to="/platform" replace />;
     }
-    return <Navigate to="/app" replace />;
+
+    if (organizations && organizations.length > 0) {
+      const route = getPostLoginRoute(organizations);
+      return <Navigate to={route} replace />;
+    }
+
+    return null;
   }
 
   const navigate = useNavigate();
@@ -82,12 +89,8 @@ const LoginPage = () => {
           navigate(`/accept-invite/${inviteToken}`);
           return;
         }
-
-        if (organizations.length > 1) {
-          navigate("/workspaces");
-        } else {
-          navigate("/app");
-        }
+        const route = getPostLoginRoute(organizations);
+        navigate(route, { replace: true });
       }
     } catch (error) {
       if (!error.response) {

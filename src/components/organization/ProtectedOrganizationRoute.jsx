@@ -1,54 +1,38 @@
 import { Navigate, Outlet, useLocation } from "react-router";
-import {
-  getAccessToken,
-  clearAccessToken,
-  getAdminStatus,
-  getActiveOrgId,
-} from "@/api/authStore";
 import { useAuth } from "@/context/authContext";
-import SwitchOrganizationPage from "@/pages/organization/SwitchOrganizationPage";
+
+const VALID_SUBSCRIPTIONS = ["ACTIVE", "TRIAL"];
 
 const ProtectedOrganizationRoute = () => {
-  const token = getAccessToken();
-  const isAdmin = getAdminStatus();
-  const { activeOrganization } = useAuth();
-  const { pathname } = useLocation();
+  const { user, organizations, activeOrganization } = useAuth();
+  const location = useLocation();
 
-  if (!token) {
-    clearAccessToken();
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
-  if (token && isAdmin) return <Navigate to="/platform" replace />;
 
-  if (!getActiveOrgId() || !activeOrganization) {
-    return <SwitchOrganizationPage />;
-  }
-
-  const isOnboardingRoute = pathname.startsWith("/onboarding");
-
-  if (
-    !activeOrganization?.is_profile_completed &&
-    activeOrganization?.role === "OWNER"
-  ) {
-    if (pathname !== "/onboarding/profile") {
-      return <Navigate to="/onboarding/profile" replace />;
-    }
+  if (location.pathname === "/workspaces") {
     return <Outlet />;
   }
 
-  if (
-    activeOrganization?.role === "OWNER" &&
-    activeOrganization?.subscription_status === "NONE"
-  ) {
-    if (pathname !== "/onboarding/subscription") {
-      return <Navigate to="/onboarding/subscription" replace />;
-    }
-    return <Outlet />;
+  // Multi-org but none selected → force workspace selection
+  if (organizations.length > 1 && !activeOrganization) {
+    return <Navigate to="/workspaces" replace />;
   }
 
-  // PREVENT ACCESSING ONBOARDING AFTER COMPLETION
-  if (isOnboardingRoute) {
-    return <Navigate to="/app" replace />;
+  const org = activeOrganization || organizations[0];
+
+  // OWNER onboarding enforcement
+  if (org.role === "OWNER") {
+    if (!org.is_profile_completed) {
+      if (location.pathname !== "/onboarding/profile") {
+        return <Navigate to="/onboarding/profile" replace />;
+      }
+    } else if (!VALID_SUBSCRIPTIONS.includes(org.subscription_status)) {
+      if (location.pathname !== "/onboarding/subscription") {
+        return <Navigate to="/onboarding/subscription" replace />;
+      }
+    }
   }
 
   return <Outlet />;

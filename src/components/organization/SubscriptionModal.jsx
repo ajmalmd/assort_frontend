@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate, useLocation } from "react-router";
 import { useAuth } from "@/context/authContext";
 import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
@@ -8,6 +8,7 @@ import { Badge } from "lucide-react";
 import { Button } from "../ui/button";
 import { Check } from "lucide-react";
 import toast from "react-hot-toast";
+import { loadRazorpay } from "@/api/razorpay";
 
 export const SubscriptionModal = ({
   isOpen,
@@ -18,9 +19,30 @@ export const SubscriptionModal = ({
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const hasRedirected = useRef(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { activeOrganization, organizations, setLoginData, user } = useAuth();
+
+  useEffect(() => {
+    if (!activeOrganization || hasRedirected.current) return;
+
+    // prevent re-trigger after navigation
+    if (location.pathname !== "/onboarding/profile") return;
+
+    if (activeOrganization.role !== "OWNER") {
+      hasRedirected.current = true;
+      navigate("/app", { replace: true });
+      return;
+    }
+
+    if (["ACTIVE", "TRIAL"].includes(activeOrganization.subscription_status)) {
+      hasRedirected.current = true;
+      navigate("/app", { replace: true });
+      return;
+    }
+  }, [activeOrganization?.id, location.pathname]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -49,7 +71,7 @@ export const SubscriptionModal = ({
     try {
       setIsSaving(true);
 
-      // Mark subscription as PENDING
+      // Mark subscription as Scheduled
       await assort_api.post(APP_POINTS.SUBSCRIPTIONS + "subscribe/", {
         plan_id: planId,
       });
@@ -57,6 +79,7 @@ export const SubscriptionModal = ({
       // Create Razorpay Order
       const orderRes = await assort_api.post(
         APP_POINTS.SUBSCRIPTIONS + "create-order/",
+        { plan_id: planId },
       );
 
       const { order_id, amount, currency, key } = orderRes.data;

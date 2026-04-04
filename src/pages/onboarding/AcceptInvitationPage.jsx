@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
-import { getAccessToken, getAdminStatus } from "@/api/authStore";
+import {
+  getAccessToken,
+  getAdminStatus,
+  setActiveOrgId,
+} from "@/api/authStore";
 import { useAuth } from "@/context/authContext";
 import { APP_POINTS } from "@/api/apiConfig";
 import assort_api from "@/api/axios";
@@ -8,13 +12,14 @@ import { Clock, CheckCircle, AlertCircle, LogOut } from "lucide-react";
 import DotsBg from "@/assets/images/DotsBg.png";
 
 const AcceptInvitationPage = () => {
-  const [status, setStatus] = useState("loading"); // loading, valid, expired, already_accepted, invalid
+  const [status, setStatus] = useState("loading"); // loading, valid, expired, already_accepted, owner_blocked, invalid
   const [invitationData, setInvitationData] = useState({});
   const [isAccepting, setIsAccepting] = useState(false);
 
   const navigate = useNavigate();
   const { inviteToken } = useParams();
-  const { user, setLoginData } = useAuth();
+  const { user, organizations, setLoginData, setActiveOrganization } =
+    useAuth();
 
   const token = getAccessToken();
   const isAdmin = getAdminStatus();
@@ -53,6 +58,11 @@ const AcceptInvitationPage = () => {
           return;
         }
 
+        if (data.is_owner) {
+          setStatus("owner_blocked");
+          return;
+        }
+
         if (!token && !data.user_exists) {
           navigate("/signup", {
             state: { inviteToken, email: data.email, full_name: data.name },
@@ -82,9 +92,25 @@ const AcceptInvitationPage = () => {
   const handleAccept = async () => {
     setIsAccepting(true);
     try {
-      await assort_api.post(APP_POINTS.INVITATIONS + "accept/", {
-        token: inviteToken,
-      });
+      const response = await assort_api.post(
+        APP_POINTS.INVITATIONS + "accept/",
+        {
+          token: inviteToken,
+        },
+      );
+      const newOrg = {
+        id: response.data.organization_id,
+        title: invitationData?.organization?.title,
+        role: invitationData?.role,
+        email: invitationData?.organization?.email,
+        logo: invitationData?.organization?.logo || "",
+        city: invitationData?.organization?.city,
+        country: invitationData?.organization?.country,
+      };
+
+      setLoginData({ user, organizations: [...organizations, newOrg] });
+      setActiveOrgId(response.data.organization_id);
+      setActiveOrganization(newOrg);
 
       navigate("/app");
     } catch (err) {
@@ -170,6 +196,45 @@ const AcceptInvitationPage = () => {
                   </h2>
                   <p className="text-gray-600 mt-1">
                     This invitation has already been accepted.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end items-center px-8 py-6 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+              <button
+                onClick={handleGoToApp}
+                className="px-6 py-2 bg-gray-900 text-white hover:bg-gray-800 rounded-lg font-medium"
+              >
+                Go to Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === "owner_blocked") {
+    return (
+      <div
+        className="min-h-screen flex bg-repeat py-12 px-4 sm:px-6 lg:px-8"
+        style={{
+          backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url(${DotsBg})`,
+        }}
+      >
+        <div className="max-w-2xl mx-auto w-full">
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+            <div className="p-8 space-y-6">
+              <div className="flex items-center gap-4">
+                <AlertCircle className="w-12 h-12 text-red-600 flex-shrink-0" />
+                <div>
+                  <h2 className="text-2xl font-semibold text-gray-900">
+                    Action Not Allowed
+                  </h2>
+                  <p className="text-gray-600 mt-1">
+                    Organization owners cannot accept invitations to join
+                    another organization.
                   </p>
                 </div>
               </div>

@@ -83,7 +83,11 @@ export function InviteMemberModal({ isOpen, onClose, onSendInvitation }) {
       onClose();
     } catch (error) {
       console.error("Failed to send invitation:", error.response || error);
-      toast.error("Failed to send invitation");
+      toast.error(
+        error.response.data.message
+          ? error.response.data.message
+          : "Failed to send invitation",
+      );
 
       // Show backend validation errors if any
       if (error.response?.data) {

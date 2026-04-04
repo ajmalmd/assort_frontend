@@ -1,34 +1,63 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 import { Upload, LogOut } from "lucide-react";
 import DotsBg from "@/assets/images/DotsBg.png";
 import { useAuth } from "@/context/authContext";
 import { getInitials } from "@/appFunctions";
 import { logout } from "@/api/utility";
-import { SubscriptionModal } from "@/components/organization/SubscriptionModal";
 import { APP_POINTS } from "@/api/apiConfig";
 import assort_api from "@/api/axios";
 import toast from "react-hot-toast";
-import { useEffect } from "react";
 
 export default function CompleteProfilePage() {
   const navigate = useNavigate();
   const { user, activeOrganization, setLoginData, organizations } = useAuth();
 
+  const hasRedirected = useRef(false);
+
   const [formData, setFormData] = useState({
-    email: activeOrganization.email || "",
-    city: activeOrganization.city || "",
-    country: activeOrganization.country || "",
-    logo: activeOrganization.logo,
+    email: "",
+    city: "",
+    country: "",
+    logo: null,
   });
 
-  useEffect(() => {
-    if (!activeOrganization.role === "OWNER")
-      navigate("/app", { replace: true });
-  }, [activeOrganization]);
-
   const [isSaving, setIsSaving] = useState(false);
-  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+
+  // Sync formData when activeOrganization loads (async safe)
+  useEffect(() => {
+    if (!activeOrganization) return;
+
+    setFormData({
+      email: activeOrganization.email || "",
+      city: activeOrganization.city || "",
+      country: activeOrganization.country || "",
+      logo: activeOrganization.logo || null,
+    });
+  }, [activeOrganization?.id]); // stable dependency
+
+  // Redirect logic (no infinite loop)
+  useEffect(() => {
+    if (!activeOrganization || hasRedirected.current) return;
+
+    if (!activeOrganization.is_profile_completed) return;
+
+    if (activeOrganization.role !== "OWNER") {
+      hasRedirected.current = true;
+      navigate("/app", { replace: true });
+      return;
+    }
+
+    if (["ACTIVE", "TRIAL"].includes(activeOrganization.subscription_status)) {
+      hasRedirected.current = true;
+      navigate("/app", { replace: true });
+      return;
+    }
+  }, [
+    activeOrganization?.id,
+    activeOrganization?.role,
+    activeOrganization?.subscription_status,
+  ]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -38,21 +67,28 @@ export default function CompleteProfilePage() {
   const handleLogoChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
     const reader = new FileReader();
-    reader.onload = (e) =>
-      setFormData((prev) => ({ ...prev, logo: e.target?.result }));
+    reader.onload = (e) => {
+      setFormData((prev) => ({
+        ...prev,
+        logo: e.target?.result,
+      }));
+    };
     reader.readAsDataURL(file);
   };
 
-  const handleRemoveLogo = () =>
+  const handleRemoveLogo = () => {
     setFormData((prev) => ({
       ...prev,
       logo: null,
     }));
+  };
 
   const handleSave = async (e) => {
     e.preventDefault();
     setIsSaving(true);
+
     const form = new FormData();
     form.append("email", formData.email);
     form.append("city", formData.city);
@@ -61,6 +97,7 @@ export default function CompleteProfilePage() {
     if (formData.logo) {
       form.append("logo", formData.logo);
     }
+
     try {
       const response = await assort_api.patch(
         APP_POINTS.ORGANIZATIONS + "complete-profile/",
@@ -76,19 +113,25 @@ export default function CompleteProfilePage() {
         setLoginData({
           user,
           organizations: organizations.map((org) =>
-            org.id === updatedOrg.id ? updatedOrg : org,
+            org.id === updatedOrg.id
+              ? { ...org, is_profile_completed: true }
+              : org,
           ),
         });
       }
-      setIsSaving(false);
-      navigate("/onboarding/subscription");
+
+      navigate("/onboarding/subscription", { replace: true });
     } catch (error) {
-      toast.error(error);
+      toast.error(error?.response?.data?.detail || "Something went wrong");
+    } finally {
       setIsSaving(false);
     }
   };
 
   const handleLogout = async () => await logout(false);
+
+  // Prevent render crash while loading
+  if (!activeOrganization) return null;
 
   return (
     <div
@@ -116,7 +159,6 @@ export default function CompleteProfilePage() {
           </button>
         </div>
 
-        {/* Form Card */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
           <form onSubmit={handleSave}>
             <div className="p-8 space-y-8">
@@ -125,6 +167,7 @@ export default function CompleteProfilePage() {
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   Organization Logo
                 </label>
+
                 <div className="flex items-center gap-4">
                   <div className="flex-shrink-0 relative">
                     {typeof formData.logo === "string" &&
@@ -137,10 +180,11 @@ export default function CompleteProfilePage() {
                     ) : (
                       <div className="w-16 h-16 rounded-lg bg-gray-300 flex items-center justify-center">
                         <span className="text-lg font-semibold text-gray-700">
-                          {getInitials(activeOrganization.title)}
+                          {getInitials(activeOrganization?.title || "")}
                         </span>
                       </div>
                     )}
+
                     {formData.logo && formData.logo.length > 20 && (
                       <button
                         type="button"
@@ -169,20 +213,19 @@ export default function CompleteProfilePage() {
                 </div>
               </div>
 
-              {/* Name & Email */}
+              {/* Name */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Organization Name
                 </label>
                 <input
                   disabled
-                  type="text"
-                  name="organizationName"
-                  value={activeOrganization.title}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  value={activeOrganization?.title || ""}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                 />
               </div>
 
+              {/* Email */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Contact Email
@@ -192,7 +235,7 @@ export default function CompleteProfilePage() {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                   required
                 />
               </div>
@@ -200,48 +243,35 @@ export default function CompleteProfilePage() {
               {/* City + Country */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <input
-                  type="text"
                   name="city"
                   value={formData.city}
                   onChange={handleInputChange}
                   placeholder="City"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                   required
                 />
                 <input
-                  type="text"
                   name="country"
                   value={formData.country}
                   onChange={handleInputChange}
                   placeholder="Country"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                   required
                 />
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="flex justify-end items-center px-8 py-6 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+            <div className="flex justify-end px-8 py-6 border-t bg-gray-50">
               <button
                 type="submit"
                 disabled={isSaving}
-                className="px-6 py-2 bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50 rounded-lg font-medium"
+                className="px-6 py-2 bg-gray-900 text-white rounded-lg"
               >
                 {isSaving ? "Saving..." : "Continue"}
               </button>
             </div>
           </form>
         </div>
-
-        {/* Subscription Modal */}
-        {showSubscriptionModal && (
-          <SubscriptionModal
-            isOpen={showSubscriptionModal}
-            onClose={() => setShowSubscriptionModal(false)}
-            title="Choose Your Plan"
-            description="Select a subscription or start a free trial to continue"
-          />
-        )}
       </div>
     </div>
   );
