@@ -19,22 +19,7 @@ const AdminOrganizationListPage = () => {
         const response = await assort_api.get(
           APP_POINTS.PLATFORM + "organizations/",
         );
-        // sample response.data = {
-        // "count": 3,
-        // "next": null,
-        // "previous": null,
-        // "results": [
-        //     {
-        //         "id": 4,
-        //         "title": "Test Org",
-        //         "email": "sayit55876@fun4k.com",
-        //         "logo": null,
-        //         "city": "Trivandrum",
-        //         "country": "India",
-        //         "is_active": true,
-        //         "created_at": "2026-03-25T17:03:47.943177Z"
-        //     }]}
-        setOrganizations(response.data.results);
+        setOrganizations(response.data);
       } catch (error) {
         console.error(error);
       }

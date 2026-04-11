@@ -19,9 +19,7 @@ const AdminSubscriptionListPage = () => {
     const fetchData = async () => {
       try {
         const response = await assort_api.get(APP_POINTS.PLATFORM + "plans/");
-        if (response.data.results) {
-          setPlans(response.data.results);
-        }
+        setPlans(response.data || []);
       } catch (error) {
         toast.error("Network Error");
       }

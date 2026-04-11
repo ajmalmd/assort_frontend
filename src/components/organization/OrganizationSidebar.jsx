@@ -69,7 +69,7 @@ export function OrganizationSidebar({
       {/* Mobile Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
           onClick={!disabled ? onClose : undefined}
         />
       )}
@@ -78,7 +78,7 @@ export function OrganizationSidebar({
       <aside
         className={`
     fixed left-0 top-0 h-screen bg-gray-50 border-r border-gray-200 
-    flex flex-col z-50 
+    flex flex-col z-20
     transition-[width,transform] duration-300 ease-in-out
 
     ${isOpen ? "translate-x-0" : "-translate-x-full"} 

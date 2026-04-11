@@ -172,7 +172,7 @@ export const SubscriptionModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed top-16 left-0 right-0 bottom-0 z-50 flex items-center justify-center bg-black/40 px-4">
+    <div className="fixed top-16 left-0 right-0 bottom-0 z-25 flex items-center justify-center bg-black/40 px-4">
       <div className="bg-white w-full max-w-5xl rounded-2xl shadow-xl p-6 md:p-10 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="text-center mb-10">

@@ -20,7 +20,7 @@ const MemberProfilePage = () => {
   const fetchProfile = async () => {
     try {
       const response = await assort_api.get(
-        APP_POINTS.ORGANIZATIONS + "profile",
+        APP_POINTS.ORGANIZATIONS + "profile/",
       );
 
       if (response.data.role === "OWNER") return;
@@ -57,7 +57,7 @@ const MemberProfilePage = () => {
       }
 
       await assort_api.patch(
-        APP_POINTS.ORGANIZATIONS + "update-profile",
+        APP_POINTS.ORGANIZATIONS + "update-profile/",
         formData,
         {
           headers: {

@@ -14,9 +14,9 @@ export function OrganizationTopBar({
     <div
       className={`
     fixed top-0 right-0 h-16 bg-white border-b border-gray-200 
-    flex items-center justify-between px-4 lg:px-8 z-30 
+    flex items-center justify-between px-4 lg:px-8
     transition-all duration-300
-    z-[60]
+    z-[30]
 
     left-0 
     ${sidebarCollapsed ? "lg:ml-20" : "lg:ml-48"}

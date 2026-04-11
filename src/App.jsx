@@ -43,8 +43,9 @@ import Profile from "./pages/organization/Profile";
 import OrganizationLayout from "./components/organization/OrganizationLayout";
 import Dashboard from "./pages/organization/Dashboard";
 import MembersPage from "./pages/organization/MembersPage";
-import MemberViewPage from "./pages/organization/MemberViewPage";
+import MemberDetailPage from "./pages/organization/MemberDetailPage";
 import DepartmentsPage from "./pages/organization/DepartmentsPage";
+import DepartmentDetailPage from "./pages/organization/DepartmentDetailPage";
 import ProjectsPage from "./pages/organization/ProjectsPage";
 import RolesPage from "./pages/organization/RolesPage";
 import JobsPage from "./pages/organization/JobsPage";
@@ -71,26 +72,28 @@ function App() {
 
         // determine active org FIRST
         let activeOrg = null;
+        if (!is_admin) {
+          if (organizations.length === 1) {
+            activeOrg = organizations[0];
+          } else if (organizations.length > 1) {
+            const activeOrgId = getActiveOrgId();
 
-        if (organizations.length === 1) {
-          activeOrg = organizations[0];
-        } else if (organizations.length > 1) {
-          const activeOrgId = getActiveOrgId();
+            activeOrg = organizations.find(
+              (org) => org.id === Number(activeOrgId),
+            );
+          }
 
-          activeOrg = organizations.find(
-            (org) => org.id === Number(activeOrgId),
-          );
+          if (activeOrg) {
+            setActiveOrganization(activeOrg);
+          }
+
+          if (window.location.pathname === "/login") {
+            const route = getPostLoginRoute(organizations);
+            navigate(route, { replace: true });
+          }
         }
-
-        if (activeOrg) {
-          setActiveOrganization(activeOrg);
-        }
-
-        if (window.location.pathname === "/login") {
-          const route = getPostLoginRoute(organizations);
-          navigate(route, { replace: true });
-        }
-      } catch {
+      } catch (err) {
+        console.log(err);
         clearAccessToken();
       } finally {
         setAuthReady(true);
@@ -143,8 +146,9 @@ function App() {
             <Route path="/app" element={<OrganizationLayout />}>
               <Route index element={<Dashboard />} />
               <Route path="members" element={<MembersPage />} />
-              <Route path="members/:id" element={<MemberViewPage />} />
+              <Route path="member/:id" element={<MemberDetailPage />} />
               <Route path="departments" element={<DepartmentsPage />} />
+              <Route path="department/:id" element={<DepartmentDetailPage />} />
               <Route path="projects" element={<ProjectsPage />} />
               <Route path="roles" element={<RolesPage />} />
               <Route path="jobs" element={<JobsPage />} />

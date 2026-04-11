@@ -7,4 +7,5 @@ export const APP_POINTS = {
   ORGANIZATIONS: "organizations/",
   INVITATIONS: "invitations/",
   SUBSCRIPTIONS: "subscriptions/",
+  DEPARTMENTS: "departments/",
 };

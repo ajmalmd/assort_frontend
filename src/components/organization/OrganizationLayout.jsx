@@ -9,7 +9,9 @@ import { SubscriptionModal } from "./SubscriptionModal";
 const TITLE_MAP = {
   "/app": "Dashboard",
   "/app/members": "Members",
+  "/app/member": "Member Details",
   "/app/departments": "Departments",
+  "/app/department": "Department Details",
   "/app/projects": "Projects",
   "/app/roles": "Roles",
   "/app/chats": "Chats",

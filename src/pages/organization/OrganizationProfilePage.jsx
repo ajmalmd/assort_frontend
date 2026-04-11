@@ -35,7 +35,7 @@ const OrganizationProfilePage = () => {
   const fetchData = async () => {
     try {
       const response = await assort_api.get(
-        APP_POINTS.ORGANIZATIONS + "profile",
+        APP_POINTS.ORGANIZATIONS + "profile/",
       );
 
       const data = response.data;
@@ -72,7 +72,7 @@ const OrganizationProfilePage = () => {
       }
 
       await assort_api.patch(
-        APP_POINTS.ORGANIZATIONS + "update-profile",
+        APP_POINTS.ORGANIZATIONS + "update-profile/",
         formData,
         {
           headers: {
@@ -93,7 +93,7 @@ const OrganizationProfilePage = () => {
     try {
       try {
         await assort_api.delete(
-          APP_POINTS.ORGANIZATIONS + "delete-organization",
+          APP_POINTS.ORGANIZATIONS + "delete-organization/",
         );
       } catch (err) {
         console.log("Delete error:", err);

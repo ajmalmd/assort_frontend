@@ -27,7 +27,7 @@ export function InviteMemberModal({ isOpen, onClose, onSendInvitation }) {
     const fetchDepartments = async () => {
       try {
         const response = await assort_api.get(
-          APP_POINTS.ORGANIZATIONS + "departments/",
+          APP_POINTS.ORGANIZATIONS + "department-options/",
         );
         if (response.data) setDepartments(response.data);
       } catch (error) {
@@ -106,8 +106,8 @@ export function InviteMemberModal({ isOpen, onClose, onSendInvitation }) {
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/40 z-40" />
-      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-lg shadow-lg z-50 mx-4">
+      <div className="fixed h-full inset-0 bg-black/30 z-[50]" />
+      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-lg shadow-lg z-50 mx-4 z-[65]">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
             <h2 className="text-2xl font-normal text-gray-900">

@@ -128,7 +128,7 @@ const MembersPage = () => {
                 <tr
                   key={member.id}
                   className="border-b border-gray-200 hover:bg-gray-50 cursor-pointer"
-                  onClick={() => navigate(`/app/members/${member.id}`)}
+                  onClick={() => navigate(`/app/member/${member.id}`)}
                 >
                   <td className="px-6 py-4 text-center text-sm font-medium text-gray-900">
                     {member.name}
