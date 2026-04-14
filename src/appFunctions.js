@@ -15,3 +15,11 @@ export const getInitials = (name = "") => {
 
   return name.slice(0, 2).toUpperCase();
 };
+
+export const formatDate_MmmDD_YYYY = (date) => {
+  return new Date(date).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};

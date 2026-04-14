@@ -29,7 +29,9 @@ import ProtectedPlatformRoute from "./components/platform/ProtectedPlatformRoute
 import PlatformLayout from "./components/platform/PlatformLayout";
 import AdminDashboardPage from "./pages/platform/AdminDashboardPage";
 import AdminUserListPage from "./pages/platform/AdminUserListPage";
+import UserDetailPage from "./pages/platform/UserDetailPage";
 import AdminOrganizationListPage from "./pages/platform/AdminOrganizationListPage";
+import OrganizationDetailPage from "./pages/platform/OrganizationDetailPage";
 import AdminSubscriptionListPage from "./pages/platform/AdminSubscriptionListPage";
 import AdminTicketsPage from "./pages/platform/AdminTicketsPage";
 
@@ -163,10 +165,12 @@ function App() {
               {/* Default page */}
               <Route index element={<AdminDashboardPage />} />
               <Route path="users" element={<AdminUserListPage />} />
+              <Route path="user/:id" element={<UserDetailPage />} />
               <Route
                 path="organizations"
                 element={<AdminOrganizationListPage />}
               />
+              <Route path="organization/:id" element={<OrganizationDetailPage />} />
               <Route path="tickets" element={<AdminTicketsPage />} />
               <Route
                 path="subscription-plans"

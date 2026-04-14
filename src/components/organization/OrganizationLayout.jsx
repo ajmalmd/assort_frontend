@@ -19,10 +19,6 @@ const TITLE_MAP = {
   "/app/timesheet": "Timesheet",
 };
 
-const DYNAMIC_TITLES = [
-  { match: (p) => p.startsWith("/app/members/"), title: "Member Details" },
-];
-
 const OrganizationLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -47,11 +43,9 @@ const OrganizationLayout = () => {
     activeOrganization?.role === "OWNER" &&
     ["NONE", "EXPIRED"].includes(activeOrganization?.subscription_status);
 
-  const dynamicMatch = DYNAMIC_TITLES.find((r) => r.match(pathname));
 
   const title =
     TITLE_MAP[pathname] ||
-    dynamicMatch?.title ||
     Object.entries(TITLE_MAP)
       .sort((a, b) => b[0].length - a[0].length)
       .find(([path]) => pathname.startsWith(path + "/"))?.[1] ||
