@@ -31,7 +31,10 @@ const getRoleColor = (role) => {
 };
 
 const OrganizationDetailPage = () => {
-  const [organization, setOrganization] = useState({ members: [] });
+  const [organization, setOrganization] = useState({
+    subscription_details: {},
+    members: [],
+  });
   const navigate = useNavigate();
   const { id } = useParams();
 
@@ -89,7 +92,7 @@ const OrganizationDetailPage = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="font-semibold">{organization.city}</div>
+            <div className="font-semibold">{organization.city || "--"}</div>
             <div className="text-sm text-muted-foreground">
               {organization.country}
             </div>
@@ -139,9 +142,16 @@ const OrganizationDetailPage = () => {
       </div>
 
       {/* Tabs for Members and Details */}
-      <Tabs defaultValue="members" className="space-y-4">
+      <Tabs
+        defaultValue={
+          organization.members.length > 0 ? "members" : "subscription"
+        }
+        className="space-y-4"
+      >
         <TabsList>
-          <TabsTrigger value="members">Members</TabsTrigger>
+          {organization.members.length > 0 && (
+            <TabsTrigger value="members">Members</TabsTrigger>
+          )}
           <TabsTrigger value="subscription">Subscription</TabsTrigger>
         </TabsList>
 
@@ -206,7 +216,7 @@ const OrganizationDetailPage = () => {
                   Current Plan
                 </div>
                 <div className="font-semibold">
-                  {organization.subscription_details.plan}
+                  {organization.subscription_details.plan || "--"}
                 </div>
               </div>
               <div>
@@ -217,7 +227,7 @@ const OrganizationDetailPage = () => {
                   variant="default"
                   className="bg-green-100 text-green-800 hover:bg-green-100"
                 >
-                  {formatEnum(organization.subscription_details.status)}
+                  {formatEnum(organization.subscription_details.status) || ""}
                 </Badge>
               </div>
               <div>
@@ -225,7 +235,7 @@ const OrganizationDetailPage = () => {
                   Start Date
                 </div>
                 <div className="font-semibold">
-                  {organization.subscription_details.start_date}
+                  {organization.subscription_details.start_date || "--"}
                 </div>
               </div>
               <div>
@@ -233,7 +243,7 @@ const OrganizationDetailPage = () => {
                   End Date
                 </div>
                 <div className="font-semibold">
-                  {organization.subscription_details.end_date}
+                  {organization.subscription_details.end_date || "--"}
                 </div>
               </div>
             </CardContent>
