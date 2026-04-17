@@ -49,6 +49,7 @@ import MemberDetailPage from "./pages/organization/MemberDetailPage";
 import DepartmentsPage from "./pages/organization/DepartmentsPage";
 import DepartmentDetailPage from "./pages/organization/DepartmentDetailPage";
 import ProjectsPage from "./pages/organization/ProjectsPage";
+import ProjectDetailPage from "./pages/organization/ProjectDetailPage";
 import RolesPage from "./pages/organization/RolesPage";
 import JobsPage from "./pages/organization/JobsPage";
 import TimesheetPage from "./pages/organization/TimesheetPage";
@@ -152,6 +153,7 @@ function App() {
               <Route path="departments" element={<DepartmentsPage />} />
               <Route path="department/:id" element={<DepartmentDetailPage />} />
               <Route path="projects" element={<ProjectsPage />} />
+              <Route path="project/:id" element={<ProjectDetailPage />} />
               <Route path="roles" element={<RolesPage />} />
               <Route path="jobs" element={<JobsPage />} />
               <Route path="timesheet" element={<TimesheetPage />} />
@@ -170,7 +172,10 @@ function App() {
                 path="organizations"
                 element={<AdminOrganizationListPage />}
               />
-              <Route path="organization/:id" element={<OrganizationDetailPage />} />
+              <Route
+                path="organization/:id"
+                element={<OrganizationDetailPage />}
+              />
               <Route path="tickets" element={<AdminTicketsPage />} />
               <Route
                 path="subscription-plans"

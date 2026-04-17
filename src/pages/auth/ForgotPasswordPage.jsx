@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      await assort_api.post(APP_POINTS.AUTH + "forgot/", {
+      await assort_api.post(APP_POINTS.AUTH + "forgot-password/", {
         email: normalizedEmail,
       });
 
@@ -47,6 +47,8 @@ export default function ForgotPasswordPage() {
 
       navigate("/verify-otp", { state: { type: "forgot-password" } });
     } catch (error) {
+      console.log(error);
+      
       if (!error.response) {
         setError("Network error. Please try again.");
       } else {

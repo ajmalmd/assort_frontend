@@ -10,35 +10,35 @@ import {
 const mockProjects = [
   {
     id: "1",
-    name: "Web App Development",
-    members: 8,
-    overallProgress: 75,
-    milestones: [
+    title: "Web App Development",
+    members_count: 8,
+    overall_progress: 75,
+    phases: [
       {
         id: "m1",
         title: "Frontend Setup",
-        dueDate: "2024-03-15",
-        completionRate: 100,
+        due_date: "2024-03-15",
+        completion_rate: 100,
         tasks: [
           {
             id: "t1",
             title: "Design System",
-            taskLead: "John Doe",
+            task_lead: "John Doe",
             status: "Completed",
             jobs: [
               {
                 id: "j1",
                 title: "Create Components",
-                assignedTo: "Alice",
-                hoursWorked: 40,
-                hoursEstimated: 40,
+                assigned_to: "Alice",
+                total_worked_hours: 40,
+                estimated_hours: 40,
               },
               {
                 id: "j2",
                 title: "Setup Styling",
-                assignedTo: "Bob",
-                hoursWorked: 35,
-                hoursEstimated: 35,
+                assigned_to: "Bob",
+                total_worked_hours: 35,
+                estimated_hours: 35,
               },
             ],
           },
@@ -47,36 +47,36 @@ const mockProjects = [
       {
         id: "m2",
         title: "Backend API",
-        dueDate: "2024-03-31",
-        completionRate: 60,
+        due_date: "2024-03-31",
+        completion_rate: 60,
         tasks: [
           {
             id: "t2",
             title: "Database Schema",
-            taskLead: "Sarah Smith",
+            task_lead: "Sarah Smith",
             status: "In Progress",
             jobs: [
               {
                 id: "j3",
                 title: "Design Tables",
-                assignedTo: "Charlie",
-                hoursWorked: 24,
-                hoursEstimated: 30,
+                assigned_to: "Charlie",
+                total_worked_hours: 24,
+                estimated_hours: 30,
               },
             ],
           },
           {
             id: "t3",
             title: "API Endpoints",
-            taskLead: "Sarah Smith",
+            task_lead: "Sarah Smith",
             status: "Not Started",
             jobs: [
               {
                 id: "j4",
                 title: "REST API",
-                assignedTo: "David",
-                hoursWorked: 0,
-                hoursEstimated: 40,
+                assigned_to: "David",
+                total_worked_hours: 0,
+                estimated_hours: 40,
               },
             ],
           },
@@ -86,28 +86,28 @@ const mockProjects = [
   },
   {
     id: "2",
-    name: "Mobile App Design",
-    members: 5,
-    overallProgress: 60,
-    milestones: [
+    title: "Mobile App Design",
+    members_count: 5,
+    overall_progress: 60,
+    phases: [
       {
         id: "m3",
         title: "UI Design",
-        dueDate: "2024-03-20",
-        completionRate: 80,
+        due_date: "2024-03-20",
+        completion_rate: 80,
         tasks: [
           {
             id: "t4",
             title: "Wireframes",
-            taskLead: "Emma Wilson",
+            task_lead: "Emma Wilson",
             status: "In Progress",
             jobs: [
               {
                 id: "j5",
                 title: "Create Mockups",
-                assignedTo: "Frank",
-                hoursWorked: 32,
-                hoursEstimated: 40,
+                assigned_to: "Frank",
+                total_worked_hours: 32,
+                estimated_hours: 40,
               },
             ],
           },
@@ -125,25 +125,25 @@ export default function ManagerDashboardPage() {
   const selectedProject =
     mockProjects.find((p) => p.id === selectedProjectId) || mockProjects[0];
 
-  const allJobs = selectedProject.milestones.flatMap((m) =>
+  const allJobs = selectedProject.phases.flatMap((m) =>
     m.tasks.flatMap((t) => t.jobs),
   );
 
   const totalHoursWorked = allJobs.reduce(
-    (sum, job) => sum + job.hoursWorked,
+    (sum, job) => sum + job.total_worked_hours,
     0,
   );
   const totalHoursEstimated = allJobs.reduce(
-    (sum, job) => sum + job.hoursEstimated,
+    (sum, job) => sum + job.estimated_hours,
     0,
   );
 
-  const totalTasks = selectedProject.milestones.reduce(
+  const totalTasks = selectedProject.phases.reduce(
     (sum, m) => sum + m.tasks.length,
     0,
   );
 
-  const completedTasks = selectedProject.milestones.reduce(
+  const completedTasks = selectedProject.phases.reduce(
     (sum, m) => sum + m.tasks.filter((t) => t.status === "Completed").length,
     0,
   );
@@ -175,7 +175,7 @@ export default function ManagerDashboardPage() {
         >
           {mockProjects.map((project) => (
             <option key={project.id} value={project.id}>
-              {project.name}
+              {project.title}
             </option>
           ))}
         </select>
@@ -185,12 +185,12 @@ export default function ManagerDashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Team Members"
-          value={selectedProject.members}
+          value={selectedProject.members_count}
           icon={<Users size={32} className="text-blue-500" />}
         />
         <StatCard
-          title="Active Milestones"
-          value={selectedProject.milestones.length}
+          title="Active Phases"
+          value={selectedProject.phases.length}
           icon={<FolderKanban size={32} className="text-green-500" />}
         />
         <StatCard
@@ -207,39 +207,39 @@ export default function ManagerDashboardPage() {
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Milestones */}
+        {/* Phases */}
         <div className="lg:col-span-2 space-y-4">
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h2 className="text-lg font-bold text-gray-900 mb-4">
-              Milestones & Tasks
+              Phases & Tasks
             </h2>
 
-            {selectedProject.milestones.map((milestone) => (
+            {selectedProject.phases.map((phase) => (
               <div
-                key={milestone.id}
+                key={phase.id}
                 className="border border-gray-200 rounded-lg p-4 mb-4"
               >
                 <div className="flex justify-between mb-3">
-                  <h3 className="font-semibold">{milestone.title}</h3>
+                  <h3 className="font-semibold">{phase.title}</h3>
                   <span className="text-sm text-gray-600">
-                    Due: {milestone.dueDate}
+                    Due: {phase.due_date}
                   </span>
                 </div>
 
                 <div className="mb-3">
                   <div className="flex justify-between text-sm">
                     <span>Progress</span>
-                    <span>{milestone.completionRate}%</span>
+                    <span>{phase.completion_rate}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
                     <div
                       className="bg-gray-900 h-2 rounded-full"
-                      style={{ width: `${milestone.completionRate}%` }}
+                      style={{ width: `${phase.completion_rate}%` }}
                     />
                   </div>
                 </div>
 
-                {milestone.tasks.map((task) => (
+                {phase.tasks.map((task) => (
                   <div
                     key={task.id}
                     className="bg-gray-50 p-3 rounded border border-gray-100 mb-2"
@@ -255,7 +255,7 @@ export default function ManagerDashboardPage() {
                       </span>
                     </div>
                     <p className="text-xs text-gray-600">
-                      Task Lead: {task.taskLead}
+                      Task Lead: {task.task_lead}
                     </p>
                     <p className="text-xs text-gray-600">
                       Jobs: {task.jobs.length}
@@ -276,14 +276,14 @@ export default function ManagerDashboardPage() {
             <div className="flex justify-between mb-2">
               <span>Overall Completion</span>
               <span className="font-bold">
-                {selectedProject.overallProgress}%
+                {selectedProject.overall_progress}%
               </span>
             </div>
 
             <div className="w-full bg-gray-200 rounded-full h-3">
               <div
                 className="bg-gray-900 h-3 rounded-full"
-                style={{ width: `${selectedProject.overallProgress}%` }}
+                style={{ width: `${selectedProject.overall_progress}%` }}
               />
             </div>
 
@@ -305,20 +305,20 @@ export default function ManagerDashboardPage() {
             <h2 className="text-lg font-bold mb-4">Top Performers</h2>
 
             {[
-              { name: "Alice", hours: 40 },
-              { name: "Bob", hours: 35 },
-              { name: "Charlie", hours: 24 },
+              { full_name: "Alice", hours: 40 },
+              { full_name: "Bob", hours: 35 },
+              { full_name: "Charlie", hours: 24 },
             ].map((member) => (
               <div
-                key={member.name}
+                key={member.full_name}
                 className="flex justify-between items-center pb-2 border-b last:border-0"
               >
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-sm font-bold">
-                    {member.name[0]}
+                    {member.full_name[0]}
                   </div>
                   <div>
-                    <p className="text-sm font-medium">{member.name}</p>
+                    <p className="text-sm font-medium">{member.full_name}</p>
                     <p className="text-xs text-gray-600">
                       {member.hours}h worked
                     </p>

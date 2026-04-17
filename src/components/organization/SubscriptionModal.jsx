@@ -49,7 +49,7 @@ export const SubscriptionModal = ({
     setLoading(true);
     assort_api
       .get(APP_POINTS.SUBSCRIPTIONS + "plans/")
-      .then((res) => setPlans(res.data?.results || []))
+      .then((res) => setPlans(res.data || []))
       .catch(() => setPlans([]))
       .finally(() => setLoading(false));
   }, [isOpen]);
@@ -251,6 +251,10 @@ export const SubscriptionModal = ({
         {/* Trial */}
         {activeOrganization.subscription_status === "NONE" && (
           <div className="text-center mb-6">
+            <div className="mb-1">
+              You can start free trial for 7 days with a Projects, Members and
+              Storage limit of Basic plan.
+            </div>
             <Button variant="outline" disabled={isSaving} onClick={handleTrial}>
               {isSaving ? "Starting..." : "Start Free Trial"}
             </Button>

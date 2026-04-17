@@ -70,8 +70,8 @@ export default function SetPasswordPage() {
     }
 
     try {
-      await assort_api.post(setPasswordUrl, reqBody);
-      toast.success("Organization created successfully")
+      const res = await assort_api.post(setPasswordUrl, reqBody);
+      toast.success(res.data?.message || "Successful! Login now");
       clearFlow();
       navigate("/login");
     } catch (err) {
