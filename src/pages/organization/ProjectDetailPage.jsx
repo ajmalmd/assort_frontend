@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChevronDown, ChevronRight, Users, X, Plus, Edit } from "lucide-react";
+import { ChevronDown, ChevronRight, Edit, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EditProjectModal } from "@/components/organization/EditProjectModal";
 import { AddPhaseModal } from "@/components/organization/AddPhaseModal";
@@ -22,153 +22,8 @@ import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
 import { formatEnum } from "@/appFunctions";
 
-const mockProjectDetail = {
-  details: {
-    id: 1,
-    title: "Mobile App Redesign",
-    description: "Comprehensive redesign of the mobile application interface",
-    project_manager: { id: 2, full_name: "Robert King" },
-    members_count: 6,
-    status: "In Progress",
-    progress: 65,
-  },
-  phase: [
-    {
-      id: 2,
-      list_position: 1,
-      title: "Design & Planning",
-      description:
-        "Comprehensive redesign of the mobile application interface and Comprehensive redesign of the mobile application interface",
-      status: "Completed",
-      tasks: [
-        {
-          id: 101,
-          title: "Create wireframes and mockups",
-          task_lead: { id: 101, full_name: "John Smith" },
-          deadline: "2024-01-20",
-          completed_jobs: 5,
-          total_jobs: 5,
-          jobs: [
-            {
-              id: 10001,
-              title: "Create layout structure",
-              assigned_to: { id: 103, full_name: "Mike Chen" },
-              deadline: "2024-01-14",
-              hours_worked: 8,
-              expected_hours: 10,
-            },
-            {
-              id: 10002,
-              title: "Add navigation elements",
-              assigned_to: { id: 104, full_name: "Emma Wilson" },
-              deadline: "2024-01-14",
-              hours_worked: 6,
-              expected_hours: 8,
-            },
-            {
-              id: 10003,
-              title: "Review and finalize",
-              assigned_to: { id: 103, full_name: "Mike Chen" },
-              deadline: "2024-01-15",
-              hours_worked: 4,
-              expected_hours: 6,
-            },
-            {
-              id: 10004,
-              title: "Design widgets",
-              assigned_to: { id: 104, full_name: "Emma Wilson" },
-              deadline: "2024-01-17",
-              hours_worked: 10,
-              expected_hours: 12,
-            },
-            {
-              id: 10005,
-              title: "Create components library",
-              assigned_to: { id: 105, full_name: "David Lee" },
-              deadline: "2024-01-18",
-              hours_worked: 12,
-              expected_hours: 16,
-            },
-          ],
-        },
-        {
-          id: 102,
-          title: "Conduct user research",
-          task_lead: { id: 105, full_name: "David Lee" },
-          deadline: "2024-01-25",
-          completed_jobs: 2,
-          total_jobs: 2,
-          jobs: [
-            {
-              id: 10006,
-              title: "Schedule interviews",
-              assigned_to: { id: 105, full_name: "David Lee" },
-              deadline: "2024-01-20",
-              hours_worked: 5,
-              expected_hours: 6,
-            },
-            {
-              id: 10007,
-              title: "Compile survey data",
-              assigned_to: { id: 106, full_name: "Lisa Anderson" },
-              deadline: "2024-01-22",
-              hours_worked: 7,
-              expected_hours: 10,
-            },
-          ],
-        },
-      ],
-    },
-    {
-      id: 1,
-      list_position: 2,
-      title: "Development",
-      status: "In Progress",
-      tasks: [
-        {
-          id: 201,
-          title: "Frontend development setup",
-          task_lead: { id: 101, full_name: "John Smith" },
-          deadline: "2024-02-10",
-          completed_jobs: 3,
-          total_jobs: 3,
-          jobs: [
-            {
-              id: 20001,
-              title: "Setup React project",
-              assigned_to: { id: 101, full_name: "John Smith" },
-              deadline: "2024-01-28",
-              hours_worked: 8,
-              expected_hours: 10,
-            },
-            {
-              id: 20002,
-              title: "Configure build tools",
-              assigned_to: { id: 102, full_name: "Sarah Johnson" },
-              deadline: "2024-01-29",
-              hours_worked: 6,
-              expected_hours: 8,
-            },
-            {
-              id: 20003,
-              title: "Setup linting and formatting",
-              assigned_to: { id: 101, full_name: "John Smith" },
-              deadline: "2024-01-30",
-              hours_worked: 4,
-              expected_hours: 6,
-            },
-          ],
-        },
-      ],
-    },
-  ],
-};
-
 export default function ProjectDetailPage() {
-  const [expandedPhases, setExpandedPhases] = useState({
-    1: true,
-    2: true,
-  });
+  const [expandedPhases, setExpandedPhases] = useState({});
   const [expandedTasks, setExpandedTasks] = useState({});
 
   const [addTaskModalOpen, setAddTaskModalOpen] = useState(false);
@@ -176,79 +31,84 @@ export default function ProjectDetailPage() {
   const [editProjectModalOpen, setEditProjectModalOpen] = useState(false);
   const [addPhaseModalOpen, setAddPhaseModalOpen] = useState(false);
   const [editPhasesModalOpen, setEditPhasesModalOpen] = useState(false);
-  const [project, setProject] = useState(mockProjectDetail.details);
-  const [phases, setPhases] = useState(mockProjectDetail.phase);
+
+  const [project, setProject] = useState(null);
+  const [phases, setPhases] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
   const { projectId } = useParams();
 
   useEffect(() => {
+    if (!projectId) return;
+
     const fetchProjectDetail = async () => {
-      const res = await assort_api.get(
-        `${APP_POINTS.PROJECTS}project/${projectId}/`,
-      );
-      const {
-        id,
-        title,
-        description,
-        status,
-        deadline,
-        progress,
-        members_count,
-        project_manager,
-        phase,
-      } = res.data;
+      setLoading(true);
+      try {
+        const res = await assort_api.get(
+          `${APP_POINTS.PROJECTS}project/${projectId}/`,
+        );
 
-      // const mockResponse = {
-      //   id: 1,
-      //   title: "Attendance",
-      //   description: "",
-      //   status: "PLANNED",
-      //   progress: 0,
-      //   members_count: 1,
-      //   project_manager: {
-      //     id: 18,
-      //     full_name: "User 001",
-      //   },
-      //   phases: [],
-      // };
+        const {
+          id,
+          title,
+          description,
+          status,
+          deadline,
+          progress,
+          members_count,
+          project_manager,
+          phase,
+        } = res.data;
 
-      const details = {
-        id: id,
-        title: title,
-        description: description || "",
-        status: status,
-        deadline: deadline || "",
-        progress: progress || 0,
-        members_count: members_count || 0,
-        project_manager: project_manager || { id: "", full_name: "" },
-      };
-      setProject(details);
-      setPhases(phase || []);
+        setProject({
+          id,
+          title,
+          description: description || "",
+          status,
+          deadline: deadline || "",
+          progress: progress || 0,
+          members_count: members_count || 0,
+          project_manager: project_manager || { id: "", full_name: "" },
+        });
+
+        setPhases(phase || []);
+      } catch (error) {
+        console.error("Failed to fetch project:", error);
+      } finally {
+        setLoading(false);
+      }
     };
+
     fetchProjectDetail();
-  }, []);
+  }, [projectId]);
 
   const togglePhase = (id) => {
-    setExpandedPhases((prev) => ({ ...prev, [id]: !prev[id] }));
+    const key = String(id);
+    setExpandedPhases((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   const toggleTask = (id) => {
-    setExpandedTasks((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
-
-  const openTaskDetail = (taskId) => {
-    // navigate(`/app/task/${taskId}`);
+    const key = String(id);
+    setExpandedTasks((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   const handlePhaseReorder = (reorderedPhases) => {
     setPhases(reorderedPhases);
   };
 
+  if (loading) {
+    return <div className="text-center py-10">Loading...</div>;
+  }
+
+  if (!project) {
+    return <div className="text-center py-10">Project not found</div>;
+  }
+
   return (
     <div className="space-y-6">
       <BackButton onClick={() => navigate(-1)} />
-      {/* Info Tab */}
+
       <Tabs defaultValue="info" className="w-full">
         <TabsList className="grid w-full grid-cols-4 lg:w-[400px]">
           <TabsTrigger value="info">Info</TabsTrigger>
@@ -258,7 +118,6 @@ export default function ProjectDetailPage() {
         </TabsList>
 
         <TabsContent value="info" className="space-y-6">
-          {/* Project Header */}
           <Card>
             <CardHeader>
               <div className="flex items-start justify-between gap-4">
@@ -284,6 +143,7 @@ export default function ProjectDetailPage() {
                 </div>
               </div>
             </CardHeader>
+
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
@@ -309,6 +169,7 @@ export default function ProjectDetailPage() {
                   <p className="text-sm font-medium">{project.progress}%</p>
                 </div>
               </div>
+
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-sm">
                   <span className="font-medium">Overall Progress</span>
@@ -326,7 +187,6 @@ export default function ProjectDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Add Phase and Edit Phases Buttons */}
           <div className="flex justify-end gap-2">
             {phases.length > 0 && (
               <Button
@@ -348,14 +208,19 @@ export default function ProjectDetailPage() {
             </Button>
           </div>
 
-          {/* Phases, Tasks, and Jobs */}
           <div className="space-y-4">
+            {phases.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center">
+                No phases yet
+              </p>
+            )}
+
             {phases.map((phase) => (
               <Card key={phase.id}>
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between w-full">
                     <button
-                      onClick={() => togglePhase(String(phase.id))}
+                      onClick={() => togglePhase(phase.id)}
                       className="flex items-center gap-2 flex-1 hover:opacity-75"
                     >
                       {expandedPhases[String(phase.id)] ? (
@@ -363,18 +228,12 @@ export default function ProjectDetailPage() {
                       ) : (
                         <ChevronRight className="h-4 w-4" />
                       )}
-                      <CardTitle
-                        className="text-base"
-                        onClick={() => {
-                          console.log(phase.title);
-                        }}
-                      >
-                        {phase.title}
-                      </CardTitle>
+                      <CardTitle className="text-base">{phase.title}</CardTitle>
                       <Badge variant="outline" className="ml-auto">
                         {phase.status}
                       </Badge>
                     </button>
+
                     {expandedPhases[String(phase.id)] && (
                       <Button
                         size="sm"
@@ -391,6 +250,7 @@ export default function ProjectDetailPage() {
                     )}
                   </div>
                 </CardHeader>
+
                 {phase.description && (
                   <CardDescription className="pl-6 pb-2">
                     {phase.description}
@@ -399,14 +259,13 @@ export default function ProjectDetailPage() {
 
                 {expandedPhases[String(phase.id)] && (
                   <CardContent className="space-y-3 border-t pt-3">
-                    {/* Tasks */}
-                    {phase.tasks.map((task) => (
+                    {phase.tasks?.map((task) => (
                       <div
                         key={task.id}
                         className="space-y-2 bg-muted/30 rounded-lg p-3"
                       >
                         <button
-                          onClick={() => toggleTask(String(task.id))}
+                          onClick={() => toggleTask(task.id)}
                           className="flex items-center gap-2 w-full hover:opacity-75"
                         >
                           {expandedTasks[String(task.id)] ? (
@@ -424,10 +283,6 @@ export default function ProjectDetailPage() {
                             <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                               <span>Lead: {task.task_lead?.full_name}</span>
                               <span>Deadline: {task.deadline}</span>
-                              {/* <div className="flex items-center gap-1 hover:text-foreground">
-                                <Users className="h-3 w-3" />
-                                {task.members_count}
-                              </div> */}
                               <span>
                                 Jobs: {task.completed_jobs}/{task.total_jobs}
                               </span>
@@ -473,7 +328,6 @@ export default function ProjectDetailPage() {
         </TabsContent>
 
         <TabsContent value="members">
-          {/* <MembersTab projectName={project.title} /> */}
           <ProjectMembersTab projectId={projectId} />
         </TabsContent>
 
@@ -503,6 +357,7 @@ export default function ProjectDetailPage() {
       <AddTaskModal
         open={addTaskModalOpen}
         onOpenChange={setAddTaskModalOpen}
+        phaseId={selectedPhaseId}
       />
     </div>
   );

@@ -28,6 +28,7 @@ export function AddProjectMembersModal({
   onOpenChange,
   projectId,
   roles,
+  refreshMembers,
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const [orgMembers, setOrgMembers] = useState([]);
@@ -37,20 +38,29 @@ export function AddProjectMembersModal({
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    const fetchOrgMembers = async () => {
-      const res = await assort_api.get(
-        `${APP_POINTS.PROJECTS}member-options/${projectId}/`,
-      );
-      setOrgMembers(res.data);
-    };
-    fetchOrgMembers();
-  }, []);
+    if (!projectId) return;
 
-  const filteredMembers = orgMembers?.filter(
-    (member) =>
-      member.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      member.email.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+    const fetchOrgMembers = async () => {
+      try {
+        const res = await assort_api.get(
+          `${APP_POINTS.PROJECTS}member-options/${projectId}/`,
+        );
+        setOrgMembers(res.data || []);
+      } catch (err) {
+        console.error("Failed to fetch org members:", err);
+      }
+    };
+
+    fetchOrgMembers();
+  }, [projectId]);
+
+  const filteredMembers = (orgMembers || []).filter((member) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      member.full_name?.toLowerCase().includes(q) ||
+      member.email?.toLowerCase().includes(q)
+    );
+  });
 
   const handleMemberToggle = (memberId) => {
     setSelectedMembers((prev) =>
@@ -66,26 +76,36 @@ export function AddProjectMembersModal({
     const finalRole =
       projectRole === "__custom__" ? customRole.trim() : projectRole;
 
-    if (!finalRole) return;
+    if (!finalRole || selectedMembers.length === 0) return;
 
     setIsLoading(true);
     try {
       await assort_api.post(
         `${APP_POINTS.PROJECTS}project/add-members/${projectId}/`,
-        { members: selectedMembers, role: finalRole },
+        {
+          members: selectedMembers,
+          role: finalRole,
+        },
       );
-      setIsLoading(false);
+
+      toast.success("Members added successfully");
+
+      // refresh parent list
+      refreshMembers?.();
+
+      // reset modal state
+      setSelectedMembers([]);
+      setProjectRole("");
+      setCustomRole("");
+      setSearchQuery("");
+
       onOpenChange(false);
     } catch (error) {
       console.error(error);
       toast.error("Couldn't add members");
+    } finally {
+      setIsLoading(false);
     }
-
-    // Reset state
-    setSelectedMembers([]);
-    setProjectRole("");
-    setCustomRole("");
-    setSearchQuery("");
   };
 
   return (
@@ -93,9 +113,7 @@ export function AddProjectMembersModal({
       <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Add Members to Project</DialogTitle>
-          <DialogDescription>
-            Select members to add to this project and assign their role.
-          </DialogDescription>
+          <DialogDescription>Select members and assign role.</DialogDescription>
         </DialogHeader>
 
         <form
@@ -104,9 +122,8 @@ export function AddProjectMembersModal({
         >
           {/* Search */}
           <div className="space-y-2">
-            <Label htmlFor="search">Search Members</Label>
+            <Label>Search Members</Label>
             <Input
-              id="search"
               placeholder="Search by name or email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -114,8 +131,8 @@ export function AddProjectMembersModal({
           </div>
 
           {/* Members List */}
-          <div className="flex-1 overflow-hidden border rounded-lg">
-            <ScrollArea className="h-full w-full">
+          <div className="h-64 border rounded-lg overflow-hidden">
+            <ScrollArea className="h-full">
               <div className="p-4 space-y-2">
                 {filteredMembers.length > 0 ? (
                   filteredMembers.map((member) => (
@@ -124,21 +141,17 @@ export function AddProjectMembersModal({
                       className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50"
                     >
                       <Checkbox
-                        id={`member-${member.id}`}
                         checked={selectedMembers.includes(member.id)}
                         onCheckedChange={() => handleMemberToggle(member.id)}
                       />
-                      <label
-                        htmlFor={`member-${member.id}`}
-                        className="flex-1 cursor-pointer"
-                      >
+                      <div>
                         <p className="font-medium text-sm">
                           {member.full_name}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {member.email}
                         </p>
-                      </label>
+                      </div>
                     </div>
                   ))
                 ) : (
@@ -150,29 +163,26 @@ export function AddProjectMembersModal({
             </ScrollArea>
           </div>
 
-          {/* Role Selection */}
+          {/* Role */}
           <div className="space-y-2">
-            <Label htmlFor="project-role">Assign Project Role</Label>
+            <Label>Assign Role</Label>
 
             <Select
               value={projectRole}
               onValueChange={(value) => {
                 setProjectRole(value);
-                if (value !== "__custom__") {
-                  setCustomRole("");
-                }
+                if (value !== "__custom__") setCustomRole("");
               }}
-              required
             >
-              <SelectTrigger id="project-role">
-                <SelectValue placeholder="Select a role for selected members" />
+              <SelectTrigger>
+                <SelectValue placeholder="Select role" />
               </SelectTrigger>
 
               <SelectContent>
-                <SelectItem value={null}>Select Role</SelectItem>
                 <SelectItem value="__custom__">+ Add new role</SelectItem>
-                {roles.map((role, ind) => (
-                  <SelectItem key={ind} value={role}>
+
+                {roles?.map((role, i) => (
+                  <SelectItem key={i} value={role}>
                     {role}
                   </SelectItem>
                 ))}
@@ -180,15 +190,14 @@ export function AddProjectMembersModal({
             </Select>
           </div>
 
-          {/* Custom Role Input */}
+          {/* Custom Role */}
           {projectRole === "__custom__" && (
             <div className="space-y-2">
-              <Label htmlFor="custom-role">New Role</Label>
+              <Label>New Role</Label>
               <Input
-                id="custom-role"
-                placeholder="Enter new role..."
                 value={customRole}
                 onChange={(e) => setCustomRole(e.target.value)}
+                placeholder="Enter role"
               />
             </div>
           )}
@@ -198,7 +207,10 @@ export function AddProjectMembersModal({
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={() => {
+                setProjectRole(null);
+                onOpenChange(false);
+              }}
             >
               Cancel
             </Button>
@@ -214,9 +226,7 @@ export function AddProjectMembersModal({
             >
               {isLoading
                 ? "Adding..."
-                : `Add ${selectedMembers.length} Member${
-                    selectedMembers.length !== 1 ? "s" : ""
-                  }`}
+                : `Add ${selectedMembers.length} Member(s)`}
             </Button>
           </DialogFooter>
         </form>
