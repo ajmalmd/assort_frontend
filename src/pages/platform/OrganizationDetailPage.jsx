@@ -15,7 +15,7 @@ import { useNavigate, useParams } from "react-router";
 import BackButton from "@/components/ui/backButton";
 import { formatDate_MmmDD_YYYY, formatEnum, getInitials } from "@/appFunctions";
 import assort_api from "@/api/axios";
-import { APP_POINTS } from "@/api/apiConfig";
+import { APP_POINTS, MEDIA_URL } from "@/api/apiConfig";
 
 const getRoleColor = (role) => {
   switch (role) {
@@ -61,7 +61,7 @@ const OrganizationDetailPage = () => {
           <img
             src={organization.logo}
             alt="Organization logo"
-            className="w-20 h-20 rounded-lg object-contain bg-gray-100"
+            className="w-20 h-20 rounded-lg object-fill bg-gray-100"
           />
         ) : (
           <div className="h-20 w-20 rounded-lg bg-muted flex items-center justify-center text-2xl font-bold">

@@ -190,7 +190,7 @@ export function ProjectUpdatesTab() {
                       <img
                         src={file.file_data}
                         alt={file.file_name}
-                        className="h-16 w-16 object-cover rounded"
+                        className="h-16 w-16 object-fill rounded"
                       />
                     ) : (
                       <ImageIcon className="h-8 w-8 text-primary flex-shrink-0" />
@@ -224,7 +224,7 @@ export function ProjectUpdatesTab() {
               <img
                 src={selectedFile.file_data}
                 alt={selectedFile.file_name}
-                className="max-w-full max-h-[60vh] object-contain"
+                className="max-w-full max-h-[60vh] object-fill"
               />
             ) : (
               <div className="text-center space-y-2">

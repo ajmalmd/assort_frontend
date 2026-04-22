@@ -1,5 +1,11 @@
-import { useState } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardDescription,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChevronDown, ChevronRight, Users, X, Plus, Edit } from "lucide-react";
@@ -9,8 +15,12 @@ import { AddPhaseModal } from "@/components/organization/AddPhaseModal";
 import { EditPhasesModal } from "@/components/organization/EditPhasesModal";
 import { AddTaskModal } from "@/components/organization/AddTaskModal";
 import BackButton from "@/components/ui/backButton";
-import { useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { ProjectUpdatesTab } from "@/components/organization/ProjectUpdatesTab";
+import { ProjectMembersTab } from "@/components/organization/ProjectMembersTab";
+import assort_api from "@/api/axios";
+import { APP_POINTS } from "@/api/apiConfig";
+import { formatEnum } from "@/appFunctions";
 
 const mockProjectDetail = {
   details: {
@@ -27,6 +37,8 @@ const mockProjectDetail = {
       id: 2,
       list_position: 1,
       title: "Design & Planning",
+      description:
+        "Comprehensive redesign of the mobile application interface and Comprehensive redesign of the mobile application interface",
       status: "Completed",
       tasks: [
         {
@@ -34,7 +46,6 @@ const mockProjectDetail = {
           title: "Create wireframes and mockups",
           task_lead: { id: 101, full_name: "John Smith" },
           deadline: "2024-01-20",
-          members_count: 3,
           completed_jobs: 5,
           total_jobs: 5,
           jobs: [
@@ -85,7 +96,6 @@ const mockProjectDetail = {
           title: "Conduct user research",
           task_lead: { id: 105, full_name: "David Lee" },
           deadline: "2024-01-25",
-          members_count: 2,
           completed_jobs: 2,
           total_jobs: 2,
           jobs: [
@@ -120,7 +130,6 @@ const mockProjectDetail = {
           title: "Frontend development setup",
           task_lead: { id: 101, full_name: "John Smith" },
           deadline: "2024-02-10",
-          members_count: 3,
           completed_jobs: 3,
           total_jobs: 3,
           jobs: [
@@ -171,6 +180,54 @@ export default function ProjectDetailPage() {
   const [phases, setPhases] = useState(mockProjectDetail.phase);
 
   const navigate = useNavigate();
+  const { projectId } = useParams();
+
+  useEffect(() => {
+    const fetchProjectDetail = async () => {
+      const res = await assort_api.get(
+        `${APP_POINTS.PROJECTS}project/${projectId}/`,
+      );
+      const {
+        id,
+        title,
+        description,
+        status,
+        deadline,
+        progress,
+        members_count,
+        project_manager,
+        phase,
+      } = res.data;
+
+      // const mockResponse = {
+      //   id: 1,
+      //   title: "Attendance",
+      //   description: "",
+      //   status: "PLANNED",
+      //   progress: 0,
+      //   members_count: 1,
+      //   project_manager: {
+      //     id: 18,
+      //     full_name: "User 001",
+      //   },
+      //   phases: [],
+      // };
+
+      const details = {
+        id: id,
+        title: title,
+        description: description || "",
+        status: status,
+        deadline: deadline || "",
+        progress: progress || 0,
+        members_count: members_count || 0,
+        project_manager: project_manager || { id: "", full_name: "" },
+      };
+      setProject(details);
+      setPhases(phase || []);
+    };
+    fetchProjectDetail();
+  }, []);
 
   const togglePhase = (id) => {
     setExpandedPhases((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -189,7 +246,7 @@ export default function ProjectDetailPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <BackButton onClick={() => navigate(-1)} />
       {/* Info Tab */}
       <Tabs defaultValue="info" className="w-full">
@@ -209,12 +266,12 @@ export default function ProjectDetailPage() {
                   <CardTitle className="text-2xl mb-2">
                     {project.title}
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground whitespace-pre-line">
                     {project.description}
                   </p>
                 </div>
                 <div className="flex items-start gap-2">
-                  <Badge>{project.status}</Badge>
+                  <Badge>{formatEnum(project.status)}</Badge>
                   <Button
                     size="sm"
                     variant="outline"
@@ -242,8 +299,10 @@ export default function ProjectDetailPage() {
                   <p className="text-sm font-medium">{project.members_count}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Status</p>
-                  <p className="text-sm font-medium">{project.status}</p>
+                  <p className="text-xs text-muted-foreground">Deadline</p>
+                  <p className="text-sm font-medium">
+                    {project.deadline || "--"}
+                  </p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Progress</p>
@@ -269,14 +328,16 @@ export default function ProjectDetailPage() {
 
           {/* Add Phase and Edit Phases Buttons */}
           <div className="flex justify-end gap-2">
-            <Button
-              onClick={() => setEditPhasesModalOpen(true)}
-              variant="outline"
-              className="gap-2"
-            >
-              <Edit className="h-4 w-4" />
-              Edit Phases
-            </Button>
+            {phases.length > 0 && (
+              <Button
+                onClick={() => setEditPhasesModalOpen(true)}
+                variant="outline"
+                className="gap-2"
+              >
+                <Edit className="h-4 w-4" />
+                Edit Phases
+              </Button>
+            )}
             <Button
               onClick={() => setAddPhaseModalOpen(true)}
               variant="outline"
@@ -302,7 +363,14 @@ export default function ProjectDetailPage() {
                       ) : (
                         <ChevronRight className="h-4 w-4" />
                       )}
-                      <CardTitle className="text-base">{phase.title}</CardTitle>
+                      <CardTitle
+                        className="text-base"
+                        onClick={() => {
+                          console.log(phase.title);
+                        }}
+                      >
+                        {phase.title}
+                      </CardTitle>
                       <Badge variant="outline" className="ml-auto">
                         {phase.status}
                       </Badge>
@@ -323,6 +391,11 @@ export default function ProjectDetailPage() {
                     )}
                   </div>
                 </CardHeader>
+                {phase.description && (
+                  <CardDescription className="pl-6 pb-2">
+                    {phase.description}
+                  </CardDescription>
+                )}
 
                 {expandedPhases[String(phase.id)] && (
                   <CardContent className="space-y-3 border-t pt-3">
@@ -350,13 +423,13 @@ export default function ProjectDetailPage() {
                             </p>
                             <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                               <span>Lead: {task.task_lead?.full_name}</span>
-                              <span>Due: {task.deadline}</span>
-                              <div className="flex items-center gap-1 hover:text-foreground">
+                              <span>Deadline: {task.deadline}</span>
+                              {/* <div className="flex items-center gap-1 hover:text-foreground">
                                 <Users className="h-3 w-3" />
                                 {task.members_count}
-                              </div>
+                              </div> */}
                               <span>
-                                {task.completed_jobs}/{task.total_jobs}
+                                Jobs: {task.completed_jobs}/{task.total_jobs}
                               </span>
                             </div>
                           </div>
@@ -372,13 +445,14 @@ export default function ProjectDetailPage() {
                                 className="text-xs p-2 bg-muted/50 rounded w-full text-left hover:bg-muted transition-colors"
                               >
                                 <p className="font-medium">{job.title}</p>
-                                <div className="flex justify-between mt-1 text-muted-foreground">
+                                <div className="flex items-center gap-3 mt-1 text-muted-foreground">
                                   <span>
                                     Assigned to: {job.assigned_to?.full_name}
                                   </span>
-                                  <span>Due: {job.deadline}</span>
+                                  <span>Deadline: {job.deadline}</span>
                                   <span>
-                                    {job.hours_worked}h / {job.expected_hours}h
+                                    Hours: {job.hours_worked}h /{" "}
+                                    {job.expected_hours}h
                                   </span>
                                 </div>
                               </button>
@@ -400,17 +474,13 @@ export default function ProjectDetailPage() {
 
         <TabsContent value="members">
           {/* <MembersTab projectName={project.title} /> */}
+          <ProjectMembersTab projectId={projectId} />
         </TabsContent>
 
         <TabsContent value="chat">
           {/* <ChatTab projectName={project.title} /> */}
         </TabsContent>
       </Tabs>
-
-      <AddTaskModal
-        open={addTaskModalOpen}
-        onOpenChange={setAddTaskModalOpen}
-      />
 
       <EditProjectModal
         open={editProjectModalOpen}
@@ -428,6 +498,11 @@ export default function ProjectDetailPage() {
         onOpenChange={setEditPhasesModalOpen}
         phases={phases}
         onPhaseReorder={handlePhaseReorder}
+      />
+
+      <AddTaskModal
+        open={addTaskModalOpen}
+        onOpenChange={setAddTaskModalOpen}
       />
     </div>
   );

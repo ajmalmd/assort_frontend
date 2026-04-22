@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatEnum, getInitials } from "@/appFunctions";
 import { Badge } from "@/components/ui/badge";
 import assort_api from "@/api/axios";
-import { APP_POINTS } from "@/api/apiConfig";
+import { APP_POINTS, MEDIA_URL } from "@/api/apiConfig";
 import toast from "react-hot-toast";
 import BackButton from "@/components/ui/backButton";
 
@@ -68,7 +68,7 @@ const MemberDetailPage = () => {
                   <img
                     src={
                       typeof member.profile_pic === "string"
-                        ? member.profile_pic
+                        ? MEDIA_URL + member.profile_pic
                         : URL.createObjectURL(member.profile_pic)
                     }
                     alt="Photo"

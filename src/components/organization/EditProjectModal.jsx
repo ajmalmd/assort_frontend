@@ -17,21 +17,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const mockProjectManagers = [
-  { id: 1, full_name: "Alice Brown" },
-  { id: 2, full_name: "Robert King" },
-  { id: 3, full_name: "Sophia Turner" },
-  { id: 4, full_name: "Daniel Scott" },
-  { id: 5, full_name: "Olivia Harris" },
-];
+import assort_api from "@/api/axios";
+import { APP_POINTS } from "@/api/apiConfig";
+import toast from "react-hot-toast";
 
 export function EditProjectModal({ open, onOpenChange, project }) {
   const [isLoading, setIsLoading] = useState(false);
+  const [managers, setManagers] = useState([]);
   const [formData, setFormData] = useState({
     title: project?.title || "",
     description: project?.description || "",
-    project_manager_id: project?.project_manager?.id || "",
+    project_manager: project?.project_manager?.id || "",
   });
 
   useEffect(() => {
@@ -39,10 +35,21 @@ export function EditProjectModal({ open, onOpenChange, project }) {
       setFormData({
         title: project.title || "",
         description: project.description || "",
-        project_manager_id: project.project_manager?.id || "",
+        deadline: project.deadline || null,
+        project_manager: project.project_manager?.id || "",
       });
     }
   }, [project, open]);
+
+  useEffect(() => {
+    const fetchManagers = async () => {
+      const res = await assort_api.get(
+        APP_POINTS.PROJECTS + "manager-options/",
+      );
+      setManagers(res.data);
+    };
+    fetchManagers();
+  }, [open]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -52,16 +59,29 @@ export function EditProjectModal({ open, onOpenChange, project }) {
   const handleManagerChange = (value) => {
     setFormData((prev) => ({
       ...prev,
-      project_manager_id: Number(value),
+      project_manager: Number(value),
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      await assort_api.patch(
+        `${APP_POINTS.PROJECTS}project/${project.id}/update/`,
+        formData,
+      );
+      // mockResponse = {
+      //   id: id,
+      //   message: "Project updated successfully",
+      // };
+      toast.success("Project Updated");
+      onOpenChange(false);
+    } catch (error) {
+      console.log(error);
+      toast.error("Couldn't update project");
+    }
     setIsLoading(false);
-    onOpenChange(false);
   };
 
   return (
@@ -101,11 +121,22 @@ export function EditProjectModal({ open, onOpenChange, project }) {
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="phase-deadline">Deadline</Label>
+            <Input
+              id="phase-deadline"
+              name="deadline"
+              type="date"
+              value={formData.deadline}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="edit-project-manager">Project Manager</Label>
             <Select
               value={
-                formData.project_manager_id
-                  ? String(formData.project_manager_id)
+                formData.project_manager
+                  ? String(formData.project_manager)
                   : undefined
               }
               onValueChange={handleManagerChange}
@@ -115,7 +146,7 @@ export function EditProjectModal({ open, onOpenChange, project }) {
                 <SelectValue placeholder="Select project manager" />
               </SelectTrigger>
               <SelectContent>
-                {mockProjectManagers.map((manager) => (
+                {managers?.map((manager) => (
                   <SelectItem key={manager.id} value={String(manager.id)}>
                     {manager.full_name}
                   </SelectItem>

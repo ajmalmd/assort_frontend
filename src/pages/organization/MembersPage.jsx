@@ -138,7 +138,7 @@ const MembersPage = () => {
                   </td>
                   <td className="px-6 py-4 text-center text-sm">
                     <span className="inline-flex px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                      {member.role}
+                      {formatEnum(member.role)}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-center text-sm text-gray-700">

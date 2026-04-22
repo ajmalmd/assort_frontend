@@ -1,4 +1,5 @@
 export const BASE_URL = "http://localhost:8000/api/";
+export const MEDIA_URL = "http://localhost:8000";
 
 export const APP_POINTS = {
   REFRESH_TOKEN: "auth/token-refresh/",
@@ -8,4 +9,5 @@ export const APP_POINTS = {
   INVITATIONS: "invitations/",
   SUBSCRIPTIONS: "subscriptions/",
   DEPARTMENTS: "departments/",
+  PROJECTS: "projects/",
 };

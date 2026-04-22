@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { Calendar, Upload } from "lucide-react";
+import { Upload } from "lucide-react";
 import { getInitials } from "@/appFunctions";
 import assort_api from "@/api/axios";
-import { APP_POINTS } from "@/api/apiConfig";
+import { APP_POINTS, MEDIA_URL } from "@/api/apiConfig";
 import toast from "react-hot-toast";
 
 const MemberProfilePage = () => {
@@ -105,7 +105,7 @@ const MemberProfilePage = () => {
                   <img
                     src={
                       typeof profile.profile_pic === "string"
-                        ? profile.profile_pic
+                        ? MEDIA_URL + profile.profile_pic
                         : URL.createObjectURL(profile.profile_pic)
                     }
                     alt="Photo"

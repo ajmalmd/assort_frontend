@@ -175,7 +175,7 @@ export default function CompleteProfilePage() {
                       <img
                         src={formData.logo}
                         alt="Organization logo"
-                        className="w-16 h-16 rounded-lg object-cover bg-gray-100"
+                        className="w-16 h-16 rounded-lg object-fill bg-gray-100"
                       />
                     ) : (
                       <div className="w-16 h-16 rounded-lg bg-gray-300 flex items-center justify-center">

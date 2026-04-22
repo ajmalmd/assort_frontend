@@ -23,3 +23,15 @@ export const formatDate_MmmDD_YYYY = (date) => {
     day: "numeric",
   });
 };
+
+// Role Checks
+export const isOrgOwner = (role) => role === "OWNER";
+
+export const isOrgAdmin = (role) => role === "ADMIN";
+
+export const isOrgProjectManager = (role) => role === "PROJECT_MANAGER";
+
+export const isOrgOwnerorAdmin = (role) => ["OWNER", "ADMIN"].includes(role);
+
+export const hasProjectRight = (role) =>
+  ["OWNER", "ADMIN", "PROJECT_MANAGER"].includes(role);
