@@ -20,6 +20,8 @@ import {
 import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
 import toast from "react-hot-toast";
+import { useAuth } from "@/context/authContext";
+import { isOrgOwnerorAdmin } from "@/appFunctions";
 
 export function EditProjectModal({ open, onOpenChange, project }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -28,7 +30,9 @@ export function EditProjectModal({ open, onOpenChange, project }) {
     title: project?.title || "",
     description: project?.description || "",
     project_manager: project?.project_manager?.id || "",
+    deadline: project?.deadline || "",
   });
+  const { activeOrganization } = useAuth();
 
   useEffect(() => {
     if (open && project) {
@@ -42,13 +46,15 @@ export function EditProjectModal({ open, onOpenChange, project }) {
   }, [project, open]);
 
   useEffect(() => {
-    const fetchManagers = async () => {
-      const res = await assort_api.get(
-        APP_POINTS.PROJECTS + "manager-options/",
-      );
-      setManagers(res.data);
-    };
-    fetchManagers();
+    if (open) {
+      const fetchManagers = async () => {
+        const res = await assort_api.get(
+          APP_POINTS.PROJECTS + "manager-options/",
+        );
+        setManagers(res.data);
+      };
+      fetchManagers();
+    }
   }, [open]);
 
   const handleChange = (e) => {
@@ -67,19 +73,26 @@ export function EditProjectModal({ open, onOpenChange, project }) {
     e.preventDefault();
     setIsLoading(true);
     try {
+      const payload = {
+        title: formData.title,
+        description: formData.description,
+        deadline: formData.deadline,
+      };
+      if (isOrgOwnerorAdmin(activeOrganization.role)) {
+        payload.project_manager = formData.project_manager;
+      }
+
       await assort_api.patch(
-        `${APP_POINTS.PROJECTS}project/${project.id}/update/`,
-        formData,
+        `${APP_POINTS.PROJECTS + project.id}/update/`,
+        payload,
       );
-      // mockResponse = {
-      //   id: id,
-      //   message: "Project updated successfully",
-      // };
       toast.success("Project Updated");
       onOpenChange(false);
     } catch (error) {
       console.log(error);
-      toast.error("Couldn't update project");
+      const message =
+        error?.response?.data?.message || "Couldn't update project";
+      toast.error(message);
     }
     setIsLoading(false);
   };

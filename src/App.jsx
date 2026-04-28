@@ -50,7 +50,7 @@ import DepartmentsPage from "./pages/organization/DepartmentsPage";
 import DepartmentDetailPage from "./pages/organization/DepartmentDetailPage";
 import ProjectsPage from "./pages/organization/ProjectsPage";
 import ProjectDetailPage from "./pages/organization/ProjectDetailPage";
-import RolesPage from "./pages/organization/RolesPage";
+import ProjectTaskDetailPage from "./pages/organization/ProjectTaskDetailPage";
 import JobsPage from "./pages/organization/JobsPage";
 import TimesheetPage from "./pages/organization/TimesheetPage";
 import ChatsPage from "./pages/organization/ChatsPage";
@@ -153,8 +153,14 @@ function App() {
               <Route path="departments" element={<DepartmentsPage />} />
               <Route path="department/:id" element={<DepartmentDetailPage />} />
               <Route path="projects" element={<ProjectsPage />} />
-              <Route path="project/:projectId" element={<ProjectDetailPage />} />
-              <Route path="roles" element={<RolesPage />} />
+              <Route
+                path="project/:projectId"
+                element={<ProjectDetailPage />}
+              />
+              <Route
+                path="project/task/:taskId"
+                element={<ProjectTaskDetailPage />}
+              />
               <Route path="jobs" element={<JobsPage />} />
               <Route path="timesheet" element={<TimesheetPage />} />
               <Route path="chats" element={<ChatsPage />} />

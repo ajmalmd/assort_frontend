@@ -14,7 +14,7 @@ const TITLE_MAP = {
   "/app/department": "Department Details",
   "/app/projects": "Projects",
   "/app/project": "Project Details",
-  "/app/roles": "Roles",
+  "/app/project/task": "Task Details",
   "/app/chats": "Chats",
   "/app/jobs": "Jobs",
   "/app/timesheet": "Timesheet",
@@ -43,7 +43,6 @@ const OrganizationLayout = () => {
   const isSubscriptionBlocked =
     activeOrganization?.role === "OWNER" &&
     ["NONE", "EXPIRED"].includes(activeOrganization?.subscription_status);
-
 
   const title =
     TITLE_MAP[pathname] ||

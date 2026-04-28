@@ -6,16 +6,6 @@ import { APP_POINTS } from "@/api/apiConfig";
 import assort_api from "@/api/axios";
 import { useNavigate } from "react-router";
 
-const mockDepartments = [
-  {
-    id: 1,
-    name: "Engineering",
-    memberCount: 12,
-    description: "Product Development",
-  },
-  { id: 2, name: "Design", memberCount: 8, description: "UX/UI Design" },
-  { id: 3, name: "Sales", memberCount: 5, description: "Business Development" },
-];
 
 const DepartmentsPage = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);

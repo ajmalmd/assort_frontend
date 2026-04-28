@@ -38,10 +38,7 @@ const MembersPage = () => {
     return matchesSearch && matchesRole;
   });
 
-  const roles = [
-    "All Roles",
-    ...new Set(members.map((m) => formatEnum(m.role))),
-  ];
+  const roles = ["All Roles", ...new Set(members.map((m) => m.role))];
 
   const handleSendInvitation = (data) => {
     const newMember = {
@@ -95,7 +92,7 @@ const MembersPage = () => {
         >
           {roles.map((role) => (
             <option key={role} value={role}>
-              {role}
+              {formatEnum(role)}
             </option>
           ))}
         </select>

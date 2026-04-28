@@ -24,6 +24,19 @@ export const formatDate_MmmDD_YYYY = (date) => {
   });
 };
 
+export const formatDate_d_m_yyyy = (date) => {
+  return new Date(date).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "numeric",
+    year: "numeric",
+  });
+};
+
+const formatDate = (date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
+export const today_localdate = formatDate(new Date());
+
 // Role Checks
 export const isOrgOwner = (role) => role === "OWNER";
 

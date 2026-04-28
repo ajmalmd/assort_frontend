@@ -8,36 +8,54 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChevronDown, ChevronRight, Edit, Plus } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Edit,
+  Plus,
+  ListChevronsDownUp,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { EditProjectModal } from "@/components/organization/EditProjectModal";
-import { AddPhaseModal } from "@/components/organization/AddPhaseModal";
-import { EditPhasesModal } from "@/components/organization/EditPhasesModal";
-import { AddTaskModal } from "@/components/organization/AddTaskModal";
 import BackButton from "@/components/ui/backButton";
 import { useNavigate, useParams } from "react-router";
-import { ProjectUpdatesTab } from "@/components/organization/ProjectUpdatesTab";
-import { ProjectMembersTab } from "@/components/organization/ProjectMembersTab";
 import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
-import { formatEnum } from "@/appFunctions";
+import { formatEnum, hasProjectRight } from "@/appFunctions";
+import { useAuth } from "@/context/authContext";
+
+import { ProjectUpdatesTab } from "@/components/organization/ProjectUpdatesTab";
+import { ProjectChatTab } from "@/components/organization/ProjectChatTab";
+import { ProjectMembersTab } from "@/components/organization/ProjectMembersTab";
+
+import { EditProjectModal } from "@/components/organization/EditProjectModal";
+import { AddPhaseModal } from "@/components/organization/AddPhaseModal";
+import { ReorderPhasesModal } from "@/components/organization/ReorderPhasesModal";
+import { EditPhaseModal } from "@/components/organization/EditPhaseModal";
+import { AddTaskModal } from "@/components/organization/AddTaskModal";
+import { ReorderTasksModal } from "@/components/organization/ReorderTasksModal";
 
 export default function ProjectDetailPage() {
   const [expandedPhases, setExpandedPhases] = useState({});
   const [expandedTasks, setExpandedTasks] = useState({});
 
-  const [addTaskModalOpen, setAddTaskModalOpen] = useState(false);
   const [selectedPhaseId, setSelectedPhaseId] = useState(null);
+  const [selectedPhase, setSelectedPhase] = useState({});
+
   const [editProjectModalOpen, setEditProjectModalOpen] = useState(false);
   const [addPhaseModalOpen, setAddPhaseModalOpen] = useState(false);
-  const [editPhasesModalOpen, setEditPhasesModalOpen] = useState(false);
+  const [reorderPhasesModalOpen, setReorderPhasesModalOpen] = useState(false);
+  const [editPhaseModalOpen, setEditPhaseModalOpen] = useState(false);
+  const [addTaskModalOpen, setAddTaskModalOpen] = useState(false);
+  const [reorderTasksModalOpen, setReorderTasksModalOpen] = useState(false);
 
   const [project, setProject] = useState(null);
   const [phases, setPhases] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [reorderTasks, setReorderTasks] = useState({});
 
   const navigate = useNavigate();
   const { projectId } = useParams();
+  const { activeOrganization } = useAuth();
 
   useEffect(() => {
     if (!projectId) return;
@@ -45,9 +63,7 @@ export default function ProjectDetailPage() {
     const fetchProjectDetail = async () => {
       setLoading(true);
       try {
-        const res = await assort_api.get(
-          `${APP_POINTS.PROJECTS}project/${projectId}/`,
-        );
+        const res = await assort_api.get(`${APP_POINTS.PROJECTS + projectId}/`);
 
         const {
           id,
@@ -58,7 +74,7 @@ export default function ProjectDetailPage() {
           progress,
           members_count,
           project_manager,
-          phase,
+          phases,
         } = res.data;
 
         setProject({
@@ -72,7 +88,7 @@ export default function ProjectDetailPage() {
           project_manager: project_manager || { id: "", full_name: "" },
         });
 
-        setPhases(phase || []);
+        setPhases(phases || []);
       } catch (error) {
         console.error("Failed to fetch project:", error);
       } finally {
@@ -97,12 +113,82 @@ export default function ProjectDetailPage() {
     setPhases(reorderedPhases);
   };
 
+  const getMaxTaskDeadline = (tasks) =>
+    tasks?.length
+      ? tasks.reduce((max, task) => {
+          if (!task.deadline) return max;
+          return !max || new Date(task.deadline) > new Date(max)
+            ? task.deadline
+            : max;
+        }, null)
+      : null;
+
+  const addPhase = (data) => {
+    setPhases((prev) => [...prev, data]);
+  };
+
+  const editPhase = (updatedPhase) => {
+    setPhases((prev) =>
+      prev.map((phase) => {
+        if (phase.id !== updatedPhase.id) return phase;
+
+        return {
+          ...phase,
+          title: updatedPhase.title,
+          description: updatedPhase.description,
+          deadline: updatedPhase.deadline,
+        };
+      }),
+    );
+  };
+
+  const addTask = (data) => {
+    console.log(data);
+
+    setPhases((prev) =>
+      prev.map((phase) =>
+        phase.id == data.phaseId
+          ? {
+              ...phase,
+              tasks: [...phase.tasks, data.taskDetails],
+            }
+          : phase,
+      ),
+    );
+  };
+
+  const handleTasksReorder = (reorderedTasks) => {
+    setPhases((prev) =>
+      prev.map((phase) =>
+        phase.id === reorderedTasks.phaseId
+          ? { ...phase, tasks: reorderedTasks.tasks }
+          : phase,
+      ),
+    );
+  };
+
+  const mockJob = [
+    {
+      id: 1,
+      title: "Sample Job",
+      deadline: "2026-10-01",
+      worked_hours: 2,
+      estimated_hours: 5,
+      assigned_to: { id: 4, full_name: "Ajmal" },
+    },
+  ];
+
   if (loading) {
     return <div className="text-center py-10">Loading...</div>;
   }
 
   if (!project) {
-    return <div className="text-center py-10">Project not found</div>;
+    return (
+      <>
+        <BackButton onClick={() => navigate(-1)} />
+        <div className="text-center py-10">Project not found</div>
+      </>
+    );
   }
 
   return (
@@ -113,8 +199,8 @@ export default function ProjectDetailPage() {
         <TabsList className="grid w-full grid-cols-4 lg:w-[400px]">
           <TabsTrigger value="info">Info</TabsTrigger>
           <TabsTrigger value="updates">Updates</TabsTrigger>
-          <TabsTrigger value="members">Members</TabsTrigger>
           <TabsTrigger value="chat">Chat</TabsTrigger>
+          <TabsTrigger value="members">Members</TabsTrigger>
         </TabsList>
 
         <TabsContent value="info" className="space-y-6">
@@ -122,24 +208,27 @@ export default function ProjectDetailPage() {
             <CardHeader>
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
-                  <CardTitle className="text-2xl mb-2">
+                  <CardTitle className="text-2xl font-medium mb-2">
                     {project.title}
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground whitespace-pre-line">
+                  <p className="text-sm text-muted-foreground font-mono whitespace-pre-line">
                     {project.description}
                   </p>
                 </div>
                 <div className="flex items-start gap-2">
                   <Badge>{formatEnum(project.status)}</Badge>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setEditProjectModalOpen(true)}
-                    className="gap-2"
-                  >
-                    <Edit className="h-4 w-4" />
-                    Edit
-                  </Button>
+
+                  {hasProjectRight(activeOrganization.role) && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setEditProjectModalOpen(true)}
+                      className="gap-2"
+                    >
+                      <Edit className="h-4 w-4" />
+                      Edit
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardHeader>
@@ -154,61 +243,68 @@ export default function ProjectDetailPage() {
                     {project.project_manager.full_name}
                   </p>
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Members</p>
-                  <p className="text-sm font-medium">{project.members_count}</p>
-                </div>
+
                 <div>
                   <p className="text-xs text-muted-foreground">Deadline</p>
                   <p className="text-sm font-medium">
                     {project.deadline || "--"}
                   </p>
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Progress</p>
-                  <p className="text-sm font-medium">{project.progress}%</p>
-                </div>
+
+                {hasProjectRight(activeOrganization.role) && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Members</p>
+                    <p className="text-sm font-medium">
+                      {project.members_count}
+                    </p>
+                  </div>
+                )}
               </div>
 
-              <div className="space-y-2">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="font-medium">Overall Progress</span>
-                  <span className="text-muted-foreground">
-                    {project.progress}%
-                  </span>
+              {hasProjectRight(activeOrganization.role) && (
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="font-medium">Overall Progress</span>
+                    <span className="text-muted-foreground">
+                      {project.progress}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-3">
+                    <div
+                      className="bg-primary h-3 rounded-full transition-all"
+                      style={{ width: `${project.progress}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="w-full bg-muted rounded-full h-3">
-                  <div
-                    className="bg-primary h-3 rounded-full transition-all"
-                    style={{ width: `${project.progress}%` }}
-                  />
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
 
-          <div className="flex justify-end gap-2">
-            {phases.length > 0 && (
+          {hasProjectRight(activeOrganization.role) && (
+            <div className="flex justify-end gap-2">
+              {phases.length > 1 && (
+                <Button
+                  onClick={() => setReorderPhasesModalOpen(true)}
+                  variant="outline"
+                  className="gap-2"
+                >
+                  <ListChevronsDownUp className="h-4 w-4" />
+                  Reorder Phases
+                </Button>
+              )}
               <Button
-                onClick={() => setEditPhasesModalOpen(true)}
+                onClick={() => setAddPhaseModalOpen(true)}
                 variant="outline"
                 className="gap-2"
               >
-                <Edit className="h-4 w-4" />
-                Edit Phases
+                <Plus className="h-4 w-4" />
+                Add Phase
               </Button>
-            )}
-            <Button
-              onClick={() => setAddPhaseModalOpen(true)}
-              variant="outline"
-              className="gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Add Phase
-            </Button>
-          </div>
+            </div>
+          )}
 
-          <div className="space-y-4">
+          <div className="space-y-4 p-2 bg-gray-500/10 rounded-xl">
+            <div className="font-normal pt-2 pl-2 text-xl">Phases</div>
             {phases.length === 0 && (
               <p className="text-sm text-muted-foreground text-center">
                 No phases yet
@@ -217,7 +313,7 @@ export default function ProjectDetailPage() {
 
             {phases.map((phase) => (
               <Card key={phase.id}>
-                <CardHeader className="pb-3">
+                <CardHeader>
                   <div className="flex items-center justify-between w-full">
                     <button
                       onClick={() => togglePhase(phase.id)}
@@ -228,76 +324,137 @@ export default function ProjectDetailPage() {
                       ) : (
                         <ChevronRight className="h-4 w-4" />
                       )}
-                      <CardTitle className="text-base">{phase.title}</CardTitle>
+                      <CardTitle className="text-base font-medium">
+                        {phase.title}
+                      </CardTitle>
                       <Badge variant="outline" className="ml-auto">
-                        {phase.status}
+                        {formatEnum(phase.status)}
                       </Badge>
                     </button>
 
-                    {expandedPhases[String(phase.id)] && (
+                    {hasProjectRight(activeOrganization.role) && (
                       <Button
                         size="sm"
-                        variant="outline"
-                        className="ml-2 bg-transparent"
+                        variant="default"
                         onClick={() => {
-                          setSelectedPhaseId(phase.id);
-                          setAddTaskModalOpen(true);
+                          setEditPhaseModalOpen(true);
+                          setSelectedPhase({
+                            id: phase.id,
+                            title: phase.title,
+                            description: phase.description,
+                            deadline: phase.deadline,
+                            maxTaskDeadline: getMaxTaskDeadline(phase.tasks),
+                          });
                         }}
+                        className="ml-2 gap-2"
                       >
-                        <Plus className="h-4 w-4 mr-1" />
-                        Add Task
+                        <Edit className="h-4 w-4" />
+                        Edit
                       </Button>
                     )}
                   </div>
                 </CardHeader>
 
                 {phase.description && (
-                  <CardDescription className="pl-6 pb-2">
+                  <CardDescription className="pl-6 pb-2 whitespace-pre-line font-mono">
                     {phase.description}
                   </CardDescription>
                 )}
 
                 {expandedPhases[String(phase.id)] && (
                   <CardContent className="space-y-3 border-t pt-3">
+                    {hasProjectRight(activeOrganization.role) && (
+                      <div className="flex justify-end gap-2">
+                        {phase?.tasks?.length > 1 && (
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              setReorderTasksModalOpen(true);
+                              setReorderTasks({
+                                phaseId: phase.id,
+                                tasks: phase.tasks,
+                              });
+                            }}
+                            variant="outline"
+                            className="gap-2"
+                          >
+                            <ListChevronsDownUp className="h-4 w-4" />
+                            Reorder Tasks
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-2"
+                          onClick={() => {
+                            setAddTaskModalOpen(true);
+                            setSelectedPhase({
+                              id: phase.id,
+                              title: phase.title,
+                              deadline: phase.deadline,
+                            });
+                          }}
+                        >
+                          <Plus className="h-4 w-4" />
+                          Add Task
+                        </Button>
+                      </div>
+                    )}
+                    {phase?.tasks.length === 0 && (
+                      <p className="text-sm text-muted-foreground text-center">
+                        No tasks yet
+                      </p>
+                    )}
                     {phase.tasks?.map((task) => (
                       <div
                         key={task.id}
-                        className="space-y-2 bg-muted/30 rounded-lg p-3"
+                        className="space-y-2 bg-gray-500/10 rounded-lg p-3 hover:bg-gray-500/20"
                       >
-                        <button
-                          onClick={() => toggleTask(task.id)}
-                          className="flex items-center gap-2 w-full hover:opacity-75"
-                        >
-                          {expandedTasks[String(task.id)] ? (
-                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                          ) : (
-                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                          )}
+                        <div className="flex justify-between items-center">
                           <div
-                            className="flex-1 min-w-0 text-left cursor-pointer"
-                            onClick={() => openTaskDetail(task.id)}
+                            onClick={() => toggleTask(task.id)}
+                            className="flex items-center gap-2 w-full"
                           >
-                            <p className="font-medium text-sm hover:text-primary">
-                              {task.title}
-                            </p>
-                            <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                              <span>Lead: {task.task_lead?.full_name}</span>
-                              <span>Deadline: {task.deadline}</span>
-                              <span>
-                                Jobs: {task.completed_jobs}/{task.total_jobs}
-                              </span>
+                            {expandedTasks[String(task.id)] ? (
+                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                            ) : (
+                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                            )}
+                            <div className="flex-1 min-w-0 text-left cursor-pointer">
+                              <p className="font-medium text-sm hover:text-primary">
+                                {task.title}
+                              </p>
+                              <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                                <span>Lead: {task.lead?.full_name}</span>
+                                <span>Deadline: {task.deadline}</span>
+                                <span>
+                                  Jobs: {task.jobs_completed || 0}/
+                                  {task.total_jobs || 0}
+                                </span>
+                              </div>
                             </div>
                           </div>
-                        </button>
+                          {task.has_access && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                navigate(`/app/project/task/${task.id}`);
+                              }}
+                            >
+                              View
+                            </Button>
+                          )}
+                        </div>
 
                         {expandedTasks[String(task.id)] && (
                           <div className="pl-6 space-y-1">
                             {/* Jobs */}
-                            {task.jobs.map((job) => (
+                            {mockJob.map((job) => (
                               <button
                                 key={job.id}
                                 onClick={() => {}}
-                                className="text-xs p-2 bg-muted/50 rounded w-full text-left hover:bg-muted transition-colors"
+                                className="text-xs p-2 bg-white rounded w-full text-left hover:bg-muted transition-colors"
                               >
                                 <p className="font-medium">{job.title}</p>
                                 <div className="flex items-center gap-3 mt-1 text-muted-foreground">
@@ -306,8 +463,8 @@ export default function ProjectDetailPage() {
                                   </span>
                                   <span>Deadline: {job.deadline}</span>
                                   <span>
-                                    Hours: {job.hours_worked}h /{" "}
-                                    {job.expected_hours}h
+                                    Hours: {job.worked_hours}h /{" "}
+                                    {job.estimated_hours}h
                                   </span>
                                 </div>
                               </button>
@@ -324,41 +481,66 @@ export default function ProjectDetailPage() {
         </TabsContent>
 
         <TabsContent value="updates">
-          <ProjectUpdatesTab />
+          <ProjectUpdatesTab projectId={projectId} />
+        </TabsContent>
+
+        <TabsContent value="chat">
+          <ProjectChatTab projectId={projectId} />
         </TabsContent>
 
         <TabsContent value="members">
           <ProjectMembersTab projectId={projectId} />
         </TabsContent>
-
-        <TabsContent value="chat">
-          {/* <ChatTab projectName={project.title} /> */}
-        </TabsContent>
       </Tabs>
 
-      <EditProjectModal
-        open={editProjectModalOpen}
-        onOpenChange={setEditProjectModalOpen}
-        project={project}
-      />
+      {hasProjectRight(activeOrganization.role) && (
+        <>
+          <EditProjectModal
+            open={editProjectModalOpen}
+            onOpenChange={setEditProjectModalOpen}
+            project={project}
+          />
 
-      <AddPhaseModal
-        open={addPhaseModalOpen}
-        onOpenChange={setAddPhaseModalOpen}
-      />
+          <AddPhaseModal
+            open={addPhaseModalOpen}
+            onOpenChange={setAddPhaseModalOpen}
+            project={project}
+            addedPhaseDetails={addPhase}
+          />
 
-      <EditPhasesModal
-        open={editPhasesModalOpen}
-        onOpenChange={setEditPhasesModalOpen}
-        phases={phases}
-        onPhaseReorder={handlePhaseReorder}
-      />
+          <EditPhaseModal
+            open={editPhaseModalOpen}
+            onOpenChange={setEditPhaseModalOpen}
+            project={project}
+            phase={selectedPhase}
+            editedPhaseDetails={editPhase}
+          />
 
-      <AddTaskModal
-        open={addTaskModalOpen}
-        onOpenChange={setAddTaskModalOpen}
-        phaseId={selectedPhaseId}
-      />
+          <ReorderPhasesModal
+            open={reorderPhasesModalOpen}
+            onOpenChange={setReorderPhasesModalOpen}
+            phases={phases}
+            projectId={projectId}
+            onPhaseReorder={handlePhaseReorder}
+          />
+
+          <AddTaskModal
+            open={addTaskModalOpen}
+            onOpenChange={setAddTaskModalOpen}
+            project={project}
+            phase={selectedPhase}
+            addedTaskDetails={addTask}
+          />
+
+          <ReorderTasksModal
+            open={reorderTasksModalOpen}
+            onOpenChange={setReorderTasksModalOpen}
+            tasks={reorderTasks.tasks}
+            phaseId={reorderTasks.phaseId}
+            onTasksReorder={handleTasksReorder}
+          />
+        </>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -15,11 +15,12 @@ import { APP_POINTS } from "@/api/apiConfig";
 import toast from "react-hot-toast";
 import { today_localdate } from "@/appFunctions";
 
-export function AddPhaseModal({
+export function EditPhaseModal({
   open,
   onOpenChange,
   project,
-  addedPhaseDetails,
+  phase,
+  editedPhaseDetails,
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -28,7 +29,21 @@ export function AddPhaseModal({
     deadline: "",
   });
 
-  const today = new Date().toISOString().split("T")[0];
+  useEffect(() => {
+    if (phase && open) {
+      setFormData({
+        title: phase.title || "",
+        description: phase.description || "",
+        deadline: phase.deadline || "",
+      });
+    }
+  }, [phase, open]);
+
+  const minDate = phase.maxTaskDeadline
+    ? phase.maxTaskDeadline > today_localdate
+      ? phase.maxTaskDeadline
+      : today_localdate
+    : today_localdate;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -39,23 +54,21 @@ export function AddPhaseModal({
     e.preventDefault();
     setIsLoading(true);
     try {
-      const res = await assort_api.post(
-        `${APP_POINTS.PROJECTS + project.id}/add-phase/`,
+      await assort_api.patch(
+        `${APP_POINTS.PROJECTS}phase/${phase.id}/update/`,
         formData,
       );
-      toast.success("Phase added");
+      toast.success("Phase edited successfully");
       setIsLoading(false);
       onOpenChange(false);
-      addedPhaseDetails({
+      editedPhaseDetails({
         ...formData,
-        id: res.data.id,
-        status: "PLANNED",
+        id: phase.id,
       });
-      setFormData({ title: "", description: "", deadline: "" });
     } catch (error) {
       console.error(error);
       setIsLoading(false);
-      const message = error?.response?.data?.message || "Couldn't add phase";
+      const message = error?.response?.data?.message || "Couldn't edit phase";
       toast.error(message);
     }
   };
@@ -64,10 +77,8 @@ export function AddPhaseModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Add New Phase</DialogTitle>
-          <DialogDescription>
-            Create a new phase for the project "{project.title}".
-          </DialogDescription>
+          <DialogTitle>Edit Phase</DialogTitle>
+          <DialogDescription>Update the phase details</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -78,7 +89,6 @@ export function AddPhaseModal({
               name="title"
               value={formData.title}
               onChange={handleChange}
-              placeholder="e.g., Planning"
               required
             />
           </div>
@@ -90,7 +100,6 @@ export function AddPhaseModal({
               name="description"
               value={formData.description}
               onChange={handleChange}
-              placeholder="Describe the phase goals and scope..."
               className="w-full p-2 border rounded-md text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary"
               rows={3}
             />
@@ -104,8 +113,8 @@ export function AddPhaseModal({
               type="date"
               value={formData.deadline}
               onChange={handleChange}
-              max={project?.deadline||undefined}
-              min={today_localdate}
+              max={project?.deadline || undefined}
+              min={minDate}
             />
           </div>
 
@@ -117,11 +126,8 @@ export function AddPhaseModal({
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              disabled={isLoading || !formData.title || !formData.deadline}
-            >
-              {isLoading ? "Adding..." : "Add Phase"}
+            <Button type="submit" disabled={isLoading || !formData.title}>
+              {isLoading ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>
         </form>

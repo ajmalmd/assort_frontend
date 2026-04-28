@@ -19,7 +19,6 @@ const ROLE_MENU = {
     { label: "Members", icon: Users, to: "/app/members" },
     { label: "Departments", icon: Layers, to: "/app/departments" },
     { label: "Projects", icon: Briefcase, to: "/app/projects" },
-    { label: "Roles", icon: Shield, to: "/app/roles" },
     { label: "Chats", icon: MessageSquare, to: "/app/chats" },
   ],
   ADMIN: [
@@ -27,7 +26,6 @@ const ROLE_MENU = {
     { label: "Members", icon: Users, to: "/app/members" },
     { label: "Departments", icon: Layers, to: "/app/departments" },
     { label: "Projects", icon: Briefcase, to: "/app/projects" },
-    { label: "Roles", icon: Shield, to: "/app/roles" },
     { label: "Chats", icon: MessageSquare, to: "/app/chats" },
   ],
   PROJECT_MANAGER: [

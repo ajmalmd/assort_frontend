@@ -10,23 +10,27 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { GripVertical } from "lucide-react";
+import assort_api from "@/api/axios";
+import { APP_POINTS } from "@/api/apiConfig";
+import toast from "react-hot-toast";
 
-export function EditPhasesModal({
+export function ReorderTasksModal({
   open,
   onOpenChange,
-  phases,
-  onPhaseReorder,
+  tasks,
+  phaseId,
+  onTasksReorder,
 }) {
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
-  const [localPhases, setLocalPhases] = useState(phases);
+  const [localTasks, setLocalTasks] = useState(tasks);
 
   useEffect(() => {
-    setLocalPhases(phases);
-  }, [phases, open]);
+    setLocalTasks(tasks);
+  }, [tasks, open]);
 
   const handleOpenChange = (newOpen) => {
-    if (!newOpen) setLocalPhases(phases);
+    if (!newOpen) setLocalTasks(tasks);
     onOpenChange(newOpen);
   };
 
@@ -45,11 +49,11 @@ export function EditPhasesModal({
 
     if (draggedIndex === null || draggedIndex === dropIndex) return;
 
-    const newPhases = [...localPhases];
-    const [removed] = newPhases.splice(draggedIndex, 1);
-    newPhases.splice(dropIndex, 0, removed);
+    const newTasks = [...localTasks];
+    const [removed] = newTasks.splice(draggedIndex, 1);
+    newTasks.splice(dropIndex, 0, removed);
 
-    setLocalPhases(newPhases);
+    setLocalTasks(newTasks);
     setDraggedIndex(null);
     setDragOverIndex(null);
   };
@@ -59,31 +63,37 @@ export function EditPhasesModal({
     setDragOverIndex(null);
   };
 
-  const handleSave = () => {
-    const updatedPhases = localPhases.map((phase, index) => ({
-      ...phase,
-      list_position: index + 1,
-    }));
-
-    onPhaseReorder(updatedPhases);
-    onOpenChange(false);
+  const handleSave = async () => {
+    try {
+      await assort_api.patch(
+        `${APP_POINTS.PROJECTS}phase/${phaseId}/reorder-tasks/`,
+        { ordered_task_ids: localTasks.map((task) => task.id) },
+      );
+      toast.success("Tasks reorder successful");
+      onTasksReorder({ phaseId, tasks: localTasks });
+      onOpenChange(false);
+    } catch (error) {
+      console.error(error);
+      const message = error?.response?.data?.message || "Couldn't reorder task";
+      toast.error(message);
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Edit Phases Order</DialogTitle>
+          <DialogTitle>Edit Tasks Order</DialogTitle>
 
           <DialogDescription>
-            Drag and drop phases to reorder them. Click save when you're done.
+            Drag and drop tasks to reorder them. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-2 max-h-[400px] overflow-y-auto">
-          {localPhases.map((phase, index) => (
+          {localTasks?.map((task, index) => (
             <div
-              key={phase.id}
+              key={task.id}
               draggable
               onDragStart={(e) => handleDragStart(e, index)}
               onDragOver={(e) => handleDragOver(e, index)}
@@ -99,11 +109,8 @@ export function EditPhasesModal({
             >
               <GripVertical className="h-5 w-5 text-muted-foreground flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm truncate">{phase.title}</p>
+                <p className="font-medium text-sm truncate">{task.title}</p>
               </div>
-              <Badge variant="outline" className="text-xs flex-shrink-0">
-                {phase.status}
-              </Badge>
             </div>
           ))}
         </div>

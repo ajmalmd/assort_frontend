@@ -40,19 +40,21 @@ export function AddProjectMembersModal({
   useEffect(() => {
     if (!projectId) return;
 
-    const fetchOrgMembers = async () => {
-      try {
-        const res = await assort_api.get(
-          `${APP_POINTS.PROJECTS}member-options/${projectId}/`,
-        );
-        setOrgMembers(res.data || []);
-      } catch (err) {
-        console.error("Failed to fetch org members:", err);
-      }
-    };
+    if (projectId && open) {
+      const fetchOrgMembers = async () => {
+        try {
+          const res = await assort_api.get(
+            `${APP_POINTS.PROJECTS + projectId}/member-options/`,
+          );
+          setOrgMembers(res.data || []);
+        } catch (err) {
+          console.error("Failed to fetch org members:", err);
+        }
+      };
 
-    fetchOrgMembers();
-  }, [projectId]);
+      fetchOrgMembers();
+    }
+  }, [projectId, open]);
 
   const filteredMembers = (orgMembers || []).filter((member) => {
     const q = searchQuery.toLowerCase();
@@ -80,13 +82,10 @@ export function AddProjectMembersModal({
 
     setIsLoading(true);
     try {
-      await assort_api.post(
-        `${APP_POINTS.PROJECTS}project/add-members/${projectId}/`,
-        {
-          members: selectedMembers,
-          role: finalRole,
-        },
-      );
+      await assort_api.post(`${APP_POINTS.PROJECTS + projectId}/add-members/`, {
+        members: selectedMembers,
+        role: finalRole,
+      });
 
       toast.success("Members added successfully");
 
@@ -102,7 +101,8 @@ export function AddProjectMembersModal({
       onOpenChange(false);
     } catch (error) {
       console.error(error);
-      toast.error("Couldn't add members");
+      const message = error?.response?.data?.message || "Couldn't add members";
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }

@@ -6,15 +6,18 @@ import { Plus } from "lucide-react";
 import { AddProjectMembersModal } from "./AddProjectMembersModal";
 import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
+import { hasProjectRight } from "@/appFunctions";
+import { useAuth } from "@/context/authContext";
 
 export function ProjectMembersTab({ projectId }) {
   const [addMemberModalOpen, setAddMemberModalOpen] = useState(false);
   const [members, setMembers] = useState([]);
+  const { activeOrganization } = useAuth();
 
   const fetchProjectMembers = async () => {
     try {
       const res = await assort_api.get(
-        `${APP_POINTS.PROJECTS}project/members/${projectId}/`,
+        `${APP_POINTS.PROJECTS + projectId}/members/`,
       );
       setMembers(res.data || []);
     } catch (err) {
@@ -30,12 +33,14 @@ export function ProjectMembersTab({ projectId }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <Button onClick={() => setAddMemberModalOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Member
-        </Button>
-      </div>
+      {hasProjectRight(activeOrganization.role) && (
+        <div className="flex justify-end">
+          <Button onClick={() => setAddMemberModalOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Member
+          </Button>
+        </div>
+      )}
 
       <div className="space-y-3">
         {members?.map((member) => (
@@ -57,13 +62,15 @@ export function ProjectMembersTab({ projectId }) {
         ))}
       </div>
 
-      <AddProjectMembersModal
-        open={addMemberModalOpen}
-        onOpenChange={setAddMemberModalOpen}
-        projectId={projectId}
-        roles={roles}
-        refreshMembers={fetchProjectMembers}
-      />
+      {hasProjectRight(activeOrganization.role) && (
+        <AddProjectMembersModal
+          open={addMemberModalOpen}
+          onOpenChange={setAddMemberModalOpen}
+          projectId={projectId}
+          roles={roles}
+          refreshMembers={fetchProjectMembers}
+        />
+      )}
     </div>
   );
 }

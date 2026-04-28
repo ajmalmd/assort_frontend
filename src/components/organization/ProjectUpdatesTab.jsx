@@ -60,7 +60,7 @@ const mockUpdates = [
   },
 ];
 
-export function ProjectUpdatesTab() {
+export function ProjectUpdatesTab({ projectId }) {
   const [showForm, setShowForm] = useState(false);
   const [updates, setUpdates] = useState(mockUpdates);
   const [newUpdate, setNewUpdate] = useState("");
