@@ -7,53 +7,60 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { ScrollArea } from "../ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "../ui/scroll-area";
 import { Badge } from "../ui/badge";
-import { today_localdate } from "@/appFunctions";
+import toast from "react-hot-toast";
 import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
-import toast from "react-hot-toast";
+import { today_localdate } from "@/appFunctions";
 
-export function AddJobModal({
+export function EditTaskModal({
   open,
   onOpenChange,
   task,
-  project,
   maxDeadline,
-  addedJobDetails,
+  updatedTaskDetails,
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const [members, setMembers] = useState([]);
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     deadline: "",
-    estimated_hours: "",
-    assigned_to: "",
+    lead: "",
   });
 
   useEffect(() => {
-    if (open) {
-      const fetchProjectMembers = async () => {
+    if (open && task) {
+      const fetchMembers = async () => {
         try {
           const res = await assort_api.get(
-            `${APP_POINTS.PROJECTS + project.id}/members/`,
+            `${APP_POINTS.PROJECTS + task.projectId}/members/`,
           );
-          const availaleMembers = res.data.filter(
-            (mem) => mem.id !== task.lead,
+          const availableMembers = res.data?.filter(
+            (mem) => !task.jobMembers?.includes(mem.id),
           );
 
-          setMembers(availaleMembers || []);
+          setMembers(availableMembers || []);
         } catch (err) {
           console.error("Failed to fetch members:", err);
         }
       };
-      fetchProjectMembers();
+
+      setFormData({
+        title: task.title || "",
+        description: task.description || "",
+        deadline: task.deadline || "",
+        lead: String(task.lead || ""),
+      });
+
+      fetchMembers();
     }
-  }, [open]);
+  }, [open, task]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -63,34 +70,26 @@ export function AddJobModal({
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+
     try {
-      const res = await assort_api.post(
-        `${APP_POINTS.PROJECTS}task/${task.id}/add-job/`,
+      await assort_api.patch(
+        `${APP_POINTS.PROJECTS}task/${task.id}/update/`,
         formData,
       );
 
-      toast.success("Job added");
-      setIsLoading(false);
-      onOpenChange(false);
-      addedJobDetails({
+      updatedTaskDetails({
         ...formData,
-        id: res.data.id,
-        assigned_to: members.find(
-          (mem) => mem.id === Number(formData.assigned_to),
-        ),
+        lead: members.find((mem) => mem.id === Number(formData.lead)),
       });
-      setFormData({
-        title: "",
-        description: "",
-        deadline: "",
-        estimated_hours: "",
-        assigned_to: "",
-      });
+
+      toast.success("Task updated");
+      onOpenChange(false);
     } catch (error) {
       console.error(error);
-      setIsLoading(false);
-      const message = error?.response?.data?.message || "Couldn't add phase";
+      const message = error?.response?.data?.message || "Couldn't update task";
       toast.error(message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -98,44 +97,40 @@ export function AddJobModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Create New Job</DialogTitle>
-          <DialogDescription>
-            Add a new job to the task "{task.title}".
-          </DialogDescription>
+          <DialogTitle>Edit Task</DialogTitle>
+          <DialogDescription>Update task details.</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Title */}
           <div className="space-y-2">
-            <Label htmlFor="job-title">Job Title</Label>
+            <Label>Task Title</Label>
             <Input
-              id="job-title"
               name="title"
-              placeholder="Job title..."
               value={formData.title}
               onChange={handleChange}
               required
             />
           </div>
 
+          {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="job-description">Description</Label>
+            <Label>Description</Label>
             <textarea
-              id="job-description"
               name="description"
               value={formData.description}
               onChange={handleChange}
-              placeholder="Describe the job goals and scope..."
-              className="w-full p-2 border rounded-md text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary"
               rows={3}
+              className="w-full p-2 border rounded-md text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
 
+          {/* Deadline */}
           <div className="space-y-2">
-            <Label htmlFor="job-deadline">Deadline</Label>
+            <Label>Deadline</Label>
             <Input
-              id="job-deadline"
-              name="deadline"
               type="date"
+              name="deadline"
               value={formData.deadline}
               onChange={handleChange}
               min={today_localdate}
@@ -144,29 +139,16 @@ export function AddJobModal({
             />
           </div>
 
+          {/* Lead selection */}
           <div className="space-y-2">
-            <Label htmlFor="job-hours">Estimated Hours</Label>
-            <Input
-              id="job-hours"
-              name="estimated_hours"
-              type="number"
-              placeholder="e.g., 8"
-              value={formData.estimated_hours}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Assigned To</Label>
+            <Label>Task Lead</Label>
 
             <div className="h-48 border rounded-lg overflow-hidden">
               <ScrollArea className="h-full">
                 <div className="p-3 space-y-2">
-                  {members?.length > 0 ? (
+                  {members.length > 0 ? (
                     members.map((member) => {
-                      const isSelected =
-                        String(member.id) === formData.assigned_to;
+                      const isSelected = String(member.id) === formData.lead;
 
                       return (
                         <div
@@ -174,22 +156,23 @@ export function AddJobModal({
                           onClick={() =>
                             setFormData((prev) => ({
                               ...prev,
-                              assigned_to: String(member.id),
+                              lead: String(member.id),
                             }))
                           }
                           className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer border transition
-                  ${
-                    isSelected
-                      ? "bg-primary/10 border-primary"
-                      : "hover:bg-muted/50"
-                  }`}
+                          ${
+                            isSelected
+                              ? "bg-primary/10 border-primary"
+                              : "hover:bg-muted/50"
+                          }`}
                         >
-                          {/* Radio-style indicator */}
                           <div
                             className={`h-4 w-4 rounded-full border flex items-center justify-center
-                    ${
-                      isSelected ? "border-primary" : "border-muted-foreground"
-                    }`}
+                            ${
+                              isSelected
+                                ? "border-primary"
+                                : "border-muted-foreground"
+                            }`}
                           >
                             {isSelected && (
                               <div className="h-2 w-2 rounded-full bg-primary" />
@@ -217,7 +200,7 @@ export function AddJobModal({
             </div>
           </div>
 
-          <DialogFooter className="pt-4">
+          <DialogFooter>
             <Button
               type="button"
               variant="outline"
@@ -231,11 +214,10 @@ export function AddJobModal({
                 isLoading ||
                 !formData.title ||
                 !formData.deadline ||
-                !formData.estimated_hours ||
-                !formData.assigned_to
+                !formData.lead
               }
             >
-              {isLoading ? "Creating..." : "Create Job"}
+              {isLoading ? "Updating..." : "Update Task"}
             </Button>
           </DialogFooter>
         </form>

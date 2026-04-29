@@ -211,9 +211,6 @@ export default function ProjectDetailPage() {
                   <CardTitle className="text-2xl font-medium mb-2">
                     {project.title}
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground font-mono whitespace-pre-line">
-                    {project.description}
-                  </p>
                 </div>
                 <div className="flex items-start gap-2">
                   <Badge>{formatEnum(project.status)}</Badge>
@@ -231,6 +228,9 @@ export default function ProjectDetailPage() {
                   )}
                 </div>
               </div>
+              <p className="text-sm text-muted-foreground font-mono whitespace-pre-line">
+                {project.description}
+              </p>
             </CardHeader>
 
             <CardContent className="space-y-4">
@@ -313,12 +313,9 @@ export default function ProjectDetailPage() {
 
             {phases.map((phase) => (
               <Card key={phase.id}>
-                <CardHeader>
+                <CardHeader onClick={() => togglePhase(phase.id)}>
                   <div className="flex items-center justify-between w-full">
-                    <button
-                      onClick={() => togglePhase(phase.id)}
-                      className="flex items-center gap-2 flex-1 hover:opacity-75"
-                    >
+                    <div className="flex items-center gap-2 flex-1 hover:opacity-75">
                       {expandedPhases[String(phase.id)] ? (
                         <ChevronDown className="h-4 w-4" />
                       ) : (
@@ -327,10 +324,7 @@ export default function ProjectDetailPage() {
                       <CardTitle className="text-base font-medium">
                         {phase.title}
                       </CardTitle>
-                      <Badge variant="outline" className="ml-auto">
-                        {formatEnum(phase.status)}
-                      </Badge>
-                    </button>
+                    </div>
 
                     {hasProjectRight(activeOrganization.role) && (
                       <Button
@@ -353,10 +347,22 @@ export default function ProjectDetailPage() {
                       </Button>
                     )}
                   </div>
+                  <div className="flex grid grid-cols-2 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Deadline</p>
+                      <p className="text-sm font-medium">{phase.deadline}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Status</p>
+                      <Badge variant="outline" className="">
+                        {formatEnum(phase.status)}
+                      </Badge>
+                    </div>
+                  </div>
                 </CardHeader>
 
                 {phase.description && (
-                  <CardDescription className="pl-6 pb-2 whitespace-pre-line font-mono">
+                  <CardDescription className="pl-6 pb-2 whitespace-pre-line font-mono border-t pt-4">
                     {phase.description}
                   </CardDescription>
                 )}

@@ -1,74 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, Plus } from "lucide-react";
-import { useNavigate, useParams } from "react-router";
 import BackButton from "@/components/ui/backButton";
+import { Clock, Plus, Edit } from "lucide-react";
+import { useNavigate, useParams } from "react-router";
 import { formatEnum, hasProjectRight } from "@/appFunctions";
-import { useEffect } from "react";
 import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
-import { AddJobModal } from "@/components/organization/AddJobModal";
 import { useAuth } from "@/context/authContext";
-
-const MOCK_TASK_DETAIL = {
-  id: "101",
-  title: "Create wireframes and mockups",
-  description:
-    "Understand requirements,\nDecide tools and technologies,\nEnsure resources availability,\nDesign System.",
-  project: {
-    id: 1,
-    title: "Mobile App Redesign",
-    project_manager: "Chris",
-    deadline: "2024-06-30",
-    status: "IN_PROGRESS",
-  },
-  phase: {
-    title: "Design & Planning",
-    deadline: "2024-01-30",
-    status: "IN_PROGRESS",
-  },
-  lead: { id: 400, full_name: "Sarah Johnson" },
-  deadline: "2024-01-20",
-  status: "IN_PROGRESS",
-  jobs_completed: 5,
-  total_jobs: 5,
-  worked_hours: 45,
-  estimated_hours: 60,
-  jobs: [
-    {
-      id: "1",
-      title: "Create layout structure",
-      deadline: "2024-01-15",
-      worked_hours: 4,
-      estimated_hours: 8,
-      status: "IN_PROGRESS",
-      assigned_to: { id: 401, full_name: "Mike Chen" },
-    },
-    {
-      id: "2",
-      title: "Design components",
-      deadline: "2024-01-17",
-      worked_hours: 4,
-      estimated_hours: 10,
-      assigned_to: { id: 402, full_name: "Clinton" },
-    },
-    {
-      id: "3",
-      title: "Review mockups",
-      deadline: "2024-01-20",
-      worked_hours: 4,
-      estimated_hours: 4,
-      status: "IN_PROGRESS",
-      assigned_to: { id: 403, full_name: "Sarah Johnson" },
-    },
-  ],
-};
+import { EditTaskModal } from "@/components/organization/EditTaskModal";
+import { AddJobModal } from "@/components/organization/AddJobModal";
 
 export default function ProjectTaskDetailPage() {
   const [task, setTask] = useState({});
   const [loading, setLoading] = useState(false);
+  const [editTaskModalOpen, setEditTaskModalOpen] = useState(false);
   const [addJobModalOpen, setAddJobModalOpen] = useState(false);
 
   const navigate = useNavigate();
@@ -96,6 +43,12 @@ export default function ProjectTaskDetailPage() {
 
   const isLead = () => {
     return task?.member?.id === task?.lead?.id;
+  };
+  const updateTask = (updated) => {
+    setTask((prev) => ({
+      ...prev,
+      ...updated,
+    }));
   };
 
   const addJob = (job) => {
@@ -126,12 +79,29 @@ export default function ProjectTaskDetailPage() {
       {/* Task Info Card */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl font-medium mb-2">
-            {task?.title}
-          </CardTitle>
-          <p className="text-sm text-muted-foreground font-mono whitespace-pre-line">
-            {task?.description}
-          </p>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <CardTitle className="text-2xl font-medium mb-2">
+                {task?.title}
+              </CardTitle>
+              <p className="text-sm text-muted-foreground font-mono whitespace-pre-line">
+                {task?.description}
+              </p>
+            </div>
+            <div className="flex items-start gap-2">
+              {hasProjectRight(activeOrganization.role) && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setEditTaskModalOpen(true)}
+                  className="gap-2"
+                >
+                  <Edit className="h-4 w-4" />
+                  Edit
+                </Button>
+              )}
+            </div>
+          </div>
         </CardHeader>
 
         <CardContent className="space-y-6">
@@ -260,11 +230,28 @@ export default function ProjectTaskDetailPage() {
           </div>
         ))}
       </div>
+      {hasProjectRight(activeOrganization.role) && (
+        <EditTaskModal
+          open={editTaskModalOpen}
+          onOpenChange={setEditTaskModalOpen}
+          task={{
+            id: task.id,
+            title: task.title,
+            description: task?.description,
+            deadline: task?.deadline,
+            lead: task?.lead?.id,
+            projectId: task?.project?.id,
+            jobMembers: task.jobs?.map((job) => job.assigned_to.id) || [],
+          }}
+          maxDeadline={task?.phase?.deadline || task?.project?.deadline}
+          updatedTaskDetails={updateTask}
+        />
+      )}
       {(hasProjectRight(activeOrganization.role) || isLead()) && (
         <AddJobModal
           open={addJobModalOpen}
           onOpenChange={setAddJobModalOpen}
-          task={{ id: task?.id, title: task.title, lead: task?.lead }}
+          task={{ id: task?.id, title: task.title, lead: task?.lead?.id }}
           project={task.project}
           maxDeadline={
             task?.deadline || task?.phase?.deadline || task?.project?.deadline

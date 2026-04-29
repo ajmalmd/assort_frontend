@@ -78,7 +78,7 @@ export function AddPhaseModal({
               name="title"
               value={formData.title}
               onChange={handleChange}
-              placeholder="e.g., Planning"
+              placeholder="Phase title..."
               required
             />
           </div>
