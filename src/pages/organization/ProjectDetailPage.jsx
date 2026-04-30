@@ -22,9 +22,6 @@ import { ProjectMembersTab } from "@/components/organization/ProjectMembersTab";
 import { EditProjectModal } from "@/components/organization/EditProjectModal";
 import { AddPhaseModal } from "@/components/organization/AddPhaseModal";
 import { ReorderPhasesModal } from "@/components/organization/ReorderPhasesModal";
-import { EditPhaseModal } from "@/components/organization/EditPhaseModal";
-import { AddTaskModal } from "@/components/organization/AddTaskModal";
-import { ReorderTasksModal } from "@/components/organization/ReorderTasksModal";
 import ProjectInfoCard from "@/components/organization/ProjectDetailPage/ProjectInfoCard";
 import PhaseCard from "@/components/organization/ProjectDetailPage/PhaseCard";
 
