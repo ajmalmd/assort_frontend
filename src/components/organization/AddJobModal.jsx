@@ -78,6 +78,7 @@ export function AddJobModal({
         assigned_to: members.find(
           (mem) => mem.id === Number(formData.assigned_to),
         ),
+        has_access: true,
       });
       setFormData({
         title: "",

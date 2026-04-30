@@ -50,6 +50,7 @@ export function AddPhaseModal({
         ...formData,
         id: res.data.id,
         status: "PLANNED",
+        tasks: [],
       });
       setFormData({ title: "", description: "", deadline: "" });
     } catch (error) {
@@ -104,7 +105,7 @@ export function AddPhaseModal({
               type="date"
               value={formData.deadline}
               onChange={handleChange}
-              max={project?.deadline||undefined}
+              max={project?.deadline || undefined}
               min={today_localdate}
             />
           </div>

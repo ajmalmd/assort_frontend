@@ -15,6 +15,7 @@ const TITLE_MAP = {
   "/app/projects": "Projects",
   "/app/project": "Project Details",
   "/app/project/task": "Task Details",
+  "/app/project/job": "Job Details",
   "/app/chats": "Chats",
   "/app/jobs": "Jobs",
   "/app/timesheet": "Timesheet",

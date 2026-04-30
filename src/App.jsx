@@ -55,6 +55,7 @@ import JobsPage from "./pages/organization/JobsPage";
 import TimesheetPage from "./pages/organization/TimesheetPage";
 import ChatsPage from "./pages/organization/ChatsPage";
 import { getPostLoginRoute } from "./utils/authRedirect";
+import ProjectJobDetailPage from "./pages/organization/ProjectJobDetailPage";
 
 function App() {
   const [authReady, setAuthReady] = useState(false);
@@ -160,6 +161,10 @@ function App() {
               <Route
                 path="project/task/:taskId"
                 element={<ProjectTaskDetailPage />}
+              />
+              <Route
+                path="project/job/:jobId"
+                element={<ProjectJobDetailPage />}
               />
               <Route path="jobs" element={<JobsPage />} />
               <Route path="timesheet" element={<TimesheetPage />} />
