@@ -41,7 +41,7 @@ export function CreateProjectModal({ open, onOpenChange }) {
         const res = await assort_api.get(
           APP_POINTS.PROJECTS + "manager-options/",
         );
-        setManagers(res.data);
+        setManagers(res?.data || []);
       } catch (err) {
         console.error(err);
       }
@@ -96,7 +96,7 @@ export function CreateProjectModal({ open, onOpenChange }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="w-[95vw] max-w-md sm:w-full p-4 sm:p-6 max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Create New Project</DialogTitle>
           <DialogDescription>
@@ -104,7 +104,10 @@ export function CreateProjectModal({ open, onOpenChange }) {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 overflow-y-auto max-h-[75vh] pr-1 min-h-0 flex-1"
+        >
           {/* Title */}
           <div className="space-y-2">
             <Label htmlFor="project-title">Project Title</Label>
@@ -150,7 +153,7 @@ export function CreateProjectModal({ open, onOpenChange }) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={null}>Select Manager</SelectItem>
-                {managers.map((manager) => (
+                {managers?.map((manager) => (
                   <SelectItem key={manager.id} value={manager.id.toString()}>
                     {manager.full_name}
                   </SelectItem>
@@ -160,7 +163,7 @@ export function CreateProjectModal({ open, onOpenChange }) {
           </div>
 
           {/* Actions */}
-          <DialogFooter className="pt-4">
+          <DialogFooter className="pt-4 flex flex-col-reverse sm:flex-row gap-2">
             <Button
               type="button"
               variant="outline"

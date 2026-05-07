@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -15,17 +15,13 @@ import { APP_POINTS } from "@/api/apiConfig";
 import toast from "react-hot-toast";
 import { today_localdate } from "@/appFunctions";
 
-export function AddPhaseModal({
-  open,
-  onOpenChange,
-  project,
-  addedPhaseDetails,
-}) {
+export function AddTimeLogModal({ open, onOpenChange, job, addedLogDetails }) {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    deadline: "",
+    date: "",
+    start_time: "",
+    end_time: "",
+    remarks: "",
   });
 
   const handleChange = (e) => {
@@ -38,23 +34,31 @@ export function AddPhaseModal({
     setIsLoading(true);
     try {
       const res = await assort_api.post(
-        `${APP_POINTS.PROJECTS + project.id}/add-phase/`,
+        `${APP_POINTS.PROJECTS}job/${job.id}/add-log/`,
         formData,
       );
-      toast.success("Phase added");
+
+      toast.success("Worklog added");
       setIsLoading(false);
       onOpenChange(false);
-      addedPhaseDetails({
+      addedLogDetails({
         ...formData,
         id: res.data.id,
-        status: "PLANNED",
-        tasks: [],
+        status: "LOGGED",
+        duration: res.data.duration,
+        start_time: res.data.start_time,
+        end_time: res.data.end_time,
       });
-      setFormData({ title: "", description: "", deadline: "" });
+      setFormData({
+        date: "",
+        start_time: "",
+        end_time: "",
+        remarks: "",
+      });
     } catch (error) {
       console.error(error);
       setIsLoading(false);
-      const message = error?.response?.data?.message || "Couldn't add phase";
+      const message = error?.response?.data?.message || "Couldn't add worklog";
       toast.error(message);
     }
   };
@@ -63,9 +67,9 @@ export function AddPhaseModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-md sm:w-full p-4 sm:p-6 max-h-[90vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle>Add New Phase</DialogTitle>
+          <DialogTitle>Add Work-Log</DialogTitle>
           <DialogDescription>
-            Create a new phase for the project "{project.title}".
+            Add a new work log to the job "{job.title}".
           </DialogDescription>
         </DialogHeader>
 
@@ -74,40 +78,50 @@ export function AddPhaseModal({
           className="space-y-4 overflow-y-auto pr-1 max-h-[75vh]"
         >
           <div className="space-y-2">
-            <Label htmlFor="phase-title">Phase Title</Label>
+            <Label>Date</Label>
             <Input
-              id="phase-title"
-              name="title"
-              value={formData.title}
+              name="date"
+              type="date"
+              value={formData.date}
+              max={today_localdate}
               onChange={handleChange}
-              placeholder="Phase title..."
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phase-description">Description</Label>
-            <textarea
-              id="phase-description"
-              name="description"
-              value={formData.description}
+            <Label>Start Time</Label>
+            <Input
+              name="start_time"
+              type="time"
+              value={formData.start_time}
+              max={formData.end_time || undefined}
               onChange={handleChange}
-              placeholder="Describe the phase goals and scope..."
-              className="w-full p-2 border rounded-md text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary sm:rows-3 rows-2"
-              rows={3}
+              required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phase-deadline">Deadline</Label>
+            <Label>End Time</Label>
             <Input
-              id="phase-deadline"
-              name="deadline"
-              type="date"
-              value={formData.deadline}
+              name="end_time"
+              type="time"
+              value={formData.end_time}
+              min={formData.start_time || undefined}
               onChange={handleChange}
-              max={project?.deadline || undefined}
-              min={today_localdate}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Remarks</Label>
+            <textarea
+              name="remarks"
+              value={formData.remarks}
+              onChange={handleChange}
+              placeholder="Describe the work you have done on this selected time span"
+              className="w-full p-2 border rounded-md text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+              rows={3}
             />
           </div>
 
@@ -121,9 +135,15 @@ export function AddPhaseModal({
             </Button>
             <Button
               type="submit"
-              disabled={isLoading || !formData.title || !formData.deadline}
+              disabled={
+                isLoading ||
+                !formData.date ||
+                !formData.start_time ||
+                !formData.end_time ||
+                !formData.remarks
+              }
             >
-              {isLoading ? "Adding..." : "Add Phase"}
+              {isLoading ? "Adding..." : "Add Log"}
             </Button>
           </DialogFooter>
         </form>

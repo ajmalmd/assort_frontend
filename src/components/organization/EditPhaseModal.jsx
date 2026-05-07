@@ -39,7 +39,18 @@ export function EditPhaseModal({
     }
   }, [phase, open]);
 
-  const minDate = phase.maxTaskDeadline
+  // reset on close (optional improvement)
+  useEffect(() => {
+    if (!open) {
+      setFormData({
+        title: "",
+        description: "",
+        deadline: "",
+      });
+    }
+  }, [open]);
+
+  const minDate = phase?.maxTaskDeadline
     ? phase.maxTaskDeadline > today_localdate
       ? phase.maxTaskDeadline
       : today_localdate
@@ -53,15 +64,18 @@ export function EditPhaseModal({
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+
     try {
       await assort_api.patch(
         `${APP_POINTS.PROJECTS}phase/${phase.id}/update/`,
         formData,
       );
+
       toast.success("Phase edited successfully");
       setIsLoading(false);
       onOpenChange(false);
-      editedPhaseDetails({
+
+      editedPhaseDetails?.({
         ...formData,
         id: phase.id,
       });
@@ -75,13 +89,16 @@ export function EditPhaseModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="w-[95vw] max-w-md sm:w-full p-4 sm:p-6 max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Edit Phase</DialogTitle>
           <DialogDescription>Update the phase details</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 overflow-y-auto max-h-[75vh] pr-1 min-h-0 flex-1"
+        >
           <div className="space-y-2">
             <Label htmlFor="phase-title">Phase Title</Label>
             <Input
@@ -118,7 +135,7 @@ export function EditPhaseModal({
             />
           </div>
 
-          <DialogFooter className="pt-4">
+          <DialogFooter className="pt-4 flex flex-col-reverse sm:flex-row gap-2">
             <Button
               type="button"
               variant="outline"

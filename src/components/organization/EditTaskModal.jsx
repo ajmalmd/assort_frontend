@@ -35,31 +35,32 @@ export function EditTaskModal({
   });
 
   useEffect(() => {
-    if (open && task) {
-      const fetchMembers = async () => {
-        try {
-          const res = await assort_api.get(
-            `${APP_POINTS.PROJECTS + task.projectId}/members/`,
-          );
-          const availableMembers = res.data?.filter(
-            (mem) => !task.jobMembers?.includes(mem.id),
-          );
+    if (!open || !task) return;
 
-          setMembers(availableMembers || []);
-        } catch (err) {
-          console.error("Failed to fetch members:", err);
-        }
-      };
+    const fetchMembers = async () => {
+      try {
+        const res = await assort_api.get(
+          `${APP_POINTS.PROJECTS + task.projectId}/members/`,
+        );
 
-      setFormData({
-        title: task.title || "",
-        description: task.description || "",
-        deadline: task.deadline || "",
-        lead: String(task.lead || ""),
-      });
+        const availableMembers = (res?.data || []).filter(
+          (mem) => !task?.jobMembers?.includes(mem.id),
+        );
 
-      fetchMembers();
-    }
+        setMembers(availableMembers);
+      } catch (err) {
+        console.error("Failed to fetch members:", err);
+      }
+    };
+
+    setFormData({
+      title: task?.title || "",
+      description: task?.description || "",
+      deadline: task?.deadline || "",
+      lead: String(task?.lead || ""),
+    });
+
+    fetchMembers();
   }, [open, task]);
 
   const handleChange = (e) => {
@@ -77,7 +78,7 @@ export function EditTaskModal({
         formData,
       );
 
-      updatedTaskDetails({
+      updatedTaskDetails?.({
         ...formData,
         lead: members.find((mem) => mem.id === Number(formData.lead)),
       });
@@ -95,13 +96,16 @@ export function EditTaskModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[95vw] max-w-md sm:w-full p-4 sm:p-6 max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Edit Task</DialogTitle>
           <DialogDescription>Update task details.</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 overflow-y-auto max-h-[75vh] pr-1 min-h-0 flex-1"
+        >
           {/* Title */}
           <div className="space-y-2">
             <Label>Task Title</Label>
@@ -143,7 +147,7 @@ export function EditTaskModal({
           <div className="space-y-2">
             <Label>Task Lead</Label>
 
-            <div className="h-48 border rounded-lg overflow-hidden">
+            <div className="h-40 sm:h-48 border rounded-lg overflow-hidden">
               <ScrollArea className="h-full">
                 <div className="p-3 space-y-2">
                   {members.length > 0 ? (
@@ -159,16 +163,14 @@ export function EditTaskModal({
                               lead: String(member.id),
                             }))
                           }
-                          className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer border transition
-                          ${
+                          className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer border transition ${
                             isSelected
                               ? "bg-primary/10 border-primary"
                               : "hover:bg-muted/50"
                           }`}
                         >
                           <div
-                            className={`h-4 w-4 rounded-full border flex items-center justify-center
-                            ${
+                            className={`h-4 w-4 rounded-full border flex items-center justify-center ${
                               isSelected
                                 ? "border-primary"
                                 : "border-muted-foreground"
@@ -200,7 +202,7 @@ export function EditTaskModal({
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="pt-4 flex flex-col-reverse sm:flex-row gap-2">
             <Button
               type="button"
               variant="outline"

@@ -7,47 +7,59 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "../ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "../ui/scroll-area";
 import { Badge } from "../ui/badge";
-import toast from "react-hot-toast";
+import { today_localdate } from "@/appFunctions";
 import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
-import { today_localdate } from "@/appFunctions";
+import toast from "react-hot-toast";
 
-export function AddTaskModal({
-  open,
-  onOpenChange,
-  project,
-  phase,
-  addedTaskDetails,
-}) {
+export function EditJobModal({ open, onOpenChange, job, updatedJobDetails }) {
   const [isLoading, setIsLoading] = useState(false);
   const [members, setMembers] = useState([]);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     deadline: "",
-    lead_id: "",
+    estimated_hours: "",
+    assigned_to: "",
   });
 
+  const maxDeadline =
+    job?.task?.deadline || job?.project?.deadline || undefined;
+
   useEffect(() => {
-    if (open) {
-      const fetchProjectMembers = async () => {
-        try {
-          const res = await assort_api.get(
-            `${APP_POINTS.PROJECTS + project.id}/members/`,
-          );
-          setMembers(res.data || []);
-        } catch (err) {
-          console.error("Failed to fetch members:", err);
-        }
-      };
-      fetchProjectMembers();
-    }
-  }, [open, project?.id]);
+    if (!open || !job) return;
+
+    const fetchProjectMembers = async () => {
+      try {
+        const res = await assort_api.get(
+          `${APP_POINTS.PROJECTS + job.project.id}/members/`,
+        );
+
+        const availableMembers = (res?.data || []).filter(
+          (mem) => mem.id !== job?.task?.lead?.id,
+        );
+
+        setMembers(availableMembers);
+      } catch (err) {
+        console.error("Failed to fetch members:", err);
+      }
+    };
+
+    fetchProjectMembers();
+
+    setFormData({
+      title: job?.title || "",
+      description: job?.description || "",
+      deadline: job?.deadline || "",
+      assigned_to: job?.assigned_to?.id || "",
+      estimated_hours: job?.estimated_hours || "",
+    });
+  }, [open, job]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -57,103 +69,105 @@ export function AddTaskModal({
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+
     try {
-      const res = await assort_api.post(
-        `${APP_POINTS.PROJECTS}phase/${phase.id}/add-task/`,
+      await assort_api.patch(
+        `${APP_POINTS.PROJECTS}job/${job.id}/update/`,
         formData,
       );
-      addedTaskDetails({
-        phaseId: phase.id,
-        taskDetails: {
-          id: res.data?.id,
-          title: formData.title,
-          deadline: formData.deadline,
-          lead: members.find((mem) => mem.id === Number(formData.lead_id)),
-          jobs_completed: 0,
-          total_jobs: 0,
-          jobs: [],
-          has_access: true,
-        },
-      });
 
-      toast.success("Task Added");
+      toast.success("Job updated");
       setIsLoading(false);
       onOpenChange(false);
-      setFormData({
-        title: "",
-        deadline: "",
-        description: "",
-        lead_id: "",
+
+      updatedJobDetails?.({
+        ...job,
+        ...formData,
+        assigned_to: members.find(
+          (mem) => mem.id === Number(formData.assigned_to),
+        ),
       });
     } catch (error) {
       console.error(error);
-      const message = error?.response?.data?.message || "couldn't add task";
-      toast.error(message);
       setIsLoading(false);
+      const message = error?.response?.data?.message || "Couldn't update job";
+      toast.error(message);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-md sm:w-full p-4 sm:p-6 max-h-[90vh] overflow-hidden">
+      <DialogContent className="w-[95vw] max-w-md sm:w-full p-4 sm:p-6 max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle>Create New Task</DialogTitle>
-          <DialogDescription>
-            Add a new task to the phase "{phase?.title}".
-          </DialogDescription>
+          <DialogTitle>Edit</DialogTitle>
+          <DialogDescription>Update job details</DialogDescription>
         </DialogHeader>
 
         <form
           onSubmit={handleSubmit}
-          className="space-y-4 overflow-y-auto pr-1 max-h-[75vh]"
+          className="space-y-4 overflow-y-auto max-h-[75vh] pr-1 min-h-0 flex-1"
         >
           <div className="space-y-2">
-            <Label htmlFor="task-title">Task Title</Label>
+            <Label htmlFor="job-title">Job Title</Label>
             <Input
-              id="task-title"
+              id="job-title"
               name="title"
-              placeholder="Task title..."
+              placeholder="Job title..."
               value={formData.title}
               onChange={handleChange}
               required
             />
           </div>
+
           <div className="space-y-2">
-            <Label htmlFor="task-description">Description</Label>
+            <Label htmlFor="job-description">Description</Label>
             <textarea
-              id="task-description"
+              id="job-description"
               name="description"
               value={formData.description}
               onChange={handleChange}
-              placeholder="Describe the task goals and scope..."
+              placeholder="Describe the job goals and scope..."
               className="w-full p-2 border rounded-md text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary"
               rows={3}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="task-deadline">Deadline</Label>
+            <Label htmlFor="job-deadline">Deadline</Label>
             <Input
-              id="task-deadline"
+              id="job-deadline"
               name="deadline"
               type="date"
               value={formData.deadline}
               onChange={handleChange}
-              max={phase?.deadline || project?.deadline || undefined}
               min={today_localdate}
+              max={maxDeadline || undefined}
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label>Task Lead</Label>
+            <Label htmlFor="job-hours">Estimated Hours</Label>
+            <Input
+              id="job-hours"
+              name="estimated_hours"
+              type="number"
+              placeholder="e.g., 8"
+              value={formData.estimated_hours}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Assigned To</Label>
 
             <div className="h-40 sm:h-48 border rounded-lg overflow-hidden">
               <ScrollArea className="h-full">
                 <div className="p-3 space-y-2">
                   {members?.length > 0 ? (
                     members.map((member) => {
-                      const isSelected = String(member.id) === formData.lead_id;
+                      const isSelected = member.id === formData.assigned_to;
 
                       return (
                         <div
@@ -161,22 +175,21 @@ export function AddTaskModal({
                           onClick={() =>
                             setFormData((prev) => ({
                               ...prev,
-                              lead_id: String(member.id),
+                              assigned_to: member.id,
                             }))
                           }
-                          className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer border transition
-                  ${
-                    isSelected
-                      ? "bg-primary/10 border-primary"
-                      : "hover:bg-muted/50"
-                  }`}
+                          className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer border transition ${
+                            isSelected
+                              ? "bg-primary/10 border-primary"
+                              : "hover:bg-muted/50"
+                          }`}
                         >
-                          {/* Radio-style indicator */}
                           <div
-                            className={`h-4 w-4 rounded-full border flex items-center justify-center
-                    ${
-                      isSelected ? "border-primary" : "border-muted-foreground"
-                    }`}
+                            className={`h-4 w-4 rounded-full border flex items-center justify-center ${
+                              isSelected
+                                ? "border-primary"
+                                : "border-muted-foreground"
+                            }`}
                           >
                             {isSelected && (
                               <div className="h-2 w-2 rounded-full bg-primary" />
@@ -218,10 +231,11 @@ export function AddTaskModal({
                 isLoading ||
                 !formData.title ||
                 !formData.deadline ||
-                !formData.lead_id
+                !formData.estimated_hours ||
+                !formData.assigned_to
               }
             >
-              {isLoading ? "Creating..." : "Create Task"}
+              {isLoading ? "Updating..." : "Update Job"}
             </Button>
           </DialogFooter>
         </form>

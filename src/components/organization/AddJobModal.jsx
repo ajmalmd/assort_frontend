@@ -53,7 +53,7 @@ export function AddJobModal({
       };
       fetchProjectMembers();
     }
-  }, [open]);
+  }, [open, project?.id, task?.lead]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -90,14 +90,14 @@ export function AddJobModal({
     } catch (error) {
       console.error(error);
       setIsLoading(false);
-      const message = error?.response?.data?.message || "Couldn't add phase";
+      const message = error?.response?.data?.message || "Couldn't add job";
       toast.error(message);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[95vw] max-w-md sm:w-full p-4 sm:p-6 max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle>Create New Job</DialogTitle>
           <DialogDescription>
@@ -105,7 +105,10 @@ export function AddJobModal({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 overflow-y-auto pr-1 max-h-[75vh]"
+        >
           <div className="space-y-2">
             <Label htmlFor="job-title">Job Title</Label>
             <Input
@@ -161,7 +164,7 @@ export function AddJobModal({
           <div className="space-y-2">
             <Label>Assigned To</Label>
 
-            <div className="h-48 border rounded-lg overflow-hidden">
+            <div className="h-40 sm:h-48 border rounded-lg overflow-hidden">
               <ScrollArea className="h-full">
                 <div className="p-3 space-y-2">
                   {members?.length > 0 ? (
@@ -218,7 +221,7 @@ export function AddJobModal({
             </div>
           </div>
 
-          <DialogFooter className="pt-4">
+          <DialogFooter className="pt-4 flex flex-col-reverse sm:flex-row gap-2">
             <Button
               type="button"
               variant="outline"

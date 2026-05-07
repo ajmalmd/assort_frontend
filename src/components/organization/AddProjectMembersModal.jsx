@@ -110,7 +110,7 @@ export function AddProjectMembersModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+      <DialogContent className="w-[95vw] max-w-2xl sm:w-full max-h-[90vh] flex flex-col p-4 sm:p-6 overflow-hidden">
         <DialogHeader>
           <DialogTitle>Add Members to Project</DialogTitle>
           <DialogDescription>Select members and assign role.</DialogDescription>
@@ -118,92 +118,94 @@ export function AddProjectMembersModal({
 
         <form
           onSubmit={handleSubmit}
-          className="flex-1 flex flex-col overflow-hidden space-y-4"
+          className="flex-1 flex flex-col overflow-hidden space-y-4 min-h-0"
         >
-          {/* Search */}
-          <div className="space-y-2">
-            <Label>Search Members</Label>
-            <Input
-              placeholder="Search by name or email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-
-          {/* Members List */}
-          <div className="h-64 border rounded-lg overflow-hidden">
-            <ScrollArea className="h-full">
-              <div className="p-4 space-y-2">
-                {filteredMembers.length > 0 ? (
-                  filteredMembers.map((member) => (
-                    <div
-                      key={member.id}
-                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50"
-                    >
-                      <Checkbox
-                        checked={selectedMembers.includes(member.id)}
-                        onCheckedChange={() => handleMemberToggle(member.id)}
-                      />
-                      <div>
-                        <p className="font-medium text-sm">
-                          {member.full_name}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {member.email}
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    No members found
-                  </p>
-                )}
-              </div>
-            </ScrollArea>
-          </div>
-
-          {/* Role */}
-          <div className="space-y-2">
-            <Label>Assign Role</Label>
-
-            <Select
-              value={projectRole}
-              onValueChange={(value) => {
-                setProjectRole(value);
-                if (value !== "__custom__") setCustomRole("");
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select role" />
-              </SelectTrigger>
-
-              <SelectContent>
-                <SelectItem value="__custom__">+ Add new role</SelectItem>
-
-                {roles?.map((role, i) => (
-                  <SelectItem key={i} value={role}>
-                    {role}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Custom Role */}
-          {projectRole === "__custom__" && (
+          <div className="flex-1 overflow-y-auto pr-1 space-y-4">
+            {/* Search */}
             <div className="space-y-2">
-              <Label>New Role</Label>
+              <Label>Search Members</Label>
               <Input
-                value={customRole}
-                onChange={(e) => setCustomRole(e.target.value)}
-                placeholder="Enter role"
+                placeholder="Search by name or email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-          )}
+
+            {/* Members List */}
+            <div className="h-48 sm:h-64 border rounded-lg overflow-hidden">
+              <ScrollArea className="h-full">
+                <div className="p-4 space-y-2">
+                  {filteredMembers.length > 0 ? (
+                    filteredMembers.map((member) => (
+                      <div
+                        key={member.id}
+                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50"
+                      >
+                        <Checkbox
+                          checked={selectedMembers.includes(member.id)}
+                          onCheckedChange={() => handleMemberToggle(member.id)}
+                        />
+                        <div>
+                          <p className="font-medium text-sm">
+                            {member.full_name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {member.email}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      No members found
+                    </p>
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
+
+            {/* Role */}
+            <div className="space-y-2">
+              <Label>Assign Role</Label>
+
+              <Select
+                value={projectRole}
+                onValueChange={(value) => {
+                  setProjectRole(value);
+                  if (value !== "__custom__") setCustomRole("");
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  <SelectItem value="__custom__">+ Add new role</SelectItem>
+
+                  {roles?.map((role, i) => (
+                    <SelectItem key={i} value={role}>
+                      {role}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Custom Role */}
+            {projectRole === "__custom__" && (
+              <div className="space-y-2">
+                <Label>New Role</Label>
+                <Input
+                  value={customRole}
+                  onChange={(e) => setCustomRole(e.target.value)}
+                  placeholder="Enter role"
+                />
+              </div>
+            )}
+          </div>
 
           {/* Footer */}
-          <DialogFooter>
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 pt-2">
             <Button
               type="button"
               variant="outline"

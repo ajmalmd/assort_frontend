@@ -23,38 +23,49 @@ import toast from "react-hot-toast";
 import { useAuth } from "@/context/authContext";
 import { isOrgOwnerorAdmin } from "@/appFunctions";
 
-export function EditProjectModal({ open, onOpenChange, project }) {
+export function EditProjectModal({
+  open,
+  onOpenChange,
+  project,
+  updatedProjectDetails,
+}) {
   const [isLoading, setIsLoading] = useState(false);
   const [managers, setManagers] = useState([]);
   const [formData, setFormData] = useState({
-    title: project?.title || "",
-    description: project?.description || "",
-    project_manager: project?.project_manager?.id || "",
-    deadline: project?.deadline || "",
+    title: "",
+    description: "",
+    project_manager: "",
+    deadline: "",
   });
+
   const { activeOrganization } = useAuth();
 
   useEffect(() => {
     if (open && project) {
       setFormData({
-        title: project.title || "",
-        description: project.description || "",
-        deadline: project.deadline || null,
-        project_manager: project.project_manager?.id || "",
+        title: project?.title || "",
+        description: project?.description || "",
+        deadline: project?.deadline || "",
+        project_manager: project?.project_manager?.id || "",
       });
     }
   }, [project, open]);
 
   useEffect(() => {
-    if (open) {
-      const fetchManagers = async () => {
+    if (!open) return;
+
+    const fetchManagers = async () => {
+      try {
         const res = await assort_api.get(
           APP_POINTS.PROJECTS + "manager-options/",
         );
-        setManagers(res.data);
-      };
-      fetchManagers();
-    }
+        setManagers(res?.data || []);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchManagers();
   }, [open]);
 
   const handleChange = (e) => {
@@ -72,13 +83,15 @@ export function EditProjectModal({ open, onOpenChange, project }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+
     try {
       const payload = {
         title: formData.title,
         description: formData.description,
         deadline: formData.deadline,
       };
-      if (isOrgOwnerorAdmin(activeOrganization.role)) {
+
+      if (isOrgOwnerorAdmin(activeOrganization?.role)) {
         payload.project_manager = formData.project_manager;
       }
 
@@ -86,6 +99,13 @@ export function EditProjectModal({ open, onOpenChange, project }) {
         `${APP_POINTS.PROJECTS + project.id}/update/`,
         payload,
       );
+
+      updatedProjectDetails({
+        ...formData,
+        project_manager: managers.find(
+          (m) => m.id === formData.project_manager,
+        ),
+      });
       toast.success("Project Updated");
       onOpenChange(false);
     } catch (error) {
@@ -93,13 +113,14 @@ export function EditProjectModal({ open, onOpenChange, project }) {
       const message =
         error?.response?.data?.message || "Couldn't update project";
       toast.error(message);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="w-[95vw] max-w-md sm:w-full p-4 sm:p-6 max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Edit Project</DialogTitle>
           <DialogDescription>
@@ -107,7 +128,10 @@ export function EditProjectModal({ open, onOpenChange, project }) {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 overflow-y-auto max-h-[75vh] pr-1 min-h-0 flex-1"
+        >
           <div className="space-y-2">
             <Label htmlFor="edit-project-name">Project Name</Label>
             <Input
@@ -144,31 +168,33 @@ export function EditProjectModal({ open, onOpenChange, project }) {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="edit-project-manager">Project Manager</Label>
-            <Select
-              value={
-                formData.project_manager
-                  ? String(formData.project_manager)
-                  : undefined
-              }
-              onValueChange={handleManagerChange}
-              required
-            >
-              <SelectTrigger id="edit-project-manager">
-                <SelectValue placeholder="Select project manager" />
-              </SelectTrigger>
-              <SelectContent>
-                {managers?.map((manager) => (
-                  <SelectItem key={manager.id} value={String(manager.id)}>
-                    {manager.full_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {isOrgOwnerorAdmin(activeOrganization.role) && (
+            <div className="space-y-2">
+              <Label htmlFor="edit-project-manager">Project Manager</Label>
+              <Select
+                value={
+                  formData.project_manager
+                    ? String(formData.project_manager)
+                    : undefined
+                }
+                onValueChange={handleManagerChange}
+                required
+              >
+                <SelectTrigger id="edit-project-manager">
+                  <SelectValue placeholder="Select project manager" />
+                </SelectTrigger>
+                <SelectContent>
+                  {managers?.map((manager) => (
+                    <SelectItem key={manager.id} value={String(manager.id)}>
+                      {manager.full_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
-          <DialogFooter className="pt-4">
+          <DialogFooter className="pt-4 flex flex-col-reverse sm:flex-row gap-2">
             <Button
               type="button"
               variant="outline"

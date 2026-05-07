@@ -8,29 +8,28 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { GripVertical } from "lucide-react";
 import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
 import toast from "react-hot-toast";
 
-export function ReorderPhasesModal({
+export function ReorderJobsModal({
   open,
   onOpenChange,
-  phases,
-  projectId,
-  onPhaseReorder,
+  jobs,
+  taskId,
+  onJobsReorder,
 }) {
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
-  const [localPhases, setLocalPhases] = useState(phases);
+  const [localJobs, setLocalJobs] = useState(jobs);
 
   useEffect(() => {
-    setLocalPhases(phases || []);
-  }, [phases, open]);
+    setLocalJobs(jobs || []);
+  }, [jobs, open]);
 
   const handleOpenChange = (newOpen) => {
-    if (!newOpen) setLocalPhases(phases || []);
+    if (!newOpen) setLocalJobs(jobs || []);
     onOpenChange(newOpen);
   };
 
@@ -49,11 +48,11 @@ export function ReorderPhasesModal({
 
     if (draggedIndex === null || draggedIndex === dropIndex) return;
 
-    const newPhases = [...localPhases];
-    const [removed] = newPhases.splice(draggedIndex, 1);
-    newPhases.splice(dropIndex, 0, removed);
+    const newJobs = [...localJobs];
+    const [removed] = newJobs.splice(draggedIndex, 1);
+    newJobs.splice(dropIndex, 0, removed);
 
-    setLocalPhases(newPhases);
+    setLocalJobs(newJobs);
     setDraggedIndex(null);
     setDragOverIndex(null);
   };
@@ -66,36 +65,38 @@ export function ReorderPhasesModal({
   const handleSave = async () => {
     try {
       await assort_api.patch(
-        `${APP_POINTS.PROJECTS + projectId}/reorder-phases/`,
-        { ordered_phase_ids: localPhases.map((phase) => phase.id) },
+        `${APP_POINTS.PROJECTS}task/${taskId}/reorder-jobs/`,
+        { ordered_job_ids: localJobs.map((job) => job.id) },
       );
 
-      toast.success("Phases reorder successful");
-      onPhaseReorder?.(localPhases);
+      toast.success("Jobs reorder successful");
+      onJobsReorder?.(localJobs);
       onOpenChange(false);
     } catch (error) {
       console.error(error);
       const message =
-        error?.response?.data?.message || "Couldn't reorder phase";
+        error?.response?.data?.message || "Couldn't reorder jobs";
       toast.error(message);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="w-[95vw] max-w-md sm:w-full p-4 sm:p-6 max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent
+        className="w-[95vw] max-w-md sm:w-full p-4 sm:p-6 max-h-[90vh] overflow-hidden flex flex-col"
+      >
         <DialogHeader>
-          <DialogTitle>Edit Phases Order</DialogTitle>
+          <DialogTitle>Edit Jobs Order</DialogTitle>
           <DialogDescription>
-            Drag and drop phases to reorder them. Click save when you're done.
+            Drag and drop jobs to reorder them. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-2 overflow-y-auto max-h-[75vh] pr-1 min-h-0 flex-1">
-          {localPhases?.length > 0 ? (
-            localPhases.map((phase, index) => (
+          {localJobs?.length > 0 ? (
+            localJobs.map((job, index) => (
               <div
-                key={phase.id}
+                key={job.id}
                 draggable
                 onDragStart={(e) => handleDragStart(e, index)}
                 onDragOver={(e) => handleDragOver(e, index)}
@@ -111,22 +112,24 @@ export function ReorderPhasesModal({
               >
                 <GripVertical className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate">{phase.title}</p>
+                  <p className="font-medium text-sm truncate">
+                    {job.title}
+                  </p>
                 </div>
-                <Badge variant="outline" className="text-xs flex-shrink-0">
-                  {phase.status}
-                </Badge>
               </div>
             ))
           ) : (
             <p className="text-sm text-muted-foreground text-center py-8">
-              No phases found
+              No jobs found
             </p>
           )}
         </div>
 
         <DialogFooter className="pt-4 flex flex-col-reverse sm:flex-row gap-2">
-          <Button variant="outline" onClick={() => handleOpenChange(false)}>
+          <Button
+            variant="outline"
+            onClick={() => handleOpenChange(false)}
+          >
             Cancel
           </Button>
           <Button onClick={handleSave}>Save Changes</Button>

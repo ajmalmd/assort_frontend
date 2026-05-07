@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -15,25 +15,32 @@ export function DeptSelectHeadModal({
   open,
   onOpenChange,
   onSelect,
-  memberOptions,
+  memberOptions = [],
 }) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredMembers = memberOptions.filter(
     (mem) =>
-      mem.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      mem.email.toLowerCase().includes(searchQuery.toLowerCase()),
+      mem.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      mem.email?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const handleSelect = (member) => {
-    onSelect(member);
+    onSelect?.(member);
     setSearchQuery("");
     onOpenChange(false);
   };
 
+  // Reset on close
+  useEffect(() => {
+    if (!open) {
+      setSearchQuery("");
+    }
+  }, [open]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[95vw] max-w-md sm:w-full p-4 sm:p-6 max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Select Department Head</DialogTitle>
           <DialogDescription>
@@ -41,7 +48,7 @@ export function DeptSelectHeadModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 overflow-y-auto max-h-[75vh] pr-1 min-h-0 flex-1">
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
@@ -60,7 +67,7 @@ export function DeptSelectHeadModal({
             )}
           </div>
 
-          <ScrollArea className="h-[300px] border rounded-lg p-4">
+          <ScrollArea className="h-48 sm:h-64 border rounded-lg p-4">
             <div className="space-y-2">
               {filteredMembers.length > 0 ? (
                 filteredMembers.map((member) => (

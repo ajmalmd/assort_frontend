@@ -56,7 +56,7 @@ export default function TaskItem({ task }) {
             <button
               key={job.id}
               onClick={() => {
-                job.has_access && navigate(`/app/project/job/${job.id}`);
+                task.has_access && navigate(`/app/project/job/${job.id}`);
               }}
               className="text-xs p-2 bg-white rounded w-full text-left hover:bg-muted transition-colors"
             >

@@ -23,7 +23,6 @@ import assort_api from "@/api/axios";
 import toast from "react-hot-toast";
 import { formatEnum } from "@/appFunctions";
 
-
 export default function CreateDepartmentModal({ open, onOpenChange }) {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedHead, setSelectedHead] = useState("");
@@ -32,13 +31,25 @@ export default function CreateDepartmentModal({ open, onOpenChange }) {
 
   useEffect(() => {
     const fetchMembers = async () => {
-      const res = await assort_api.get(
-        APP_POINTS.ORGANIZATIONS + "dept-member-options/",
-      );
-      setMembers(res.data);
+      try {
+        const res = await assort_api.get(
+          APP_POINTS.ORGANIZATIONS + "dept-member-options/",
+        );
+        setMembers(res?.data || []);
+      } catch (err) {
+        console.error(err);
+      }
     };
     fetchMembers();
   }, []);
+
+  // Optional: reset state on close
+  useEffect(() => {
+    if (!open) {
+      setSelectedHead("");
+      setSelectedMembers(new Set());
+    }
+  }, [open]);
 
   const handleMemberToggle = (memberId) => {
     const newMembers = new Set(selectedMembers);
@@ -56,7 +67,7 @@ export default function CreateDepartmentModal({ open, onOpenChange }) {
 
     try {
       await assort_api.post(APP_POINTS.DEPARTMENTS + "create/", {
-        name: e.target["dept-name"].value,
+        name: e.target["dept-name"]?.value,
         head: selectedHead || null,
         members: Array.from(selectedMembers),
       });
@@ -67,7 +78,7 @@ export default function CreateDepartmentModal({ open, onOpenChange }) {
     } catch (error) {
       setIsLoading(false);
       console.log(error);
-      error.response.data.message
+      error?.response?.data?.message
         ? toast.error(error.response.data.message)
         : toast.error("Couldn't create department");
     }
@@ -76,7 +87,7 @@ export default function CreateDepartmentModal({ open, onOpenChange }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-md max-h-[80vh] overflow-y-auto"
+        className="w-[95vw] max-w-md sm:w-full p-4 sm:p-6 max-h-[90vh] overflow-hidden flex flex-col"
         onInteractOutside={(e) => e.preventDefault()}
       >
         <DialogHeader>
@@ -86,7 +97,10 @@ export default function CreateDepartmentModal({ open, onOpenChange }) {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 overflow-y-auto max-h-[75vh] pr-1 min-h-0 flex-1"
+        >
           <div className="space-y-2">
             <Label htmlFor="dept-name">Department Name</Label>
             <Input id="dept-name" placeholder="e.g., Engineering" required />
@@ -100,7 +114,7 @@ export default function CreateDepartmentModal({ open, onOpenChange }) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={null}>Select Head</SelectItem>
-                {members.map(
+                {members?.map(
                   (head) =>
                     !selectedMembers.has(head.id) && (
                       <SelectItem key={head.id} value={head.id.toString()}>
@@ -114,13 +128,13 @@ export default function CreateDepartmentModal({ open, onOpenChange }) {
 
           <div className="space-y-3">
             <Label>Select Members</Label>
-            <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-3">
-              {members.map(
+            <div className="space-y-2 h-40 sm:h-48 overflow-y-auto border rounded-lg p-3">
+              {members?.map(
                 (member) =>
                   member.id != selectedHead && (
                     <label
                       key={member.id}
-                      className="flex items-center gap-3 cursor-pointer"
+                      className="flex items-center gap-3 cursor-pointer py-2"
                     >
                       <Checkbox
                         checked={selectedMembers.has(member.id)}
@@ -133,17 +147,17 @@ export default function CreateDepartmentModal({ open, onOpenChange }) {
                         <p className="text-xs text-muted-foreground truncate">
                           {member.email}
                         </p>
-                        <p className="inline-block mt-2 text-xs bg-primary text-white px-2 py-1 rounded">
-                          {formatEnum(member.role)}
-                        </p>
                       </div>
+                      <p className="inline-block mt-2 text-xs bg-primary text-white px-2 py-1 rounded">
+                        {formatEnum(member.role)}
+                      </p>
                     </label>
                   ),
               )}
             </div>
           </div>
 
-          <DialogFooter className="pt-4">
+          <DialogFooter className="pt-4 flex flex-col-reverse sm:flex-row gap-2">
             <Button
               type="button"
               variant="outline"

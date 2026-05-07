@@ -84,6 +84,10 @@ export default function ProjectDetailPage() {
     setPhases(reorderedPhases);
   };
 
+  const updateProject = (details) => {
+    setProject((prev) => ({ ...prev, ...details }));
+  };
+
   const addPhase = (data) => {
     setPhases((prev) => [...prev, data]);
   };
@@ -223,6 +227,7 @@ export default function ProjectDetailPage() {
             open={editProjectModalOpen}
             onOpenChange={setEditProjectModalOpen}
             project={project}
+            updatedProjectDetails={updateProject}
           />
 
           <AddPhaseModal

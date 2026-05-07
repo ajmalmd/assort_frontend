@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -16,7 +16,7 @@ import { formatEnum } from "@/appFunctions";
 export function DeptAddMemberModal({
   open,
   onOpenChange,
-  memberOptions,
+  memberOptions = [],
   onAddMembers,
 }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -25,8 +25,8 @@ export function DeptAddMemberModal({
 
   const filteredMembers = memberOptions.filter(
     (member) =>
-      member.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      member.email.toLowerCase().includes(searchQuery.toLowerCase()),
+      member.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      member.email?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const toggleMember = (memberId) => {
@@ -44,19 +44,25 @@ export function DeptAddMemberModal({
     setIsLoading(true);
 
     const selected = memberOptions.filter((m) => selectedMembers.has(m.id));
-    onAddMembers(selected);
+    onAddMembers?.(selected);
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    
+
     setIsLoading(false);
     onOpenChange(false);
-    setSearchQuery("");
-    setSelectedMembers(new Set());
   };
+
+  // Reset state on close
+  useEffect(() => {
+    if (!open) {
+      setSearchQuery("");
+      setSelectedMembers(new Set());
+    }
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[80vh] flex flex-col">
+      <DialogContent className="w-[95vw] max-w-md sm:w-full p-4 sm:p-6 max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Add Members to Department</DialogTitle>
           <DialogDescription>
@@ -66,7 +72,7 @@ export function DeptAddMemberModal({
 
         <form
           onSubmit={handleSubmit}
-          className="flex flex-col flex-1 space-y-4"
+          className="flex flex-col flex-1 space-y-4 overflow-y-auto max-h-[75vh] pr-1 min-h-0"
         >
           <div className="space-y-2">
             <div className="relative">
@@ -80,7 +86,7 @@ export function DeptAddMemberModal({
             </div>
           </div>
 
-          <ScrollArea className="h-[300px] rounded-lg border border-border/40">
+          <ScrollArea className="h-48 sm:h-64 rounded-lg border border-border/40">
             <div className="p-4 space-y-2">
               {filteredMembers.length > 0 ? (
                 filteredMembers.map((member) => (
@@ -120,7 +126,7 @@ export function DeptAddMemberModal({
             </div>
           </ScrollArea>
 
-          <DialogFooter className="pt-4">
+          <DialogFooter className="pt-4 flex flex-col-reverse sm:flex-row gap-2">
             <Button
               type="button"
               variant="outline"
@@ -134,7 +140,9 @@ export function DeptAddMemberModal({
             >
               {isLoading
                 ? "Adding..."
-                : `Add ${selectedMembers.size > 0 ? selectedMembers.size : ""} Member${selectedMembers.size !== 1 ? "s" : ""}`}
+                : `Add ${
+                    selectedMembers.size > 0 ? selectedMembers.size : ""
+                  } Member${selectedMembers.size !== 1 ? "s" : ""}`}
             </Button>
           </DialogFooter>
         </form>
