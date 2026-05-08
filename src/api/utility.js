@@ -6,10 +6,11 @@ export const logout = async (isAdmin = false) => {
   try {
     await assort_api.post(APP_POINTS.AUTH + "logout/");
   } catch (err) {
-    console.log(err)
+    console.log(err);
     // ignore errors (token may already be invalid)
   } finally {
     clearAccessToken();
+    localStorage.setItem("logout", Date.now());
 
     if (isAdmin) {
       window.location.href = "/platform/login";
@@ -18,3 +19,10 @@ export const logout = async (isAdmin = false) => {
     }
   }
 };
+
+window.addEventListener("storage", (event) => {
+  if (event.key === "logout") {
+    clearAccessToken();
+    window.location.href = "/login";
+  }
+});

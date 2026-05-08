@@ -8,8 +8,9 @@ import {
 import { useAuth } from "@/context/authContext";
 import { APP_POINTS } from "@/api/apiConfig";
 import assort_api from "@/api/axios";
-import { Clock, CheckCircle, AlertCircle, LogOut } from "lucide-react";
+import { Clock, CheckCircle, AlertCircle } from "lucide-react";
 import DotsBg from "@/assets/images/DotsBg.png";
+import { formatEnum } from "@/appFunctions";
 
 const AcceptInvitationPage = () => {
   const [status, setStatus] = useState("loading"); // loading, valid, expired, already_accepted, owner_blocked, invalid
@@ -330,7 +331,7 @@ const AcceptInvitationPage = () => {
               </label>
               <input
                 type="text"
-                value={invitationData.role || "Member"}
+                value={formatEnum(invitationData.role) || "Member"}
                 disabled
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 focus:outline-none"
               />

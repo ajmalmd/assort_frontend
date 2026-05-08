@@ -3,6 +3,8 @@ import { useAuth } from "@/context/authContext";
 import { useNavigate } from "react-router";
 import { ArrowRight, Briefcase } from "lucide-react";
 import { getPostLoginRoute } from "@/utils/authRedirect";
+import { getActiveOrgId } from "@/api/authStore";
+import { formatEnum } from "@/appFunctions";
 
 export default function SwitchOrganizationPage() {
   const [selectedOrg, setSelectedOrg] = useState(null);
@@ -21,7 +23,10 @@ export default function SwitchOrganizationPage() {
     }
 
     // Multiple orgs → preselect first
-    setSelectedOrg((prev) => prev || organizations[0]);
+    setSelectedOrg(
+      (prev) =>
+        prev || organizations.find((org) => Number(org.id) === Number(getActiveOrgId())),
+    );
   }, [organizations, navigate]);
 
   const handleSwitch = () => {
@@ -70,7 +75,7 @@ export default function SwitchOrganizationPage() {
                   </h3>
 
                   <span className="px-2 py-1 bg-gray-900 text-gray-100 text-xs font-medium rounded">
-                    {org.role}
+                    {formatEnum(org.role)}
                   </span>
                 </div>
 

@@ -117,7 +117,7 @@ export default function ProjectJobDetailPage() {
   const handleApprove = async (logId) => {
     console.log(logId);
     try {
-      // await assort_api.post(`${APP_POINTS.PROJECTS}log/${logId}/approve/`);
+      await assort_api.post(`${APP_POINTS.PROJECTS}log/${logId}/approve/`);
       toast.success("Log Approved");
       setJob((prev) => ({
         ...prev,

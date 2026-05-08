@@ -22,6 +22,7 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const token = getAccessToken();
   const isAdmin = getAdminStatus();
+  const { organizations } = useAuth();
 
   const [searchParams] = useSearchParams();
   const inviteToken = searchParams.get("invite_token");
@@ -86,7 +87,7 @@ const LoginPage = () => {
         setLoginData({ user, organizations });
 
         if (inviteToken) {
-          navigate(`/accept-invite/${inviteToken}`);
+          window.location.replace(`/accept-invite/${inviteToken}`);
           return;
         }
         const route = getPostLoginRoute(organizations);
