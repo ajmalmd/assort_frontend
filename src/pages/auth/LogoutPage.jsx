@@ -4,8 +4,6 @@ import { useEffect } from "react";
 const LogoutPage = () => {
   useEffect(() => {
     const endSession = async () => {
-        console.log("Lof");
-        
       await logout();
     };
     endSession();

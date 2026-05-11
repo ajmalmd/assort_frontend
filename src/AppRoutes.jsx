@@ -61,7 +61,7 @@ function AppRoutes() {
   const navigate = useNavigate();
 
   const [authReady, setAuthReady] = useState(false);
-    const { setLoginData, setActiveOrganization } = useAuth();
+  const { setLoginData, setActiveOrganization } = useAuth();
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -107,8 +107,6 @@ function AppRoutes() {
     };
 
     initializeAuth();
-    console.log("APP routes");
-    
   }, []);
 
   if (!authReady) return null;

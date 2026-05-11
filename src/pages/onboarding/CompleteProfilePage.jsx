@@ -20,11 +20,11 @@ export default function CompleteProfilePage() {
     city: "",
     country: "",
     logo: null,
+    preview: null,
   });
 
   const [isSaving, setIsSaving] = useState(false);
 
-  // Sync formData when activeOrganization loads (async safe)
   useEffect(() => {
     if (!activeOrganization) return;
 
@@ -33,10 +33,10 @@ export default function CompleteProfilePage() {
       city: activeOrganization.city || "",
       country: activeOrganization.country || "",
       logo: activeOrganization.logo || null,
+      preview: activeOrganization.logo || null,
     });
-  }, [activeOrganization?.id]); // stable dependency
+  }, [activeOrganization?.id]);
 
-  // Redirect logic (no infinite loop)
   useEffect(() => {
     if (!activeOrganization || hasRedirected.current) return;
 
@@ -68,20 +68,18 @@ export default function CompleteProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setFormData((prev) => ({
-        ...prev,
-        logo: e.target?.result,
-      }));
-    };
-    reader.readAsDataURL(file);
+    setFormData((prev) => ({
+      ...prev,
+      logo: file,
+      preview: URL.createObjectURL(file),
+    }));
   };
 
   const handleRemoveLogo = () => {
     setFormData((prev) => ({
       ...prev,
       logo: null,
+      preview: null,
     }));
   };
 
@@ -170,10 +168,9 @@ export default function CompleteProfilePage() {
 
                 <div className="flex items-center gap-4">
                   <div className="flex-shrink-0 relative">
-                    {typeof formData.logo === "string" &&
-                    formData.logo.length > 20 ? (
+                    {formData.preview ? (
                       <img
-                        src={formData.logo}
+                        src={formData.preview}
                         alt="Organization logo"
                         className="w-16 h-16 rounded-lg object-fill bg-gray-100"
                       />
