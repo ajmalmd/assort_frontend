@@ -19,6 +19,7 @@ const TITLE_MAP = {
   "/app/chats": "Chats",
   "/app/jobs": "Jobs",
   "/app/timesheet": "Timesheet",
+  "/app/timesheet/work-log": "Day - Work Log",
 };
 
 const OrganizationLayout = () => {
@@ -69,12 +70,7 @@ const OrganizationLayout = () => {
         }
       />
 
-      <div
-        className="min-h-screen flex bg-repeat bg-gray-400"
-        style={{
-          backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url(${DotsBg})`,
-        }}
-      >
+      <div className="min-h-screen w-full overflow-x-hidden bg-white">
         {/* Sidebar */}
         <OrganizationSidebar
           isOpen={sidebarOpen}
@@ -98,7 +94,12 @@ const OrganizationLayout = () => {
           />
 
           {/* Page Content */}
-          <main className="pt-20 pb-8 px-4 lg:px-8">
+          <main
+            className="min-h-dvh w-full overflow-x-hidden pt-20 pb-8 px-4 lg:px-8 bg-repeat bg-gray-400"
+            style={{
+              backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url(${DotsBg})`,
+            }}
+          >
             <Outlet />
           </main>
         </div>

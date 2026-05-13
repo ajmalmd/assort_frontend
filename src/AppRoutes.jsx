@@ -56,6 +56,7 @@ import ProjectJobDetailPage from "./pages/organization/ProjectJobDetailPage";
 import JobsPage from "./pages/organization/JobsPage";
 import TimesheetPage from "./pages/organization/TimesheetPage";
 import ChatsPage from "./pages/organization/ChatsPage";
+import TimesheetDetailPage from "./pages/organization/TimesheetDetailPage";
 
 function AppRoutes() {
   const navigate = useNavigate();
@@ -159,6 +160,7 @@ function AppRoutes() {
           <Route path="project/job/:jobId" element={<ProjectJobDetailPage />} />
           <Route path="jobs" element={<JobsPage />} />
           <Route path="timesheet" element={<TimesheetPage />} />
+          <Route path="timesheet/work-log/:date" element={<TimesheetDetailPage />} />
           <Route path="chats" element={<ChatsPage />} />
         </Route>
       </Route>
