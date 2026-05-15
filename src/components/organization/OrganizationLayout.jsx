@@ -3,8 +3,8 @@ import { Outlet, useLocation } from "react-router";
 import { OrganizationSidebar } from "./OrganizationSidebar";
 import { OrganizationTopBar } from "./OrganizationTopBar";
 import DotsBg from "@/assets/images/DotsBg.png";
-import { useAuth } from "@/context/authContext";
 import { SubscriptionModal } from "./SubscriptionModal";
+import { useAuthState } from "@/redux/hooks";
 
 const TITLE_MAP = {
   "/app": "Dashboard",
@@ -28,7 +28,7 @@ const OrganizationLayout = () => {
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
   const { pathname } = useLocation();
-  const { activeOrganization } = useAuth();
+  const { activeOrganization } = useAuthState();
 
   // Show modal if OWNER and subscription is EXPIRED or NONE
   useEffect(() => {

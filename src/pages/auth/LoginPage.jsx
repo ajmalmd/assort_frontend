@@ -9,8 +9,9 @@ import {
   getAdminStatus,
   setAccessToken,
 } from "@/api/authStore";
-import { useAuth } from "@/context/authContext";
 import { getPostLoginRoute } from "@/utils/authRedirect";
+import { useAppDispatch, useAuthState } from "@/redux/hooks";
+import { setLoginData } from "@/redux/slices/authSlice";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -22,8 +23,10 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const token = getAccessToken();
   const isAdmin = getAdminStatus();
-  const { organizations } = useAuth();
-
+  const { organizations } = useAuthState();
+  const dispatch = useAppDispatch();
+  
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const inviteToken = searchParams.get("invite_token");
 
@@ -39,10 +42,6 @@ const LoginPage = () => {
 
     return null;
   }
-
-  const navigate = useNavigate();
-
-  const { setLoginData } = useAuth();
 
   const validateForm = () => {
     const normalizedEmail = email.trim().toLowerCase();
@@ -83,8 +82,8 @@ const LoginPage = () => {
 
         setAccessToken(access, is_admin);
 
-        // store data in context api
-        setLoginData({ user, organizations });
+        // store data in redux state
+        dispatch(setLoginData({ user, organizations }));
 
         if (inviteToken) {
           window.location.replace(`/accept-invite/${inviteToken}`);

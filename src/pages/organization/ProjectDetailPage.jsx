@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  ChevronDown,
-  ChevronRight,
-  Edit,
   Plus,
   ListChevronsDownUp,
 } from "lucide-react";
@@ -12,8 +9,7 @@ import BackButton from "@/components/ui/backButton";
 import { useNavigate, useParams } from "react-router";
 import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
-import { formatEnum, hasProjectRight } from "@/appFunctions";
-import { useAuth } from "@/context/authContext";
+import { hasProjectRight } from "@/appFunctions";
 
 import { ProjectUpdatesTab } from "@/components/organization/ProjectUpdatesTab";
 import { ProjectChatTab } from "@/components/organization/ProjectChatTab";
@@ -24,6 +20,7 @@ import { AddPhaseModal } from "@/components/organization/AddPhaseModal";
 import { ReorderPhasesModal } from "@/components/organization/ReorderPhasesModal";
 import ProjectInfoCard from "@/components/organization/ProjectDetailPage/ProjectInfoCard";
 import PhaseCard from "@/components/organization/ProjectDetailPage/PhaseCard";
+import { useAuthState } from "@/redux/hooks";
 
 export default function ProjectDetailPage() {
   const [editProjectModalOpen, setEditProjectModalOpen] = useState(false);
@@ -36,7 +33,7 @@ export default function ProjectDetailPage() {
 
   const navigate = useNavigate();
   const { projectId } = useParams();
-  const { activeOrganization } = useAuth();
+  const { activeOrganization } = useAuthState();
 
   useEffect(() => {
     if (!projectId) return;

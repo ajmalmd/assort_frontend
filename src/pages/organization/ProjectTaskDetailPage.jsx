@@ -7,7 +7,6 @@ import { useNavigate, useParams } from "react-router";
 import { formatEnum, hasProjectRight } from "@/appFunctions";
 import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
-import { useAuth } from "@/context/authContext";
 import { EditTaskModal } from "@/components/organization/EditTaskModal";
 import { AddJobModal } from "@/components/organization/AddJobModal";
 import { TaskHeaderCard } from "@/components/organization/ProjectTaskDetailPage/TaskHeaderCard";
@@ -15,6 +14,7 @@ import { TaskInfoSection } from "@/components/organization/ProjectTaskDetailPage
 import { TaskStatsSection } from "@/components/organization/ProjectTaskDetailPage/TaskStatsSection";
 import { JobListSection } from "@/components/organization/ProjectTaskDetailPage/JobListSection";
 import { ReorderJobsModal } from "@/components/organization/ReorderJobsModal";
+import { useAuthState } from "@/redux/hooks";
 
 export default function ProjectTaskDetailPage() {
   const [task, setTask] = useState({});
@@ -25,7 +25,7 @@ export default function ProjectTaskDetailPage() {
 
   const navigate = useNavigate();
   const { taskId } = useParams();
-  const { activeOrganization } = useAuth();
+  const { activeOrganization } = useAuthState();
 
   useEffect(() => {
     const fetchTask = async () => {

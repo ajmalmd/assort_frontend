@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { setAccessToken } from "@/api/authStore";
-import { useAuth } from "@/context/authContext";
 import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
 import DotsBg from "@/assets/images/DotsBg.png";
 import { Eye, EyeOff } from "lucide-react";
+import { useAppDispatch } from "@/redux/hooks";
+import { setLoginData } from "@/redux/slices/authSlice";
 
 const SignupPage = () => {
   const [name, setName] = useState("");
@@ -18,7 +19,7 @@ const SignupPage = () => {
 
   const location = useLocation();
   const navigate = useNavigate();
-  const { setLoginData } = useAuth();
+  const dispatch = useAppDispatch();
 
   const inviteToken = location.state?.inviteToken;
   const email = location.state?.email;
@@ -61,10 +62,12 @@ const SignupPage = () => {
 
       setAccessToken(access, false);
 
-      setLoginData({
-        user,
-        organizations,
-      });
+      dispatch(
+        setLoginData({
+          user,
+          organizations,
+        }),
+      );
 
       if (organizations.length > 1) {
         navigate("/workspaces");

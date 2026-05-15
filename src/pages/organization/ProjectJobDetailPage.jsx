@@ -20,11 +20,11 @@ import BackButton from "@/components/ui/backButton";
 import { useNavigate, useParams } from "react-router";
 import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
-import { useAuth } from "@/context/authContext";
 import { EditJobModal } from "@/components/organization/EditJobModal";
 import { AddTimeLogModal } from "@/components/organization/AddTimeLogModal";
 import ConfirmActionModal from "@/components/common/ConfirmActionModal";
 import toast from "react-hot-toast";
+import { useAuthState } from "@/redux/hooks";
 
 function InfoItem({ label, value }) {
   return (
@@ -46,7 +46,7 @@ export default function ProjectJobDetailPage() {
 
   const navigate = useNavigate();
   const { jobId } = useParams();
-  const { activeOrganization } = useAuth();
+  const { activeOrganization } = useAuthState();
 
   useEffect(() => {
     const fetchJob = async () => {

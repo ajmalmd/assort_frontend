@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/select";
 import { Plus, Search } from "lucide-react";
 import { CreateProjectModal } from "@/components/organization/CreateProjectModal";
-import { useAuth } from "@/context/authContext";
 import {
   formatDate_d_m_yyyy,
   formatEnum,
@@ -22,6 +21,7 @@ import {
 } from "@/appFunctions";
 import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
+import { useAuthState } from "@/redux/hooks";
 
 export default function ProjectsPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -36,7 +36,7 @@ export default function ProjectsPage() {
   ];
 
   const navigate = useNavigate();
-  const { activeOrganization } = useAuth();
+  const { activeOrganization } = useAuthState();
 
   useEffect(() => {
     const fetchProjects = async () => {

@@ -1,10 +1,10 @@
 import { Navigate, Outlet, useLocation } from "react-router";
-import { useAuth } from "@/context/authContext";
+import { useAuthState } from "@/redux/hooks";
 
 const VALID_SUBSCRIPTIONS = ["ACTIVE", "TRIAL"];
 
 const ProtectedOrganizationRoute = () => {
-  const { user, organizations, activeOrganization } = useAuth();
+  const { user, organizations, activeOrganization } = useAuthState();
   const location = useLocation();
 
   if (!user) {

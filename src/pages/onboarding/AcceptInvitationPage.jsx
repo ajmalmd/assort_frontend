@@ -5,7 +5,8 @@ import {
   getAdminStatus,
   setActiveOrgId,
 } from "@/api/authStore";
-import { useAuth } from "@/context/authContext";
+import { useAppDispatch, useAuthState } from "@/redux/hooks";
+import { setActiveOrganization, setLoginData } from "@/redux/slices/authSlice";
 import { APP_POINTS } from "@/api/apiConfig";
 import assort_api from "@/api/axios";
 import { Clock, CheckCircle, AlertCircle } from "lucide-react";
@@ -19,8 +20,8 @@ const AcceptInvitationPage = () => {
 
   const navigate = useNavigate();
   const { inviteToken } = useParams();
-  const { user, organizations, setLoginData, setActiveOrganization } =
-    useAuth();
+  const { user, organizations } = useAuthState();
+  const dispatch = useAppDispatch();
 
   const token = getAccessToken();
   const isAdmin = getAdminStatus();
@@ -109,9 +110,11 @@ const AcceptInvitationPage = () => {
         country: invitationData?.organization?.country,
       };
 
-      setLoginData({ user, organizations: [...organizations, newOrg] });
+      dispatch(
+        setLoginData({ user, organizations: [...organizations, newOrg] }),
+      );
       setActiveOrgId(response.data.organization_id);
-      setActiveOrganization(newOrg);
+      dispatch(setActiveOrganization(newOrg));
 
       navigate("/app");
     } catch (err) {

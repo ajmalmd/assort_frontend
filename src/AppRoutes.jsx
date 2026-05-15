@@ -10,7 +10,8 @@ import {
 } from "./api/authStore";
 
 import { getPostLoginRoute } from "./utils/authRedirect";
-import { useAuth } from "./context/authContext";
+import { useAppDispatch } from "./redux/hooks";
+import { setLoginData, setActiveOrganization } from "./redux/slices/authSlice";
 
 import Landing from "./pages/Landing";
 import LogoutPage from "./pages/auth/LogoutPage";
@@ -62,7 +63,7 @@ function AppRoutes() {
   const navigate = useNavigate();
 
   const [authReady, setAuthReady] = useState(false);
-  const { setLoginData, setActiveOrganization } = useAuth();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -72,10 +73,12 @@ function AppRoutes() {
 
         setAccessToken(access, is_admin);
 
-        setLoginData({
-          user,
-          organizations: organizations || [],
-        });
+        dispatch(
+          setLoginData({
+            user,
+            organizations: organizations || [],
+          }),
+        );
 
         // determine active org FIRST
         let activeOrg = null;
@@ -91,7 +94,7 @@ function AppRoutes() {
           }
 
           if (activeOrg) {
-            setActiveOrganization(activeOrg);
+            dispatch(setActiveOrganization(activeOrg));
           }
 
           if (window.location.pathname === "/login") {
@@ -160,7 +163,10 @@ function AppRoutes() {
           <Route path="project/job/:jobId" element={<ProjectJobDetailPage />} />
           <Route path="jobs" element={<JobsPage />} />
           <Route path="timesheet" element={<TimesheetPage />} />
-          <Route path="timesheet/work-log/:date" element={<TimesheetDetailPage />} />
+          <Route
+            path="timesheet/work-log/:date"
+            element={<TimesheetDetailPage />}
+          />
           <Route path="chats" element={<ChatsPage />} />
         </Route>
       </Route>

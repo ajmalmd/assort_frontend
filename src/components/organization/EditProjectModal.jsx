@@ -20,8 +20,8 @@ import {
 import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
 import toast from "react-hot-toast";
-import { useAuth } from "@/context/authContext";
 import { isOrgOwnerorAdmin } from "@/appFunctions";
+import { useAuthState } from "@/redux/hooks";
 
 export function EditProjectModal({
   open,
@@ -38,7 +38,7 @@ export function EditProjectModal({
     deadline: "",
   });
 
-  const { activeOrganization } = useAuth();
+  const { activeOrganization } = useAuthState();
 
   useEffect(() => {
     if (open && project) {

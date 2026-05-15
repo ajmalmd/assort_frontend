@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "@/context/authContext";
 import { useNavigate } from "react-router";
 import { ArrowRight, Briefcase } from "lucide-react";
 import { getPostLoginRoute } from "@/utils/authRedirect";
 import { getActiveOrgId } from "@/api/authStore";
 import { formatEnum } from "@/appFunctions";
+import { useAppDispatch, useAuthState } from "@/redux/hooks";
+import { switchOrganization } from "@/redux/slices/authSlice";
 
 export default function SwitchOrganizationPage() {
   const [selectedOrg, setSelectedOrg] = useState(null);
 
-  const { organizations, switchOrganization } = useAuth();
+  const { organizations } = useAuthState();
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -25,14 +27,17 @@ export default function SwitchOrganizationPage() {
     // Multiple orgs → preselect first
     setSelectedOrg(
       (prev) =>
-        prev || organizations.find((org) => Number(org.id) === Number(getActiveOrgId())),
+        prev ||
+        organizations.find(
+          (org) => Number(org.id) === Number(getActiveOrgId()),
+        ),
     );
   }, [organizations, navigate]);
 
   const handleSwitch = () => {
     if (!selectedOrg) return;
 
-    switchOrganization(selectedOrg.id);
+    dispatch(switchOrganization(selectedOrg.id));
 
     const route = getPostLoginRoute([selectedOrg]);
     navigate(route, { replace: true });

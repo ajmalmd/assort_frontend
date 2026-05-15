@@ -7,12 +7,12 @@ import { AddProjectMembersModal } from "./AddProjectMembersModal";
 import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
 import { hasProjectRight } from "@/appFunctions";
-import { useAuth } from "@/context/authContext";
+import { useAuthState } from "@/redux/hooks";
 
 export function ProjectMembersTab({ projectId }) {
   const [addMemberModalOpen, setAddMemberModalOpen] = useState(false);
   const [members, setMembers] = useState([]);
-  const { activeOrganization } = useAuth();
+  const { activeOrganization } = useAuthState();
 
   const fetchProjectMembers = async () => {
     try {

@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router";
-import { useAuth } from "@/context/authContext";
 import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
 import { formatEnum } from "@/appFunctions";
@@ -9,6 +8,8 @@ import { Button } from "../ui/button";
 import { Check } from "lucide-react";
 import toast from "react-hot-toast";
 import { loadRazorpay } from "@/api/razorpay";
+import { useAppDispatch, useAuthState } from "@/redux/hooks";
+import { setLoginData } from "@/redux/slices/authSlice";
 
 export const SubscriptionModal = ({
   isOpen,
@@ -24,7 +25,8 @@ export const SubscriptionModal = ({
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { activeOrganization, organizations, setLoginData, user } = useAuth();
+  const { activeOrganization, organizations, user } = useAuthState();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     if (!activeOrganization || hasRedirected.current) return;
@@ -56,14 +58,16 @@ export const SubscriptionModal = ({
   }, [isOpen]);
 
   const updateSubscriptionStatus = (status) => {
-    setLoginData({
-      user,
-      organizations: organizations.map((org) =>
-        org.id === activeOrganization.id
-          ? { ...org, subscription_status: status }
-          : org,
-      ),
-    });
+    dispatch(
+      setLoginData({
+        user,
+        organizations: organizations.map((org) =>
+          org.id === activeOrganization.id
+            ? { ...org, subscription_status: status }
+            : org,
+        ),
+      }),
+    );
     onClose?.();
   };
 

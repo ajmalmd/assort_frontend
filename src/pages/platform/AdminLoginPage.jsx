@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
 import AuthLayout from "@/components/common/AuthLayout";
-import { setAccessToken, clearAccessToken } from "@/api/authStore";
-import { useAuth } from "@/context/authContext";
+import { setAccessToken } from "@/api/authStore";
+import { useAppDispatch } from "@/redux/hooks";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -18,7 +18,7 @@ const AdminLoginPage = () => {
 
   const navigate = useNavigate();
 
-  const { setLoginData } = useAuth();
+  const dispatch = useAppDispatch();
 
   const validateForm = () => {
     const normalizedEmail = email.trim().toLowerCase();
@@ -57,7 +57,7 @@ const AdminLoginPage = () => {
         const { access, is_admin, user } = response.data;
 
         setAccessToken(access, is_admin);
-        setLoginData({ user, organizations: [] });
+        dispatch(setLoginData({ user, organizations: [] }));
 
         navigate("/platform", { replace: true });
       }

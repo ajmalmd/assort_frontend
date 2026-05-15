@@ -10,8 +10,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import Logo from "@/assets/images/Logo.png";
-import { useAuth } from "@/context/authContext";
+import { useAuthState } from "@/redux/hooks";
 
 const ROLE_MENU = {
   OWNER: [
@@ -50,7 +49,7 @@ export function OrganizationSidebar({
 }) {
   const { pathname } = useLocation();
 
-  const { activeOrganization } = useAuth();
+  const { activeOrganization } = useAuthState();
   const activeRole = activeOrganization.role;
   const menuItems = ROLE_MENU[activeRole] || [];
 

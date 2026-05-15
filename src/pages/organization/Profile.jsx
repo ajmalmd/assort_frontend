@@ -1,12 +1,12 @@
-import { useAuth } from "@/context/authContext";
 import { useNavigate } from "react-router";
 import OrganizationProfilePage from "./OrganizationProfilePage";
 import MemberProfilePage from "./MemberProfilePage";
 import DotsBg from "@/assets/images/DotsBg.png";
 import { ArrowLeft } from "lucide-react";
+import { useAuthState } from "@/redux/hooks";
 
 const Profile = () => {
-  const { activeOrganization } = useAuth();
+  const { activeOrganization } = useAuthState();
   const navigate = useNavigate();
 
   const role = activeOrganization?.role;

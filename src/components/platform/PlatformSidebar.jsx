@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import Logo from "@/assets/images/Logo.png";
 import { logout } from "@/api/utility";
-import { useAuth } from "@/context/authContext";
+import { useAuthState } from "@/redux/hooks";
 
 const SIDEBAR_ITEMS = [
   { label: "Dashboard", icon: LayoutDashboard, to: "/platform" },
@@ -26,7 +26,7 @@ const SIDEBAR_ITEMS = [
 
 export function PlatformSidebar({ isOpen, onClose, isCollapsed = false }) {
   const { pathname } = useLocation();
-  const { user } = useAuth();
+  const { user } = useAuthState();
 
   const isActive = (to) => {
     if (to === "/platform") {

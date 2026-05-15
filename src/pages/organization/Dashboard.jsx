@@ -1,8 +1,8 @@
 import React from "react";
-import { useAuth } from "@/context/authContext";
 import OrgAdminDashboardPage from "./OrganizationDashboardPage";
 import ManagerDashboardPage from "./ManagerDashboardPage";
 import MemberDashboardPage from "./MemberDashboardPage";
+import { useAuthState } from "@/redux/hooks";
 
 const Dashboards = {
   OWNER: OrgAdminDashboardPage,
@@ -12,7 +12,7 @@ const Dashboards = {
 };
 
 const Dashboard = () => {
-  const { activeOrganization } = useAuth();
+  const { activeOrganization } = useAuthState();
 
   if (!activeOrganization) {
     return <div>Loading dashboard...</div>;

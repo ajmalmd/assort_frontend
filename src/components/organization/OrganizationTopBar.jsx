@@ -1,7 +1,7 @@
 import React from "react";
 import { Bell, Menu, PanelRight, PanelLeft } from "lucide-react";
 import { ProfileMenu } from "./ProfileMenu";
-import { useAuth } from "@/context/authContext";
+import { useAuthState } from "@/redux/hooks";
 
 export function OrganizationTopBar({
   title,
@@ -9,7 +9,7 @@ export function OrganizationTopBar({
   onFoldClick,
   sidebarCollapsed = false,
 }) {
-  const { user, organizations } = useAuth();
+  const { user, organizations } = useAuthState();
   return (
     <div
       className={`

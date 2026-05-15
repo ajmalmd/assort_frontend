@@ -2,16 +2,18 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 import { Upload, LogOut } from "lucide-react";
 import DotsBg from "@/assets/images/DotsBg.png";
-import { useAuth } from "@/context/authContext";
 import { getInitials } from "@/appFunctions";
 import { logout } from "@/api/utility";
 import { APP_POINTS } from "@/api/apiConfig";
 import assort_api from "@/api/axios";
 import toast from "react-hot-toast";
+import { useAppDispatch, useAuthState } from "@/redux/hooks";
+import { setLoginData } from "@/redux/slices/authSlice";
 
 export default function CompleteProfilePage() {
   const navigate = useNavigate();
-  const { user, activeOrganization, setLoginData, organizations } = useAuth();
+  const { user, activeOrganization, organizations } = useAuthState();
+  const dispatch = useAppDispatch();
 
   const hasRedirected = useRef(false);
 
@@ -108,14 +110,16 @@ export default function CompleteProfilePage() {
       if (response.status === 200) {
         const updatedOrg = response.data;
 
-        setLoginData({
-          user,
-          organizations: organizations.map((org) =>
-            org.id === updatedOrg.id
-              ? { ...org, is_profile_completed: true }
-              : org,
-          ),
-        });
+        dispatch(
+          setLoginData({
+            user,
+            organizations: organizations.map((org) =>
+              org.id === updatedOrg.id
+                ? { ...org, is_profile_completed: true }
+                : org,
+            ),
+          }),
+        );
       }
 
       navigate("/onboarding/subscription", { replace: true });
