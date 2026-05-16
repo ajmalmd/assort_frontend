@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Plus,
-  ListChevronsDownUp,
-} from "lucide-react";
+import { Plus, ListChevronsDownUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BackButton from "@/components/ui/backButton";
 import { useNavigate, useParams } from "react-router";
@@ -104,6 +101,20 @@ export default function ProjectDetailPage() {
     );
   };
 
+  const updateProjectStatus = (newStatus) => {
+    setProject((prev) => ({ ...prev, status: newStatus }));
+  };
+
+  const updatePhaseStatus = (updatedPhase) => {
+    setPhases((prev) =>
+      prev.map((phase) =>
+        phase.id !== updatedPhase.id
+          ? phase
+          : { ...phase, status: updatedPhase.newStatus },
+      ),
+    );
+  };
+
   const addTask = (data) => {
     setPhases((prev) =>
       prev.map((phase) =>
@@ -157,6 +168,7 @@ export default function ProjectDetailPage() {
             activeOrganization={activeOrganization}
             project={project}
             setEditProjectModalOpen={setEditProjectModalOpen}
+            updateStatus={updateProjectStatus}
           />
 
           {hasProjectRight(activeOrganization.role) && (
@@ -199,6 +211,7 @@ export default function ProjectDetailPage() {
                 addTask={addTask}
                 editPhase={editPhase}
                 handleTasksReorder={handleTasksReorder}
+                updateStatus={updatePhaseStatus}
                 key={phase.id}
               />
             ))}

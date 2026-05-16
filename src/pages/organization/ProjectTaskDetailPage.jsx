@@ -56,6 +56,10 @@ export default function ProjectTaskDetailPage() {
     }));
   };
 
+  const updateStatus = (newStatus) => {
+    setTask((prev) => ({ ...prev, status: newStatus }));
+  };
+
   const addJob = (job) => {
     setTask((prev) => ({
       ...prev,
@@ -92,6 +96,7 @@ export default function ProjectTaskDetailPage() {
           task={task}
           canEdit={hasProjectRight(activeOrganization.role)}
           onEdit={() => setEditTaskModalOpen(true)}
+          updateStatus={updateStatus}
         />
 
         <CardContent className="space-y-6">

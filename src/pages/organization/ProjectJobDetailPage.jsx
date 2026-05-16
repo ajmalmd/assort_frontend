@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Plus,
   Trash,
-  Edit,
   CheckCircle,
   XCircle,
   FileClock,
@@ -25,15 +24,7 @@ import { AddTimeLogModal } from "@/components/organization/AddTimeLogModal";
 import ConfirmActionModal from "@/components/common/ConfirmActionModal";
 import toast from "react-hot-toast";
 import { useAuthState } from "@/redux/hooks";
-
-function InfoItem({ label, value }) {
-  return (
-    <div>
-      <p className="text-xs text-muted-foreground mb-1">{label}</p>
-      <p className="text-sm font-medium">{value}</p>
-    </div>
-  );
-}
+import JobInfoCard from "@/components/organization/JobDetailPage/JobInfoCard";
 
 export default function ProjectJobDetailPage() {
   const [loading, setLoading] = useState(false);
@@ -79,6 +70,10 @@ export default function ProjectJobDetailPage() {
 
   const updateJob = (details) => {
     setJob((prev) => ({ ...prev, ...details }));
+  };
+
+  const updateStatus = (newStatus) => {
+    setJob((prev) => ({ ...prev, status: newStatus }));
   };
 
   const addLog = (details) => {
@@ -182,59 +177,12 @@ export default function ProjectJobDetailPage() {
   return (
     <div className="space-y-6">
       <BackButton onClick={() => navigate(-1)} />
-      <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
-              <CardTitle className="text-2xl font-medium mb-2">
-                {job?.title}
-              </CardTitle>
-              <p className="text-sm text-muted-foreground font-mono whitespace-pre-line">
-                {job?.description}
-              </p>
-            </div>
-
-            {(hasProjectRight(activeOrganization.role) || isLead()) && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setEditJobModalOpen(true)}
-                className="gap-2"
-              >
-                <Edit className="h-4 w-4" />
-                Edit
-              </Button>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="border-t pt-6">
-            <h3 className="font-semibold text-sm text-muted-foreground mb-3">
-              Job Information
-            </h3>
-
-            <div className="grid grid-cols-2 gap-4">
-              <InfoItem label="Project" value={job?.project?.title} />
-              <InfoItem
-                label="Project Manager"
-                value={job?.project?.project_manager}
-              />
-              <InfoItem label="Task" value={job?.task?.title} />
-              <InfoItem label="Task Lead" value={job?.task?.lead.full_name} />
-              <InfoItem label="Deadline" value={job?.deadline} />
-              <div>
-                <p className="text-xs text-muted-foreground mb-1">Status</p>
-                <Badge>{formatEnum(job?.status)}</Badge>
-              </div>
-              <InfoItem label="Assignee" value={job?.assigned_to?.full_name} />
-              <InfoItem
-                label="Hours Worked / Estimated"
-                value={`${job.worked_hours} / ${job.estimated_hours} hours`}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <JobInfoCard
+        job={job}
+        updateStatus={updateStatus}
+        canEdit={hasProjectRight(activeOrganization.role) || isLead()}
+        onEdit={() => setEditJobModalOpen(true)}
+      />
       {canLog() && (
         <div className="flex justify-end gap-2">
           <Button onClick={() => setShowLogModal(true)} variant="outline">

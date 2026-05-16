@@ -21,6 +21,9 @@ import { EditPhaseModal } from "../EditPhaseModal";
 import { AddTaskModal } from "../AddTaskModal";
 import { ReorderTasksModal } from "../ReorderTasksModal";
 import TaskItem from "./TaskItem";
+import assort_api from "@/api/axios";
+import { APP_POINTS } from "@/api/apiConfig";
+import toast from "react-hot-toast";
 
 export default function PhaseCard({
   phase,
@@ -29,6 +32,7 @@ export default function PhaseCard({
   editPhase,
   addTask,
   handleTasksReorder,
+  updateStatus,
 }) {
   const [expanded, setExpanded] = useState(false);
   const [editPhaseModalOpen, setEditPhaseModalOpen] = useState(false);
@@ -45,45 +49,94 @@ export default function PhaseCard({
         }, null)
       : null;
 
+  const changeStatus = async () => {
+    try {
+      const newStatus = ["PLANNED", "COMPLETED"].includes(phase.status)
+        ? "IN_PROGRESS"
+        : phase.status == "IN_PROGRESS"
+          ? "COMPLETED"
+          : "";
+
+      await assort_api.patch(
+        `${APP_POINTS.PROJECTS}phase/${phase.id}/update-status/`,
+        { status: newStatus },
+      );
+      updateStatus({ newStatus, id: phase.id });
+      toast.success("Status changed successfully");
+    } catch (error) {
+      toast.error("Couldn't change the status");
+    }
+  };
+
   return (
     <>
       <Card>
-        <CardHeader onClick={() => setExpanded((prev) => !prev)}>
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-2 flex-1 hover:opacity-75">
-              {expanded ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-              <CardTitle className="text-base font-medium">
+        <CardHeader
+          onClick={() => setExpanded((prev) => !prev)}
+          className="space-y-4"
+        >
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 w-full">
+            {/* Left Section */}
+            <div className="flex items-start gap-2 flex-1 min-w-0 hover:opacity-75">
+              <div className="mt-1 shrink-0">
+                {expanded ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+              </div>
+
+              <CardTitle className="text-base sm:text-lg font-medium break-words">
                 {phase.title}
               </CardTitle>
             </div>
 
+            {/* Right Section */}
             {hasProjectRight(activeOrganization.role) && (
-              <Button
-                size="sm"
-                variant="default"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setEditPhaseModalOpen(true);
-                }}
-                className="ml-2 gap-2"
-              >
-                <Edit className="h-4 w-4" />
-                Edit
-              </Button>
+              <div className="flex flex-col sm:flex-row sm:justify-end gap-2 w-full lg:w-auto">
+                <Button
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    changeStatus();
+                  }}
+                  className="w-full sm:w-auto"
+                >
+                  {["PLANNED", "COMPLETED"].includes(phase.status)
+                    ? "Mark as Progressing"
+                    : phase.status == "IN_PROGRESS"
+                      ? "Mark as Completed"
+                      : ""}
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="default"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditPhaseModalOpen(true);
+                  }}
+                  className="gap-2 w-full sm:w-auto"
+                >
+                  <Edit className="h-4 w-4" />
+                  Edit
+                </Button>
+              </div>
             )}
           </div>
-          <div className="flex grid grid-cols-2 md:grid-cols-2 gap-4">
+
+          {/* Info Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <p className="text-xs text-muted-foreground">Deadline</p>
+
               <p className="text-sm font-medium">{phase.deadline}</p>
             </div>
+
             <div>
               <p className="text-xs text-muted-foreground">Status</p>
-              <Badge variant="outline" className="">
+
+              <Badge variant="outline" className="w-fit">
                 {formatEnum(phase.status)}
               </Badge>
             </div>
@@ -91,7 +144,7 @@ export default function PhaseCard({
         </CardHeader>
 
         {phase.description && (
-          <CardDescription className="pl-6 pb-2 whitespace-pre-line font-mono border-t pt-4">
+          <CardDescription className="px-6 pb-2 whitespace-pre-line break-words font-mono border-t pt-4 text-sm">
             {phase.description}
           </CardDescription>
         )}
@@ -99,7 +152,7 @@ export default function PhaseCard({
         {expanded && (
           <CardContent className="space-y-3 border-t pt-3">
             {hasProjectRight(activeOrganization.role) && (
-              <div className="flex justify-end gap-2">
+              <div className="flex flex-col sm:flex-row justify-end gap-2">
                 {phase?.tasks?.length > 1 && (
                   <Button
                     size="sm"
