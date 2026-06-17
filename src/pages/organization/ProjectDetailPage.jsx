@@ -18,6 +18,7 @@ import { ReorderPhasesModal } from "@/components/organization/ReorderPhasesModal
 import ProjectInfoCard from "@/components/organization/ProjectDetailPage/ProjectInfoCard";
 import PhaseCard from "@/components/organization/ProjectDetailPage/PhaseCard";
 import { useAuthState } from "@/redux/hooks";
+import { useCallback } from "react";
 
 export default function ProjectDetailPage() {
   const [editProjectModalOpen, setEditProjectModalOpen] = useState(false);
@@ -48,6 +49,7 @@ export default function ProjectDetailPage() {
           deadline,
           progress,
           members_count,
+          chat_room_id,
           project_manager,
           phases,
         } = res.data;
@@ -60,6 +62,7 @@ export default function ProjectDetailPage() {
           deadline: deadline || "",
           progress: progress || 0,
           members_count: members_count || 0,
+          chat_room_id,
           project_manager: project_manager || { id: "", full_name: "" },
         });
 
@@ -137,6 +140,13 @@ export default function ProjectDetailPage() {
       ),
     );
   };
+
+  const handleRoomCreated = useCallback((newRoomId) => {
+    setProject((prev) => ({
+      ...prev,
+      chat_room_id: newRoomId,
+    }));
+  }, []);
 
   if (loading) {
     return <div className="text-center py-10">Loading...</div>;
@@ -223,7 +233,12 @@ export default function ProjectDetailPage() {
         </TabsContent>
 
         <TabsContent value="chat">
-          <ProjectChatTab projectId={projectId} />
+          <ProjectChatTab
+            roomId={project?.chat_room_id}
+            projectId={projectId}
+            hasProjectRight={hasProjectRight(activeOrganization.role)}
+            onRoomCreated={handleRoomCreated}
+          />
         </TabsContent>
 
         <TabsContent value="members">
