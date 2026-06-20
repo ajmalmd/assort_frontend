@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Download, FileText, ImageIcon, Paperclip, Send } from "lucide-react";
+import { useAuthState } from "@/redux/hooks";
 
 const formatTime = (date) =>
   new Date(date).toLocaleTimeString([], {
@@ -41,6 +42,9 @@ export default function Messages({
   sendMessage,
 }) {
   const [messageInput, setMessageInput] = useState("");
+  const { activeOrganization } = useAuthState();
+
+  const is_mine = (id) => activeOrganization.membership_id === id;
 
   const handleSendMessage = async () => {
     if (!messageInput.trim()) return;
@@ -68,12 +72,12 @@ export default function Messages({
             <div
               key={message.id}
               className={`flex ${
-                message.is_mine ? "justify-end" : "justify-start"
+                is_mine(message.sender_id) ? "justify-end" : "justify-start"
               }`}
             >
               <div
                 className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                  message.is_mine
+                  is_mine(message.sender_id)
                     ? "bg-primary text-primary-foreground"
                     : "bg-white"
                 }`}

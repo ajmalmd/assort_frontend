@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Video } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { formatEnum } from "@/appFunctions";
 import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
