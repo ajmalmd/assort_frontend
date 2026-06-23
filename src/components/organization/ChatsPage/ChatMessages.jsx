@@ -6,6 +6,7 @@ import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
 import { useNavigate } from "react-router";
 import Messages from "../Messages";
+import { useRoomSocket } from "@/websocket/useRoomSocket";
 
 export default function ChatMessages({
   currentChat,
@@ -18,6 +19,7 @@ export default function ChatMessages({
 
   const messagesRef = useRef(null);
   const loadingRef = useRef(false);
+  const messagesLoadedRef = useRef(false);
 
   const navigate = useNavigate();
 
@@ -60,6 +62,65 @@ export default function ChatMessages({
     }
   }, [messageURL, nextCursor]);
 
+  const pendingSeenRef = useRef(false);
+
+  const markSeen = useCallback(() => {
+    const socket = roomSocket.current;
+
+    if (socket?.readyState === WebSocket.OPEN) {
+      socket.send(
+        JSON.stringify({
+          type: "mark_seen",
+        }),
+      );
+
+      pendingSeenRef.current = false;
+    } else {
+      pendingSeenRef.current = true;
+    }
+  }, []);
+
+  const roomSocket = useRoomSocket(currentChat?.id, {
+    onOpen: () => {
+      if (pendingSeenRef.current) {
+        markSeen();
+      }
+    },
+
+    onMessage: (message) => {
+      setMessages((prev) => {
+        const exists = prev.some((m) => m.id === message.id);
+
+        if (exists) {
+          return prev;
+        }
+
+        return [...prev, message];
+      });
+
+      requestAnimationFrame(() => {
+        const container = messagesRef.current;
+
+        if (container) {
+          container.scrollTop = container.scrollHeight;
+        }
+
+        markSeen();
+      });
+    },
+
+    onSeen: (data) => {
+      console.log("SEEN", data);
+    },
+  });
+
+  useEffect(() => {
+    setMessages([]);
+    setNextCursor(null);
+
+    messagesLoadedRef.current = false;
+  }, [currentChat?.id]);
+
   useEffect(() => {
     const container = messagesRef.current;
 
@@ -79,40 +140,82 @@ export default function ChatMessages({
   useEffect(() => {
     if (!currentChat?.id || !messageURL) return;
 
+    const controller = new AbortController();
+
     const fetchMessages = async () => {
-      const res = await assort_api.get(messageURL);
+      try {
+        const res = await assort_api.get(messageURL, {
+          signal: controller.signal,
+        });
 
-      const orderedMessages = [...res.data.messages].reverse();
+        const orderedMessages = [...res.data.messages].reverse();
 
-      setMessages(orderedMessages);
-      setNextCursor(res.data.next_cursor);
+        setMessages(orderedMessages);
+        setNextCursor(res.data.next_cursor);
 
-      requestAnimationFrame(() => {
-        const container = messagesRef.current;
+        messagesLoadedRef.current = true;
 
-        if (container) {
-          container.scrollTop = container.scrollHeight;
+        requestAnimationFrame(() => {
+          const container = messagesRef.current;
+
+          if (container) {
+            container.scrollTop = container.scrollHeight;
+          }
+
+          markSeen();
+        });
+      } catch (error) {
+        if (error.name !== "CanceledError" && error.name !== "AbortError") {
+          console.error(error);
         }
-      });
+      }
     };
 
     fetchMessages();
-  }, [currentChat?.id]);
 
-  const sendMessage = async (payload) => {
-    const res = await assort_api.post(messageURL, payload);
+    return () => {
+      controller.abort();
+    };
+  }, [currentChat?.id, messageURL, markSeen]);
 
-    setMessages((prev) => [...prev, res.data]);
+  const sendMessage = async ({ text, attachments = [], reply_to = null }) => {
+    if (attachments.length) {
+      const formData = new FormData();
 
-    requestAnimationFrame(() => {
-      const container = messagesRef.current;
+      formData.append("text", text || "");
 
-      if (container) {
-        container.scrollTop = container.scrollHeight;
+      if (reply_to) {
+        formData.append("reply_to", reply_to);
       }
-    });
 
-    return res.data;
+      attachments.forEach((file) => {
+        formData.append("attachments", file);
+      });
+
+      await assort_api.post(messageURL, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      return;
+    }
+
+    if (
+      !roomSocket.current ||
+      roomSocket.current.readyState !== WebSocket.OPEN
+    ) {
+      console.warn("Room socket not connected");
+      return;
+    }
+
+    roomSocket.current.send(
+      JSON.stringify({
+        type: "send_message",
+        text,
+        reply_to,
+      }),
+    );
   };
 
   if (!currentChat?.id) return null;

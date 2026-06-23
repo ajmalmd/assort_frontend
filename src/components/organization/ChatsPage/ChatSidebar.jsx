@@ -5,6 +5,7 @@ import { Search, Plus, Video, Clock, ArrowLeft } from "lucide-react";
 import { NewChatModal } from "./NewChatModal";
 import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
+import { useChatListSocket } from "@/websocket/useChatListSocket";
 
 const mockVideoCalls = [
   {
@@ -41,6 +42,34 @@ export default function ChatSidebar({
 
     fetchChats();
   }, []);
+
+  useChatListSocket({
+    onRoomCreated: (room) => {
+      setChats((prev) => [room, ...prev]);
+    },
+
+    onRoomUpdated: (room) => {
+      setChats((prev) => {
+        const filtered = prev.filter((r) => r.id !== room.id);
+        return [room, ...filtered];
+      });
+
+      setSelectedChat((prev) => (prev?.id === room.id ? room : prev));
+    },
+
+    onUnreadUpdated: (roomId, unreadCount) => {
+      setChats((prev) =>
+        prev.map((chat) =>
+          chat.id === roomId
+            ? {
+                ...chat,
+                unread_count: unreadCount,
+              }
+            : chat,
+        ),
+      );
+    },
+  });
 
   const filteredChats = chats.filter((chat) =>
     chat.title.toLowerCase().includes(searchTerm.toLowerCase()),
@@ -123,7 +152,23 @@ export default function ChatSidebar({
             ? filteredChats.map((chat) => (
                 <button
                   key={chat.id}
-                  onClick={() => setSelectedChat(chat)}
+                  onClick={() => {
+                    setSelectedChat({
+                      ...chat,
+                      unread_count: 0,
+                    });
+
+                    setChats((prev) =>
+                      prev.map((c) =>
+                        c.id === chat.id
+                          ? {
+                              ...c,
+                              unread_count: 0,
+                            }
+                          : c,
+                      ),
+                    );
+                  }}
                   className={`w-full border-b border-border px-4 py-3 flex items-center gap-3 transition-colors ${
                     selectedChat?.id === chat.id
                       ? "bg-accent text-accent-foreground"
