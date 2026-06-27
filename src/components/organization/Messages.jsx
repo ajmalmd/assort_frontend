@@ -4,11 +4,43 @@ import { Download, FileText, Paperclip, Send } from "lucide-react";
 import { useAuthState } from "@/redux/hooks";
 import { X } from "lucide-react";
 
-const formatTime = (date) =>
-  new Date(date).toLocaleTimeString([], {
+const formatMessageDate = (dateString) => {
+  const date = new Date(dateString);
+  const now = new Date();
+
+  const time = date.toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
   });
+
+  // Today
+  if (date.toDateString() === now.toDateString()) {
+    return time;
+  }
+
+  // Yesterday
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+
+  if (date.toDateString() === yesterday.toDateString()) {
+    return `Yesterday, ${time}`;
+  }
+
+  // Current year
+  if (date.getFullYear() === now.getFullYear()) {
+    return `${date.toLocaleDateString([], {
+      month: "short",
+      day: "numeric",
+    })}, ${time}`;
+  }
+
+  // Previous years
+  return `${date.toLocaleDateString([], {
+    day: "numeric",
+    month: "short",
+    year: "2-digit",
+  })}, ${time}`;
+};
 
 function AttachmentCard({ attachment }) {
   if (attachment.type === "IMAGE") {
@@ -130,7 +162,7 @@ export default function Messages({
                 ))}
 
                 <div className="mt-2 text-xs opacity-70">
-                  {formatTime(message.created_at)}
+                  {formatMessageDate(message.created_at)}
                   {message.is_edited && " (edited)"}
                 </div>
               </div>

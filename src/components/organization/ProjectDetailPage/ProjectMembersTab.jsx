@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { AddProjectMembersModal } from "./AddProjectMembersModal";
+import { AddProjectMembersModal } from "../AddProjectMembersModal";
 import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
 import { hasProjectRight } from "@/appFunctions";

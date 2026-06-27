@@ -29,6 +29,35 @@ export default function ChatSidebar({
   const [searchTerm, setSearchTerm] = useState("");
   const [newChatModalOpen, setNewChatModalOpen] = useState(false);
   const [chats, setChats] = useState([]);
+  const formatSidebarDate = (dateString) => {
+    if (!dateString) return "";
+
+    const date = new Date(dateString);
+    const now = new Date();
+
+    // Today
+    if (date.toDateString() === now.toDateString()) {
+      return date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    }
+
+    // Yesterday
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+
+    if (date.toDateString() === yesterday.toDateString()) {
+      return "Yesterday";
+    }
+
+    // Any other date
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = date.toLocaleString([], { month: "short" });
+    const year = String(date.getFullYear()).slice(-2);
+
+    return `${day} ${month} ${year}`;
+  };
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -203,12 +232,7 @@ export default function ChatSidebar({
 
                       <p className="text-xs text-muted-foreground">
                         {chat.last_message?.created_at
-                          ? new Date(
-                              chat.last_message.created_at,
-                            ).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
+                          ? formatSidebarDate(chat.last_message.created_at)
                           : ""}
                       </p>
                     </div>

@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import Messages from "./Messages";
+import Messages from "../Messages";
 import { APP_POINTS } from "@/api/apiConfig";
 import assort_api from "@/api/axios";
-import { Button } from "../ui/button";
+import { Button } from "../../ui/button";
 
 export function ProjectChatTab({
   roomId,

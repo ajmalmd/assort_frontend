@@ -8,9 +8,9 @@ import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
 import { hasProjectRight } from "@/appFunctions";
 
-import { ProjectUpdatesTab } from "@/components/organization/ProjectUpdatesTab";
-import { ProjectChatTab } from "@/components/organization/ProjectChatTab";
-import { ProjectMembersTab } from "@/components/organization/ProjectMembersTab";
+import { ProjectUpdatesTab } from "@/components/organization/ProjectDetailPage/ProjectUpdatesTab";
+import { ProjectChatTab } from "@/components/organization/ProjectDetailPage/ProjectChatTab";
+import { ProjectMembersTab } from "@/components/organization/ProjectDetailPage/ProjectMembersTab";
 
 import { EditProjectModal } from "@/components/organization/EditProjectModal";
 import { AddPhaseModal } from "@/components/organization/AddPhaseModal";

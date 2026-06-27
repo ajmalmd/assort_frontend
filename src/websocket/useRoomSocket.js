@@ -42,7 +42,7 @@ export function useRoomSocket(roomId, handlers = {}) {
 
         const data = JSON.parse(event.data);
 
-        console.log("ROOM EVENT", roomId, data);
+        console.log("ROOM EVENT", roomId, data.type, data);
 
         const payloadRoomId =
           data.room_id ?? data.data?.room_id ?? data.data?.room;
