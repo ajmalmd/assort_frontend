@@ -1,7 +1,13 @@
-import React from "react";
+import { useState } from "react";
 import { Bell, Menu, PanelRight, PanelLeft } from "lucide-react";
 import { ProfileMenu } from "./ProfileMenu";
 import { useAuthState } from "@/redux/hooks";
+import { NotificationModal } from "./NotificationsModal";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { useEffect } from "react";
+import assort_api from "@/api/axios";
+import { APP_POINTS } from "@/api/apiConfig";
 
 export function OrganizationTopBar({
   title,
@@ -9,7 +15,20 @@ export function OrganizationTopBar({
   onFoldClick,
   sidebarCollapsed = false,
 }) {
+  const [notificationModalOpen, setNotificationModalOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  
   const { user, organizations } = useAuthState();
+
+
+  useEffect(() => {
+    const fetchNotificationSummary = async () => {
+      const res = await assort_api.get(`${APP_POINTS.NOTIFICATIONS}summary/`);
+      setUnreadCount(res.data?.total_unread);
+    };
+    fetchNotificationSummary();
+  }, []);
+
   return (
     <div
       className={`
@@ -46,12 +65,29 @@ export function OrganizationTopBar({
       </div>
 
       <div className="flex items-center gap-4">
-        <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors relative">
-          <Bell size={20} className="text-gray-700" />
-          {/* <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span> */}
-        </button>
+        <div className="relative inline-flex">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setNotificationModalOpen(true)}
+          >
+            <Bell size={20} className="text-gray-700" />
+          </Button>
+          {unreadCount > 0 && (
+            <Badge
+              variant="destructive"
+              className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs pointer-events-none"
+            >
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </Badge>
+          )}
+        </div>
         <ProfileMenu user={user} canSwitch={organizations.length > 1} />
       </div>
+      <NotificationModal
+        open={notificationModalOpen}
+        onOpenChange={setNotificationModalOpen}
+      />
     </div>
   );
 }

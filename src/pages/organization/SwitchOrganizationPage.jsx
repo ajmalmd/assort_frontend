@@ -6,9 +6,13 @@ import { getActiveOrgId } from "@/api/authStore";
 import { formatEnum } from "@/appFunctions";
 import { useAppDispatch, useAuthState } from "@/redux/hooks";
 import { switchOrganization } from "@/redux/slices/authSlice";
+import assort_api from "@/api/axios";
+import { APP_POINTS } from "@/api/apiConfig";
+import { Badge } from "@/components/ui/badge";
 
 export default function SwitchOrganizationPage() {
   const [selectedOrg, setSelectedOrg] = useState(null);
+  const [unreadNotifications, setUnreadNotifications] = useState([]);
 
   const { organizations } = useAuthState();
   const dispatch = useAppDispatch();
@@ -25,14 +29,25 @@ export default function SwitchOrganizationPage() {
     }
 
     // Multiple orgs → preselect first
-    setSelectedOrg(
-      (prev) =>
-        prev ||
-        organizations.find(
-          (org) => Number(org.id) === Number(getActiveOrgId()),
-        ),
+    const activeOrg = organizations.find(
+      (org) => Number(org.id) === Number(getActiveOrgId()),
     );
+
+    setSelectedOrg(activeOrg);
   }, [organizations, navigate]);
+
+  useEffect(() => {
+    const fetchNotificationSummary = async () => {
+      const res = await assort_api.get(`${APP_POINTS.NOTIFICATIONS}summary/`);
+      setUnreadNotifications(res.data?.organizations);
+    };
+    fetchNotificationSummary();
+  }, []);
+
+  const getUnreadCount = (id) => {
+    const org = unreadNotifications.find((o) => o.organization_id === id);
+    return org?.unread ?? 0;
+  };
 
   const handleSwitch = () => {
     if (!selectedOrg) return;
@@ -75,9 +90,19 @@ export default function SwitchOrganizationPage() {
             >
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2 justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {org.title}
-                  </h3>
+                  <div className="flex gap-1">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {org.title}
+                    </h3>
+                    {getUnreadCount(org.id) > 0 && (
+                      <Badge
+                        variant="destructive"
+                        className="h-5 w-5 p-0 flex items-center justify-center text-xs pointer-events-none"
+                      >
+                        {getUnreadCount(org.id)}
+                      </Badge>
+                    )}
+                  </div>
 
                   <span className="px-2 py-1 bg-gray-900 text-gray-100 text-xs font-medium rounded">
                     {formatEnum(org.role)}

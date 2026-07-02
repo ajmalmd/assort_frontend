@@ -61,8 +61,10 @@ assort_api.interceptors.request.use((config) => {
   // PLATFORM ADMIN ROUTES (token required, NO org)
   const isPlatformRoute = url.includes("/api/platform/");
 
-  // Skip org header for public + platform routes
-  if (!isPublicRoute && !isPlatformRoute) {
+  const isNotificationSummary = url.includes("/api/notifications/summary");
+
+  // Skip org header for public + platform + notification routes
+  if (!isPublicRoute && !isPlatformRoute && !isNotificationSummary) {
     const orgId = getActiveOrgId();
 
     if (!orgId) {
