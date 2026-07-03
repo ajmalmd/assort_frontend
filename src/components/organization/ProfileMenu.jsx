@@ -3,8 +3,9 @@ import { LogOut, ChevronRight } from "lucide-react";
 import { logout } from "@/api/utility";
 import { useNavigate } from "react-router";
 import { getInitials } from "@/appFunctions";
+import { Badge } from "../ui/badge";
 
-export function ProfileMenu({ user, canSwitch }) {
+export function ProfileMenu({ user, canSwitch, totalUnread }) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
   const navigate = useNavigate();
@@ -77,7 +78,17 @@ export function ProfileMenu({ user, canSwitch }) {
               className="flex w-full items-center justify-between px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors mb-4 text-white font-semibold"
             >
               <span>Switch workspace</span>
-              <ChevronRight size={18} />
+              <div className="flex">
+                {totalUnread > 0 && (
+                  <Badge
+                    variant="destructive"
+                    className="h-5 w-5 p-0 flex items-center justify-center text-xs pointer-events-none"
+                  >
+                    {totalUnread > 9 ? "9+" : totalUnread}
+                  </Badge>
+                )}
+                <ChevronRight size={18} />
+              </div>
             </button>
           )}
 

@@ -8,6 +8,7 @@ import { Button } from "../ui/button";
 import { useEffect } from "react";
 import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
+import { getActiveOrgId } from "@/api/authStore";
 
 export function OrganizationTopBar({
   title,
@@ -17,14 +18,19 @@ export function OrganizationTopBar({
 }) {
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  
-  const { user, organizations } = useAuthState();
+  const [totalUnread, setTotalUnread] = useState(0);
 
+  const { user, organizations } = useAuthState();
+  const orgId = getActiveOrgId();
 
   useEffect(() => {
     const fetchNotificationSummary = async () => {
       const res = await assort_api.get(`${APP_POINTS.NOTIFICATIONS}summary/`);
-      setUnreadCount(res.data?.total_unread);
+      const orgUnread = res.data.organizations.find(
+        (org) => org.organization_id === orgId,
+      );
+      setUnreadCount(orgUnread?.unread || 0);
+      setTotalUnread(res.data?.total_unread);
     };
     fetchNotificationSummary();
   }, []);
@@ -82,7 +88,11 @@ export function OrganizationTopBar({
             </Badge>
           )}
         </div>
-        <ProfileMenu user={user} canSwitch={organizations.length > 1} />
+        <ProfileMenu
+          user={user}
+          canSwitch={organizations.length > 1}
+          totalUnread={totalUnread - unreadCount}
+        />
       </div>
       <NotificationModal
         open={notificationModalOpen}
