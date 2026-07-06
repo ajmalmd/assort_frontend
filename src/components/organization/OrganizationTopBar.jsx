@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { Bell, Menu, PanelRight, PanelLeft } from "lucide-react";
-import { ProfileMenu } from "./ProfileMenu";
-import { useAuthState } from "@/redux/hooks";
-import { NotificationModal } from "./NotificationsModal";
+import { Bell, Menu, PanelLeft, PanelRight } from "lucide-react";
+
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-import { useEffect } from "react";
-import assort_api from "@/api/axios";
-import { APP_POINTS } from "@/api/apiConfig";
-import { getActiveOrgId } from "@/api/authStore";
+
+import { ProfileMenu } from "./ProfileMenu";
+import { NotificationModal } from "./NotificationsModal";
+
+import { useAuthState } from "@/redux/hooks";
+import { useNotifications } from "@/notifications/useNotifications";
 
 export function OrganizationTopBar({
   title,
@@ -17,57 +17,41 @@ export function OrganizationTopBar({
   sidebarCollapsed = false,
 }) {
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [totalUnread, setTotalUnread] = useState(0);
 
   const { user, organizations } = useAuthState();
-  const orgId = getActiveOrgId();
 
-  useEffect(() => {
-    const fetchNotificationSummary = async () => {
-      const res = await assort_api.get(`${APP_POINTS.NOTIFICATIONS}summary/`);
-      const orgUnread = res.data.organizations.find(
-        (org) => org.organization_id === orgId,
-      );
-      setUnreadCount(orgUnread?.unread || 0);
-      setTotalUnread(res.data?.total_unread);
-    };
-    fetchNotificationSummary();
-  }, []);
+  const { summary } = useNotifications();
 
   return (
     <div
       className={`
-    fixed top-0 right-0 h-16 bg-white border-b border-gray-200 
-    flex items-center justify-between px-4 lg:px-8
-    transition-all duration-300
-    z-[30]
-
-    left-0 
-    ${sidebarCollapsed ? "lg:ml-20" : "lg:ml-48"}
-  `}
+        fixed top-0 right-0 h-16 bg-white border-b border-gray-200
+        flex items-center justify-between px-4 lg:px-8
+        transition-all duration-300 z-[30]
+        left-0
+        ${sidebarCollapsed ? "lg:ml-20" : "lg:ml-48"}
+      `}
     >
       <div className="flex items-center gap-2 lg:gap-4">
         <button
           onClick={onMenuClick}
-          className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
         >
-          <Menu size={20} className="text-gray-700" />
+          <Menu size={20} />
         </button>
 
         <button
           onClick={onFoldClick}
-          className="hidden lg:flex lg:p-2 lg:hover:bg-gray-100 lg:rounded-lg lg:transition-colors"
-          title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className="hidden lg:flex p-2 hover:bg-gray-100 rounded-lg"
         >
           {sidebarCollapsed ? (
-            <PanelRight size={20} className="text-gray-700" />
+            <PanelRight size={20} />
           ) : (
-            <PanelLeft size={20} className="text-gray-700" />
+            <PanelLeft size={20} />
           )}
         </button>
 
-        <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+        <h2 className="text-xl font-semibold">{title}</h2>
       </div>
 
       <div className="flex items-center gap-4">
@@ -77,23 +61,28 @@ export function OrganizationTopBar({
             size="icon"
             onClick={() => setNotificationModalOpen(true)}
           >
-            <Bell size={20} className="text-gray-700" />
+            <Bell size={20} />
           </Button>
-          {unreadCount > 0 && (
+
+          {summary.organization_unread > 0 && (
             <Badge
               variant="destructive"
-              className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs pointer-events-none"
+              className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs"
             >
-              {unreadCount > 9 ? "9+" : unreadCount}
+              {summary.organization_unread > 9
+                ? "9+"
+                : summary.organization_unread}
             </Badge>
           )}
         </div>
+
         <ProfileMenu
           user={user}
           canSwitch={organizations.length > 1}
-          totalUnread={totalUnread - unreadCount}
+          totalUnread={summary.total_unread - summary.organization_unread}
         />
       </div>
+
       <NotificationModal
         open={notificationModalOpen}
         onOpenChange={setNotificationModalOpen}

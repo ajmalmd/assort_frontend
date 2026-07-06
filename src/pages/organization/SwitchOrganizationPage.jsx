@@ -12,7 +12,10 @@ import { Badge } from "@/components/ui/badge";
 
 export default function SwitchOrganizationPage() {
   const [selectedOrg, setSelectedOrg] = useState(null);
-  const [unreadNotifications, setUnreadNotifications] = useState([]);
+  const [summary, setSummary] = useState({
+    total_unread: 0,
+    organizations: [],
+  });
 
   const { organizations } = useAuthState();
   const dispatch = useAppDispatch();
@@ -21,14 +24,14 @@ export default function SwitchOrganizationPage() {
   useEffect(() => {
     if (!organizations || organizations.length === 0) return;
 
-    // Single org → redirect immediately
+    // Single org - redirect immediately
     if (organizations.length === 1) {
       const route = getPostLoginRoute(organizations);
       navigate(route, { replace: true });
-      return; // 🔥 stop further execution
+      return;
     }
 
-    // Multiple orgs → preselect first
+    // Multiple orgs - preselect first
     const activeOrg = organizations.find(
       (org) => Number(org.id) === Number(getActiveOrgId()),
     );
@@ -39,13 +42,14 @@ export default function SwitchOrganizationPage() {
   useEffect(() => {
     const fetchNotificationSummary = async () => {
       const res = await assort_api.get(`${APP_POINTS.NOTIFICATIONS}summary/`);
-      setUnreadNotifications(res.data?.organizations);
+      setSummary(res.data);
     };
     fetchNotificationSummary();
   }, []);
 
   const getUnreadCount = (id) => {
-    const org = unreadNotifications.find((o) => o.organization_id === id);
+    const org = summary.organizations.find((o) => o.organization_id === id);
+
     return org?.unread ?? 0;
   };
 

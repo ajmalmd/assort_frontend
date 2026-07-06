@@ -153,8 +153,9 @@ export function AddJobModal({
             <Input
               id="job-hours"
               name="estimated_hours"
-              type="number"
+              type="decimal"
               placeholder="e.g., 8"
+              min={0.0}
               value={formData.estimated_hours}
               onChange={handleChange}
               required

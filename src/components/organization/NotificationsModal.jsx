@@ -1,64 +1,55 @@
-import { useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Bell, Check, Trash2, CheckCheck } from "lucide-react";
-import assort_api from "@/api/axios";
-import { APP_POINTS } from "@/api/apiConfig";
 import { formatDistanceToNow } from "date-fns";
 
+import { useNotifications } from "@/notifications/useNotifications";
+
 export function NotificationModal({ open, onOpenChange }) {
-  const [notifications, setNotifications] = useState([]);
   const [activeTab, setActiveTab] = useState("unread");
 
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      const res = await assort_api.get(
-        `${APP_POINTS.NOTIFICATIONS}?is_read=${activeTab === "read"}`,
-      );
-      setNotifications(res.data);
-    };
-    fetchNotifications();
-  }, [activeTab]);
+  const {
+    notifications,
+    markRead,
+    markAllRead,
+    deleteNotification,
+    clearReadNotifications,
+  } = useNotifications();
 
-  const handleMarkAsRead = async (notificationId) => {
-    await assort_api.patch(
-      `${APP_POINTS.NOTIFICATIONS}${notificationId}/read/`,
-    );
+  const unreadNotifications = useMemo(
+    () => notifications.filter((n) => !n.is_read),
+    [notifications],
+  );
 
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === notificationId ? { ...n, is_read: true } : n)),
-    );
-  };
+  const readNotifications = useMemo(
+    () => notifications.filter((n) => n.is_read),
+    [notifications],
+  );
 
-  const handleMarkAllAsRead = async () => {
-    await assort_api.patch(`${APP_POINTS.NOTIFICATIONS}read-all/`);
-    setNotifications([]);
-  };
-
-  const handleDelete = async (notificationId) => {
-    await assort_api.delete(`${APP_POINTS.NOTIFICATIONS}${notificationId}/`);
-    setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
-  };
-
-  const handleClearAll = async () => {
-    await assort_api.delete(`${APP_POINTS.NOTIFICATIONS}clear/`);
-    setNotifications([]);
-  };
+  const displayedNotifications =
+    activeTab === "unread" ? unreadNotifications : readNotifications;
 
   const getNotificationIcon = (type) => {
-    const typePrefix = type.split("_")[0];
-    switch (typePrefix) {
+    const prefix = type.split("_")[0];
+
+    switch (prefix) {
       case "job":
         return "💼";
+
       case "task":
         return "✓";
+
       case "log":
         return "📝";
+
       case "chat":
         return "💬";
+
       case "project":
         return "📁";
+
       default:
         return "📌";
     }
@@ -68,6 +59,7 @@ export function NotificationModal({ open, onOpenChange }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex h-[80vh] max-w-2xl flex-col overflow-hidden p-0">
         {/* Header */}
+
         <div className="border-b px-6 py-4 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-2">
             <Bell className="h-5 w-5" />
@@ -76,6 +68,7 @@ export function NotificationModal({ open, onOpenChange }) {
         </div>
 
         {/* Tabs */}
+
         <div className="flex gap-1 border-b px-6 bg-muted/30 flex-shrink-0">
           <button
             onClick={() => setActiveTab("unread")}
@@ -85,8 +78,9 @@ export function NotificationModal({ open, onOpenChange }) {
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
-            Unread
+            Unread ({unreadNotifications.length})
           </button>
+
           <button
             onClick={() => setActiveTab("read")}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
@@ -95,30 +89,32 @@ export function NotificationModal({ open, onOpenChange }) {
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
-            Read
+            Read ({readNotifications.length})
           </button>
         </div>
 
-        {/* Action Buttons */}
-        {notifications.length > 0 && (
+        {/* Actions */}
+
+        {displayedNotifications.length > 0 && (
           <div className="flex justify-end gap-2 px-6 py-3 border-b bg-muted/20 flex-shrink-0">
             {activeTab === "unread" && (
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleMarkAllAsRead}
                 className="gap-2"
+                onClick={markAllRead}
               >
                 <CheckCheck className="h-4 w-4" />
                 Mark all read
               </Button>
             )}
+
             {activeTab === "read" && (
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleClearAll}
                 className="gap-2"
+                onClick={clearReadNotifications}
               >
                 <Trash2 className="h-4 w-4" />
                 Clear all
@@ -127,10 +123,11 @@ export function NotificationModal({ open, onOpenChange }) {
           </div>
         )}
 
-        {/* Notifications List - Scrollable */}
+        {/* Notification List */}
+
         <div className="flex-1 min-h-0 overflow-hidden">
           <ScrollArea className="h-full w-full">
-            {notifications.length === 0 ? (
+            {displayedNotifications.length === 0 ? (
               <div className="flex items-center justify-center h-48 text-muted-foreground">
                 <div className="text-center">
                   <Bell className="h-12 w-12 mx-auto mb-2 opacity-30" />
@@ -139,7 +136,7 @@ export function NotificationModal({ open, onOpenChange }) {
               </div>
             ) : (
               <div className="divide-y px-6">
-                {notifications.map((notification) => (
+                {displayedNotifications.map((notification) => (
                   <div
                     key={notification.id}
                     className={`py-4 hover:bg-muted/50 transition-colors border-l-4 pl-3 -ml-3 ${
@@ -153,15 +150,16 @@ export function NotificationModal({ open, onOpenChange }) {
                         <span className="text-xl mt-0.5 flex-shrink-0">
                           {getNotificationIcon(notification.type)}
                         </span>
+
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className="font-semibold text-sm">
-                              {notification.title}
-                            </h4>
-                          </div>
+                          <h4 className="font-semibold text-sm">
+                            {notification.title}
+                          </h4>
+
                           <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                             {notification.body}
                           </p>
+
                           <p className="text-xs text-muted-foreground mt-2">
                             {formatDistanceToNow(
                               new Date(notification.created_at),
@@ -172,14 +170,14 @@ export function NotificationModal({ open, onOpenChange }) {
                           </p>
                         </div>
                       </div>
+
                       <div className="flex items-center gap-1 flex-shrink-0">
                         {activeTab === "unread" ? (
                           <Button
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
-                            onClick={() => handleMarkAsRead(notification.id)}
-                            title="Mark as read"
+                            onClick={() => markRead(notification.id)}
                           >
                             <Check className="h-4 w-4" />
                           </Button>
@@ -188,8 +186,7 @@ export function NotificationModal({ open, onOpenChange }) {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 hover:text-destructive"
-                            onClick={() => handleDelete(notification.id)}
-                            title="Delete notification"
+                            onClick={() => deleteNotification(notification.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
