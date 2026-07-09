@@ -6,6 +6,7 @@ import { APP_POINTS } from "@/api/apiConfig";
 import AuthLayout from "@/components/common/AuthLayout";
 import { setAccessToken } from "@/api/authStore";
 import { useAppDispatch } from "@/redux/hooks";
+import { setLoginData } from "@/redux/slices/authSlice";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -62,6 +63,7 @@ const AdminLoginPage = () => {
         navigate("/platform", { replace: true });
       }
     } catch (error) {
+      console.log(error);
       if (!error.response) {
         setError("Network error.");
       } else {

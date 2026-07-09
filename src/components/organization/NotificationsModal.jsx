@@ -41,7 +41,7 @@ export function NotificationModal({ open, onOpenChange }) {
       case "task":
         return "✓";
 
-      case "log":
+      case "timesheet":
         return "📝";
 
       case "chat":
