@@ -153,8 +153,21 @@ export function EditJobModal({ open, onOpenChange, job, updatedJobDetails }) {
               name="estimated_hours"
               type="number"
               placeholder="e.g., 8"
+              min={0}
+              step="0.1"
               value={formData.estimated_hours}
-              onChange={handleChange}
+              onChange={(e) => {
+                const value = e.target.value;
+
+                if (value === "") {
+                  handleChange(e);
+                  return;
+                }
+
+                if (Number(value) >= 0) {
+                  handleChange(e);
+                }
+              }}
               required
             />
           </div>

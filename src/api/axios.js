@@ -98,15 +98,14 @@ assort_api.interceptors.response.use(
       !isRefreshRequest
     ) {
       if (isRefreshing) {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
           subscribeTokenRefresh((newToken) => {
-            originalRequest.headers.Authorization = `Bearer ${newToken}`;
-
-            const orgId = getActiveOrgId();
-            if (orgId) {
-              originalRequest.headers["X-ORG-ID"] = orgId;
+            if (!newToken) {
+              reject(new Error("Refresh failed"));
+              return;
             }
 
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
             resolve(assort_api(originalRequest));
           });
         });

@@ -153,11 +153,25 @@ export function AddJobModal({
             <Input
               id="job-hours"
               name="estimated_hours"
-              type="decimal"
+              type="number"
               placeholder="e.g., 8"
-              min={0.0}
+              min={0}
+              step="0.1"
               value={formData.estimated_hours}
-              onChange={handleChange}
+              onChange={(e) => {
+                const value = e.target.value;
+
+                // Allow empty input
+                if (value === "") {
+                  handleChange(e);
+                  return;
+                }
+
+                // Prevent negative values
+                if (Number(value) >= 0) {
+                  handleChange(e);
+                }
+              }}
               required
             />
           </div>

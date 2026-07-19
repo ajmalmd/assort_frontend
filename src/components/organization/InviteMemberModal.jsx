@@ -4,6 +4,8 @@ import Select from "react-select";
 import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
 import toast from "react-hot-toast";
+import { useAuthState } from "@/redux/hooks";
+import { isOrgOwner } from "@/appFunctions";
 
 const ROLES = [
   { label: "Admin", value: "ADMIN" },
@@ -21,6 +23,8 @@ export function InviteMemberModal({ isOpen, onClose, onSendInvitation }) {
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+
+  const { activeOrganization } = useAuthState();
 
   // Fetch departments on mount
   useEffect(() => {
@@ -207,7 +211,11 @@ export function InviteMemberModal({ isOpen, onClose, onSendInvitation }) {
                 Role
               </label>
               <Select
-                options={ROLES}
+                options={
+                  isOrgOwner(activeOrganization?.role)
+                    ? ROLES
+                    : ROLES.filter((item) => item.value != "ADMIN")
+                }
                 value={ROLES.find((o) => o.value === formData.role)}
                 onChange={(option) =>
                   setFormData({ ...formData, role: option.value })
