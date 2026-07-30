@@ -33,14 +33,7 @@ export function useChatListSocket(handlers = {}) {
             break;
 
           case "room_updated":
-            handlersRef.current.onRoomUpdated?.(data.room);
-            break;
-
-          case "unread_updated":
-            handlersRef.current.onUnreadUpdated?.(
-              data.room_id,
-              data.unread_count,
-            );
+            handlersRef.current.onRoomUpdated?.(data.room_id, data.changes);
             break;
         }
       };

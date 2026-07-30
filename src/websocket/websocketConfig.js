@@ -20,4 +20,5 @@ export const SOCKET_PATHS = {
   notification: () => "/ws/notification/list/",
   chatList: () => "/ws/chat/list/",
   room: (roomId) => `/ws/chat/rooms/${roomId}/`,
+  call: (sessionId) => `/ws/call/${sessionId}/`,
 };

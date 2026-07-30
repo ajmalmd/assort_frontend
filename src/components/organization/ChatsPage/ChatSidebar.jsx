@@ -77,25 +77,33 @@ export default function ChatSidebar({
       setChats((prev) => [room, ...prev]);
     },
 
-    onRoomUpdated: (room) => {
+    onRoomUpdated: (roomId, changes) => {
       setChats((prev) => {
-        const filtered = prev.filter((r) => r.id !== room.id);
-        return [room, ...filtered];
-      });
-
-      setSelectedChat((prev) => (prev?.id === room.id ? room : prev));
-    },
-
-    onUnreadUpdated: (roomId, unreadCount) => {
-      setChats((prev) =>
-        prev.map((chat) =>
+        const updated = prev.map((chat) =>
           chat.id === roomId
             ? {
                 ...chat,
-                unread_count: unreadCount,
+                ...changes,
               }
             : chat,
-        ),
+        );
+
+        // Move room to top when last message changes
+        if (changes.last_message) {
+          const room = updated.find((c) => c.id === roomId);
+          return [room, ...updated.filter((c) => c.id !== roomId)];
+        }
+
+        return updated;
+      });
+
+      setSelectedChat((prev) =>
+        prev?.id === roomId
+          ? {
+              ...prev,
+              ...changes,
+            }
+          : prev,
       );
     },
   });
@@ -204,7 +212,7 @@ export default function ChatSidebar({
                       : "hover:bg-accent/50"
                   }`}
                 >
-                  <div className="relative shrink-0">
+                  <div className="shrink-0">
                     {chat.image ? (
                       <img
                         src={chat.image}
@@ -216,30 +224,32 @@ export default function ChatSidebar({
                         {chat.title.charAt(0)}
                       </div>
                     )}
-
-                    {!!chat.unread_count && (
-                      <div className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center px-1">
-                        {chat.unread_count}
-                      </div>
-                    )}
                   </div>
 
-                  <div className="flex-1 min-w-0 text-left">
-                    <div className="flex justify-between gap-2">
+                  <div className="flex-1 min-w-0 text-left flex justify-between gap-3">
+                    <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">
                         {chat.title}
                       </p>
 
+                      <p className="truncate text-xs text-muted-foreground">
+                        {chat.last_message?.preview}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col items-end shrink-0">
                       <p className="text-xs text-muted-foreground">
                         {chat.last_message?.created_at
                           ? formatSidebarDate(chat.last_message.created_at)
                           : ""}
                       </p>
-                    </div>
 
-                    <p className="truncate text-xs text-muted-foreground">
-                      {chat.last_message?.preview}
-                    </p>
+                      {!!chat.unread_count && (
+                        <div className="mt-1 min-w-[18px] h-[18px] rounded-full bg-black text-white text-[10px] flex items-center justify-center px-1">
+                          {chat.unread_count}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </button>
               ))
