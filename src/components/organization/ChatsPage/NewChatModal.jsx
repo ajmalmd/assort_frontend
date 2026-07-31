@@ -141,7 +141,9 @@ export function NewChatModal({ open, onOpenChange, createdChat }) {
   };
 
   const handleModalClose = () => {
-    setStep("options");
+    isOrgOwnerorAdmin(activeOrganization.role)
+      ? setStep("options")
+      : setStep("new-chat");
     setSearchTerm("");
     setSelectedMember({ id: null });
     setGroupTitle("");

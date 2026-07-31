@@ -9,12 +9,20 @@ export function chatEventRouter(event, handlers) {
       handlers.onMessage?.(event.data);
       break;
 
+    case "member_status":
+      handlers.onChangeStatus?.(event.member_id, event.status);
+      break;
+
     case "typing":
-      handlers.onTyping?.(event.data);
+      handlers.onTyping?.(event.member_id, event.is_typing);
       break;
 
     case "seen":
-      handlers.onSeen?.(event.data);
+      handlers.onSeen?.({
+        member_id: event.member_id,
+        last_read_message_id: event.last_read_message_id,
+      });
+
       break;
 
     default:
@@ -24,6 +32,7 @@ export function chatEventRouter(event, handlers) {
 
 export function useRoomChat(roomId) {
   const [messages, setMessages] = useState([]);
+  const [memberStatus, setMemberStatus] = useState({});
   const [nextCursor, setNextCursor] = useState(null);
   const [loadingOlder, setLoadingOlder] = useState(false);
 
@@ -77,12 +86,19 @@ export function useRoomChat(roomId) {
           markSeen();
         },
 
-        onSeen: (data) => {
-          console.log("SEEN", data);
+        onChangeStatus: (member_id, status) => {
+          setMemberStatus((prev) => ({
+            ...prev,
+            [member_id]: status,
+          }));
         },
 
-        onTyping: (data) => {
-          console.log("TYPING", data);
+        onSeen: ({ member_id, last_read_message_id }) => {
+          console.log("Seen by", member_id, last_read_message_id);
+        },
+
+        onTyping: (member_id, is_typing) => {
+          console.log(member_id, is_typing);
         },
       }),
   });
@@ -266,6 +282,7 @@ export function useRoomChat(roomId) {
 
   return {
     messages,
+    memberStatus,
     hasMore: !!nextCursor,
     loadingOlder,
     messagesRef,

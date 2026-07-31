@@ -74,7 +74,12 @@ export default function ChatSidebar({
 
   useChatListSocket({
     onRoomCreated: (room) => {
-      setChats((prev) => [room, ...prev]);
+      setChats((prev) => {
+        const exists = prev.some((chat) => chat.id === room.id);
+        if (exists) return prev;
+
+        return [room, ...prev];
+      });
     },
 
     onRoomUpdated: (roomId, changes) => {

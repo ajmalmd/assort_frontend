@@ -48,9 +48,10 @@ export default function ChatMessages({
 
       <div className="flex-1 min-h-0">
         <RoomChat
-          roomId={currentChat.id}
+          room={currentChat}
           className="h-full"
           chatType={currentChat.type}
+          setSelectedChat={setSelectedChat}
         />
       </div>
     </div>

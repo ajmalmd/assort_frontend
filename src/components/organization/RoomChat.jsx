@@ -1,10 +1,50 @@
 import { useRoomChat } from "@/hooks/useRoomChat";
 import MessageList from "./ChatRoom/MessageList";
 import MessageInput from "./ChatRoom/MessageInput";
+import { useEffect } from "react";
+import { useAuthState } from "@/redux/hooks";
 
-export default function RoomChat({ roomId, className = "", chatType }) {
-  const { messages, hasMore, loadingOlder, messagesRef, sendMessage } =
-    useRoomChat(roomId);
+export default function RoomChat({
+  room,
+  className = "",
+  chatType,
+  setSelectedChat,
+}) {
+  const {
+    messages,
+    memberStatus,
+    hasMore,
+    loadingOlder,
+    messagesRef,
+    sendMessage,
+  } = useRoomChat(room.id);
+
+  const { activeOrganization } = useAuthState();
+
+  // member status update (direct chat only)
+  useEffect(() => {
+    if (!room?.direct_key) return;
+
+    const memberIds = room.direct_key.split("_").map(Number);
+
+    const otherMemberId = memberIds.find(
+      (id) => id !== activeOrganization?.membership_id,
+    );
+
+    if (!otherMemberId) return;
+
+    const status = memberStatus[otherMemberId];
+
+    if (!status) return;
+    console.log(status);
+
+    setSelectedChat((prev) => {
+      return {
+        ...prev,
+        status,
+      };
+    });
+  }, [memberStatus]);
 
   return (
     <div className={className}>
