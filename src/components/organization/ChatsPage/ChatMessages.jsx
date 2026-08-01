@@ -27,13 +27,11 @@ export default function ChatMessages({
           </Button>
 
           <div
-            onClick={() =>
-              currentChat.type === "GROUP"
-                ? setDetailCon(true)
-                : currentChat.type === "PROJECT"
-                  ? navigate(`/app/project/${currentChat.project}`)
-                  : setDetailCon(true)
-            }
+            onClick={() => {
+              currentChat.type === "GROUP" && setDetailCon(true);
+              currentChat.type === "PROJECT" &&
+                navigate(`/app/project/${currentChat.project}`);
+            }}
           >
             <p className="font-semibold">{currentChat.title}</p>
 

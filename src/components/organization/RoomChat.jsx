@@ -36,7 +36,6 @@ export default function RoomChat({
     const status = memberStatus[otherMemberId];
 
     if (!status) return;
-    console.log(status);
 
     setSelectedChat((prev) => {
       return {

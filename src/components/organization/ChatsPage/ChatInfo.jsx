@@ -9,10 +9,11 @@ export default function ChatInfo({ currentChat, setDetailCon }) {
 
   useEffect(() => {
     const fetchGroupDetails = async () => {
-      const res = await assort_api.get(`${APP_POINTS.CHAT}groups/${currentChat.id}`);
-      console.log(res.data);
-      
-      setDetails(res.data)
+      const res = await assort_api.get(
+        `${APP_POINTS.CHAT}groups/${currentChat.id}`,
+      );
+
+      setDetails(res.data);
     };
     if (currentChat.id) {
       fetchGroupDetails();

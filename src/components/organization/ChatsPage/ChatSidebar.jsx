@@ -233,9 +233,18 @@ export default function ChatSidebar({
 
                   <div className="flex-1 min-w-0 text-left flex justify-between gap-3">
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">
-                        {chat.title}
-                      </p>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <p className="truncate text-sm font-medium">
+                          {chat.title}
+                        </p>
+
+                        {chat.active_call && (
+                          <span className="flex items-center gap-1 text-xs text-green-600 shrink-0">
+                            <Video className="h-3 w-3 fill-current" />
+                            Live
+                          </span>
+                        )}
+                      </div>
 
                       <p className="truncate text-xs text-muted-foreground">
                         {chat.last_message?.preview}
