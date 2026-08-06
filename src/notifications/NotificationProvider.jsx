@@ -8,7 +8,7 @@ import { useAuthState } from "@/redux/hooks";
 import { NotificationContext } from "./NotificationContext";
 import { useNotificationSocket } from "@/websocket/useNotificationSocket";
 
-export function NotificationProvider({ children }) {
+export default function NotificationProvider({ children }) {
   const { activeOrganization } = useAuthState();
 
   const [notifications, setNotifications] = useState([]);
@@ -81,7 +81,13 @@ export function NotificationProvider({ children }) {
     },
 
     onNotificationCreated: ({ notification }) => {
-      setNotifications((prev) => [notification, ...prev]);
+      setNotifications((prev) => {
+        if (prev.some((n) => n.id === notification.id)) {
+          return prev;
+        }
+
+        return [notification, ...prev];
+      });
     },
 
     onNotificationDeleted: ({ notification_id }) => {

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useAuthState } from "@/redux/hooks";
 import { buildSocketUrl, SOCKET_PATHS } from "./websocketConfig";
+import { registerSocket, unregisterSocket } from "./websocketManager";
 
 export function useRoomSocket(roomId, handlers = {}) {
   const socketRef = useRef(null);
@@ -24,6 +25,8 @@ export function useRoomSocket(roomId, handlers = {}) {
         buildSocketUrl(SOCKET_PATHS.room(roomId), activeOrganization.id),
       );
 
+      registerSocket(socket);
+
       socketRef.current = socket;
 
       socket.onopen = () => {
@@ -46,6 +49,8 @@ export function useRoomSocket(roomId, handlers = {}) {
 
       socket.onclose = () => {
         if (!active) return;
+
+        unregisterSocket(socket);
 
         reconnectTimeout = setTimeout(connect, 3000);
       };

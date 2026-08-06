@@ -1,6 +1,7 @@
 import { useAuthState } from "@/redux/hooks";
 import { useEffect, useRef } from "react";
 import { buildSocketUrl, SOCKET_PATHS } from "./websocketConfig";
+import { registerSocket, unregisterSocket } from "./websocketManager";
 
 export function useChatListSocket(handlers = {}) {
   const socketRef = useRef(null);
@@ -22,6 +23,8 @@ export function useChatListSocket(handlers = {}) {
         buildSocketUrl(SOCKET_PATHS.chatList(), activeOrganization.id),
       );
 
+      registerSocket(socket);
+
       socketRef.current = socket;
 
       socket.onmessage = (event) => {
@@ -40,6 +43,7 @@ export function useChatListSocket(handlers = {}) {
 
       socket.onclose = () => {
         reconnectTimeout = setTimeout(connect, 3000);
+        unregisterSocket(socket);
       };
     };
 

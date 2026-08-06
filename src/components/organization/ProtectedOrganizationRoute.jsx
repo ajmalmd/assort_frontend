@@ -1,5 +1,7 @@
 import { Navigate, Outlet, useLocation } from "react-router";
 import { useAuthState } from "@/redux/hooks";
+import WorkspaceProvider from "../workspace/WorkspaceProvider";
+import NotificationProvider from "@/notifications/NotificationProvider";
 
 const VALID_SUBSCRIPTIONS = ["ACTIVE", "TRIAL"];
 
@@ -35,7 +37,13 @@ const ProtectedOrganizationRoute = () => {
     }
   }
 
-  return <Outlet />;
+  return (
+    <WorkspaceProvider>
+      <NotificationProvider>
+        <Outlet />
+      </NotificationProvider>
+    </WorkspaceProvider>
+  );
 };
 
 export default ProtectedOrganizationRoute;
