@@ -21,6 +21,26 @@ const workspaceSlice = createSlice({
       state.incomingCall = action.payload;
     },
 
+    addWaitingCall: (state, action) => {
+      const exists = state.waitingCalls.some(
+        (call) => call.session_id === action.payload.session_id,
+      );
+
+      if (!exists) {
+        state.waitingCalls.push(action.payload);
+      }
+    },
+
+    removeWaitingCall: (state, action) => {
+      state.waitingCalls = state.waitingCalls.filter(
+        (call) => call.session_id !== action.payload,
+      );
+    },
+
+    clearWaitingCalls: (state) => {
+      state.waitingCalls = [];
+    },
+
     clearIncomingCall(state) {
       state.incomingCall = null;
     },
@@ -61,6 +81,9 @@ const workspaceSlice = createSlice({
 export const {
   setConnected,
   setIncomingCall,
+  addWaitingCall,
+  removeWaitingCall,
+  clearWaitingCalls,
   clearIncomingCall,
   setWorkspaceSummary,
   updateWorkspaceSummary,

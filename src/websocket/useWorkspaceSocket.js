@@ -2,10 +2,14 @@ import { useEffect, useRef } from "react";
 
 import { buildSocketUrl, SOCKET_PATHS } from "./websocketConfig";
 import { registerSocket, unregisterSocket } from "./websocketManager";
+import { useAppDispatch } from "@/redux/hooks";
+import { addWaitingCall } from "@/redux/slices/workspaceSlice";
 
 export function useWorkspaceSocket(enabled, handlers = {}) {
   const socketRef = useRef(null);
   const handlersRef = useRef(handlers);
+
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     handlersRef.current = handlers;
@@ -40,10 +44,11 @@ export function useWorkspaceSocket(enabled, handlers = {}) {
 
           case "call_ended":
             handlersRef.current.onCallEnded?.(data);
+            dispatch(removeWaitingCall(event.session_id));
             break;
 
           case "incoming_call_waiting":
-            handlersRef.current.onCallWaiting?.(data);
+            dispatch(addWaitingCall(event.data));
             break;
 
           case "workspace_summary":

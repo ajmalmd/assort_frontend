@@ -1,7 +1,7 @@
 import { useState } from "react";
 import ChatSidebar from "@/components/organization/ChatsPage/ChatSidebar";
 import Chat from "@/components/organization/ChatsPage/Chat";
-import CallHistory from "@/components/organization/ChatsPage/CallHistory";
+import CallDetails from "@/components/organization/ChatsPage/CallDetails";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuthState } from "@/redux/hooks";
 import { isOrgOwnerorAdmin } from "@/appFunctions";
@@ -24,7 +24,7 @@ function MyChat() {
           <Chat currentRoom={selectedRoom} setSelectedRoom={setSelectedRoom} />
         )}
 
-        {activeTab === "calls" && <CallHistory currentRoom={selectedRoom}/>}
+        {activeTab === "calls" && <CallDetails currentRoom={selectedRoom}/>}
       </div>
     </div>
   );
