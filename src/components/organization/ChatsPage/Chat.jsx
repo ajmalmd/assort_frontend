@@ -2,18 +2,18 @@ import { useState } from "react";
 import ChatInfo from "./ChatInfo";
 import ChatMessages from "./ChatMessages";
 
-export default function Chat({ currentChat, setSelectedChat }) {
+export default function Chat({ currentRoom, setSelectedRoom }) {
   const [isDetailCon, setDetailCon] = useState(false);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
       {isDetailCon ? (
-        <ChatInfo currentChat={currentChat} setDetailCon={setDetailCon} />
+        <ChatInfo currentRoom={currentRoom} setDetailCon={setDetailCon} />
       ) : (
         <ChatMessages
-          currentChat={currentChat}
+          currentRoom={currentRoom}
           setDetailCon={setDetailCon}
-          setSelectedChat={setSelectedChat}
+          setSelectedRoom={setSelectedRoom}
         />
       )}
     </div>

@@ -5,11 +5,11 @@ import { useNavigate } from "react-router";
 import RoomChat from "../RoomChat";
 
 export default function ChatMessages({
-  currentChat,
+  currentRoom,
   setDetailCon,
-  setSelectedChat,
+  setSelectedRoom,
 }) {
-  if (!currentChat?.id) return null;
+  if (!currentRoom?.id) return null;
 
   const navigate = useNavigate();
 
@@ -21,24 +21,24 @@ export default function ChatMessages({
             size="icon"
             variant="ghost"
             className="md:hidden"
-            onClick={() => setSelectedChat({})}
+            onClick={() => setSelectedRoom({})}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
 
           <div
             onClick={() => {
-              currentChat.type === "GROUP" && setDetailCon(true);
-              currentChat.type === "PROJECT" &&
-                navigate(`/app/project/${currentChat.project}`);
+              currentRoom.type === "GROUP" && setDetailCon(true);
+              currentRoom.type === "PROJECT" &&
+                navigate(`/app/project/${currentRoom.project}`);
             }}
           >
-            <p className="font-semibold">{currentChat.title}</p>
+            <p className="font-semibold">{currentRoom.title}</p>
 
             <p className="text-xs text-muted-foreground">
-              {currentChat.type === "DIRECT"
-                ? formatEnum(currentChat.status)
-                : currentChat.type}
+              {currentRoom.type === "DIRECT"
+                ? formatEnum(currentRoom.status)
+                : currentRoom.type}
             </p>
           </div>
         </div>
@@ -46,10 +46,10 @@ export default function ChatMessages({
 
       <div className="flex-1 min-h-0">
         <RoomChat
-          room={currentChat}
+          room={currentRoom}
           className="h-full"
-          chatType={currentChat.type}
-          setSelectedChat={setSelectedChat}
+          chatType={currentRoom.type}
+          setSelectedRoom={setSelectedRoom}
         />
       </div>
     </div>

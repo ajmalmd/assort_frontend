@@ -4,21 +4,21 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 
-export default function ChatInfo({ currentChat, setDetailCon }) {
+export default function ChatInfo({ currentRoom, setDetailCon }) {
   const [details, setDetails] = useState({});
 
   useEffect(() => {
     const fetchGroupDetails = async () => {
       const res = await assort_api.get(
-        `${APP_POINTS.CHAT}groups/${currentChat.id}`,
+        `${APP_POINTS.CHAT}groups/${currentRoom.id}`,
       );
 
       setDetails(res.data);
     };
-    if (currentChat.id) {
+    if (currentRoom.id) {
       fetchGroupDetails();
     }
-  }, [currentChat]);
+  }, [currentRoom]);
 
   return (
     <div className="flex flex-1 flex-col bg-background">

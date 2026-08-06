@@ -1,30 +1,30 @@
 import { useState } from "react";
 import ChatSidebar from "@/components/organization/ChatsPage/ChatSidebar";
 import Chat from "@/components/organization/ChatsPage/Chat";
-import ChatVideo from "@/components/organization/ChatsPage/ChatVideo";
+import CallHistory from "@/components/organization/ChatsPage/CallHistory";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuthState } from "@/redux/hooks";
 import { isOrgOwnerorAdmin } from "@/appFunctions";
 
 function MyChat() {
   const [activeTab, setActiveTab] = useState("messages");
-  const [selectedChat, setSelectedChat] = useState({});
+  const [selectedRoom, setSelectedRoom] = useState({});
 
   return (
     <div className="flex h-[calc(100dvh-7rem)] min-h-0 overflow-hidden border rounded-xl">
       <ChatSidebar
-        selectedChat={selectedChat}
-        setSelectedChat={setSelectedChat}
+        selectedRoom={selectedRoom}
+        setSelectedRoom={setSelectedRoom}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
       />
 
       <div className="flex-1 min-w-0 overflow-hidden">
         {activeTab === "messages" && (
-          <Chat currentChat={selectedChat} setSelectedChat={setSelectedChat} />
+          <Chat currentRoom={selectedRoom} setSelectedRoom={setSelectedRoom} />
         )}
 
-        {activeTab === "videocalls" && <ChatVideo />}
+        {activeTab === "calls" && <CallHistory currentRoom={selectedRoom}/>}
       </div>
     </div>
   );

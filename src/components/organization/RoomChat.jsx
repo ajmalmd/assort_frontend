@@ -8,7 +8,7 @@ export default function RoomChat({
   room,
   className = "",
   chatType,
-  setSelectedChat,
+  setSelectedRoom,
 }) {
   const {
     messages,
@@ -37,7 +37,7 @@ export default function RoomChat({
 
     if (!status) return;
 
-    setSelectedChat((prev) => {
+    setSelectedRoom((prev) => {
       return {
         ...prev,
         status,

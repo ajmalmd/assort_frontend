@@ -1,6 +1,6 @@
 import { Video } from "lucide-react";
 
-export default function ChatVideo() {
+export default function CallHistory({ currentRoom }) {
   return (
     <div className="flex-1 flex items-center justify-center">
       <div className="text-center">
