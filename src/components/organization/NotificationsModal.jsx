@@ -5,10 +5,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Bell, Check, Trash2, CheckCheck } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
+import { useNavigate } from "react-router";
 import { useNotifications } from "@/notifications/useNotifications";
 
 export function NotificationModal({ open, onOpenChange }) {
   const [activeTab, setActiveTab] = useState("unread");
+
+  const navigate = useNavigate();
 
   const {
     notifications,
@@ -31,28 +34,31 @@ export function NotificationModal({ open, onOpenChange }) {
   const displayedNotifications =
     activeTab === "unread" ? unreadNotifications : readNotifications;
 
-  const getNotificationIcon = (type) => {
-    const prefix = type.split("_")[0];
+  const icons = {
+    job: "💼",
+    task: "✓",
+    timesheet: "📝",
+    project: "📁",
+  };
+  
+  const getNotificationIcon = (type) => icons[type.split("_")[0]] ?? "📌";
 
-    switch (prefix) {
-      case "job":
-        return "💼";
-
-      case "task":
-        return "✓";
-
-      case "timesheet":
-        return "📝";
-
-      case "chat":
-        return "💬";
-
-      case "project":
-        return "📁";
-
-      default:
-        return "📌";
+  const gotoPage = async (notification) => {
+    if (!notification.is_read) {
+      await markRead(notification.id);
     }
+
+    const prefix = notification.type.split("_")[0];
+
+    const routes = {
+      project: `/app/project/${notification.data.project_id}`,
+      task: `/app/project/task/${notification.data.task_id}`,
+      job: `/app/project/job/${notification.data.job_id}`,
+      timesheet: `/app/project/job/${notification.data.job_id}`,
+    };
+
+    navigate(routes[prefix] ?? "/app");
+    onOpenChange(false);
   };
 
   return (
@@ -144,6 +150,7 @@ export function NotificationModal({ open, onOpenChange }) {
                         ? "border-l-primary bg-muted/20"
                         : "border-l-transparent"
                     }`}
+                    onClick={() => gotoPage(notification)}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -177,7 +184,10 @@ export function NotificationModal({ open, onOpenChange }) {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
-                            onClick={() => markRead(notification.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              markRead(notification.id);
+                            }}
                           >
                             <Check className="h-4 w-4" />
                           </Button>
@@ -186,7 +196,10 @@ export function NotificationModal({ open, onOpenChange }) {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 hover:text-destructive"
-                            onClick={() => deleteNotification(notification.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteNotification(notification.id);
+                            }}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
