@@ -16,13 +16,14 @@ export const buildSocketUrl = (path, orgId = null) => {
     params.append("org_id", String(orgId));
   }
 
-  return `${getWsProtocol()}://${SOCKET_HOST}${path}?${params.toString()}`;
+  return `${getWsProtocol()}://${SOCKET_HOST}/${path}?${params.toString()}`;
 };
 
 export const SOCKET_PATHS = {
-  workspace: () => "/ws/workspace/",
-  notification: () => "/ws/notification/list/",
-  chatList: () => "/ws/chat/list/",
-  room: (roomId) => `/ws/chat/rooms/${roomId}/`,
-  call: (sessionId) => `/ws/call/${sessionId}/`,
+  workspace: () => "ws/workspace/",
+  notification: () => "ws/notification/list/",
+  chatList: () => "ws/chat/list/",
+  room: (roomId) => `ws/chat/rooms/${roomId}/`,
+  callList: () => "ws/call/list/",
+  call: (sessionId) => `ws/call/${sessionId}/`,
 };

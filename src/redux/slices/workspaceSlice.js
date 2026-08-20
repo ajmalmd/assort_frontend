@@ -3,9 +3,9 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   connected: false,
   incomingCall: null,
+  waitingCalls: [],
   organizationsSummary: [],
   minimized: true,
-  waitingCalls: [],
 };
 
 const workspaceSlice = createSlice({
@@ -29,6 +29,22 @@ const workspaceSlice = createSlice({
       if (!exists) {
         state.waitingCalls.push(action.payload);
       }
+    },
+
+    moveIncomingCallToWaiting: (state) => {
+      if (!state.incomingCall) {
+        return;
+      }
+
+      const exists = state.waitingCalls.some(
+        (call) => call.session_id === state.incomingCall.session_id,
+      );
+
+      if (!exists) {
+        state.waitingCalls.push(state.incomingCall);
+      }
+
+      state.incomingCall = null;
     },
 
     removeWaitingCall: (state, action) => {
@@ -82,6 +98,7 @@ export const {
   setConnected,
   setIncomingCall,
   addWaitingCall,
+  moveIncomingCallToWaiting,
   removeWaitingCall,
   clearWaitingCalls,
   clearIncomingCall,

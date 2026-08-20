@@ -1,10 +1,13 @@
 import { useEffect, useRef } from "react";
-import { useNavigate } from "react-router";
 
 import { useAppDispatch } from "@/redux/hooks";
 import { clearIncomingCall } from "@/redux/slices/workspaceSlice";
 import { APP_POINTS } from "@/api/apiConfig";
 import assort_api from "@/api/axios";
+import {
+  setCallSession,
+  setParticipant,
+} from "@/redux/slices/callSessionSlice";
 
 export default function IncomingCallModal({ call }) {
   const dispatch = useAppDispatch();
@@ -30,7 +33,7 @@ export default function IncomingCallModal({ call }) {
     const timeout = setTimeout(() => {
       stopRingtone();
       dispatch(clearIncomingCall());
-    }, 30000);
+    }, 62000);
 
     return () => clearTimeout(timeout);
   }, []);
@@ -46,11 +49,20 @@ export default function IncomingCallModal({ call }) {
     try {
       stopRingtone();
 
-      await assort_api.post(`${APP_POINTS.CALL + call.session_id}/join/`);
+      const response = await assort_api.post(
+        `${APP_POINTS.CALL + call.session_id}/join/`,
+      );
+      const data = response.data;
 
       dispatch(clearIncomingCall());
 
-      navigate(`/call/${call.session_id}`);
+      dispatch(
+        setCallSession({
+          id: call.session_id,
+        }),
+      );
+
+      dispatch(setParticipant(data.participant));
     } catch (error) {
       console.log(error);
 
@@ -69,11 +81,11 @@ export default function IncomingCallModal({ call }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/40">
       <div className="w-96 rounded-xl bg-white p-6 shadow-xl">
         <h2 className="text-xl font-semibold">Incoming Call</h2>
 
-        <p className="mt-2 text-gray-600">{call.started_by.name}</p>
+        <p className="mt-2 text-gray-600">{call.title}</p>
 
         <div className="mt-6 flex justify-end gap-3">
           <button

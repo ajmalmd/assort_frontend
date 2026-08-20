@@ -3,6 +3,7 @@ import { Video, Clock, PhoneIncoming, PhoneOutgoing } from "lucide-react";
 
 import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
+import { PhoneMissed } from "lucide-react";
 
 const mockCalls = [
   {
@@ -39,6 +40,14 @@ const mockCalls = [
     last_call: null,
   },
 ];
+
+const formatDuration = (duration) => {
+  const totalSeconds = Math.floor(Number(duration) || 0);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${minutes}m ${String(seconds).padStart(2, "0")}s`;
+};
 
 export default function SidebarCallsTab({
   searchTerm,
@@ -138,23 +147,31 @@ export default function SidebarCallsTab({
                   <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                     {room.last_call.direction === "OUTGOING" ? (
                       <>
-                        <PhoneOutgoing className="h-3.5 w-3.5 text-green-600" />
+                        <PhoneOutgoing className="h-4 w-4 text-green-600" />
                         <span>Outgoing</span>
                       </>
-                    ) : (
+                    ) : room.last_call.direction === "INCOMING" ? (
                       <>
-                        <PhoneIncoming className="h-3.5 w-3.5 text-sky-600" />
+                        <PhoneIncoming className="h-4 w-4 text-sky-600" />
                         <span>Incoming</span>
                       </>
+                    ) : room.last_call.direction === "MISSED" ? (
+                      <>
+                        <PhoneMissed className="h-4 w-4 text-red-600" />
+                        <span>Missed</span>
+                      </>
+                    ) : null}
+
+                    {room.last_call.duration && (
+                      <>
+                        <span>•</span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+
+                          {formatDuration(room.last_call.duration)}
+                        </span>
+                      </>
                     )}
-
-                    <span>•</span>
-
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {Math.floor(room.last_call.duration / 60)}m{" "}
-                      {room.last_call.duration % 60}s
-                    </span>
                   </div>
                 )
               ) : (
