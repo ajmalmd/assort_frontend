@@ -1,13 +1,14 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 import { buildSocketUrl, SOCKET_PATHS } from "./websocketConfig";
-
 import { registerSocket, unregisterSocket } from "./websocketManager";
 
 export function useCallSessionSocket(sessionId, enabled, handlers = {}) {
   const socketRef = useRef(null);
-
   const handlersRef = useRef(handlers);
+
+  // True only when we intentionally want this socket to close.
+  const intentionalCloseRef = useRef(false);
 
   useEffect(() => {
     handlersRef.current = handlers;
@@ -33,6 +34,32 @@ export function useCallSessionSocket(sessionId, enabled, handlers = {}) {
     return true;
   }, []);
 
+  /*
+   * Close the current socket intentionally.
+   *
+   * This prevents onclose from reconnecting.
+   */
+  const closeIntentionally = useCallback(() => {
+    intentionalCloseRef.current = true;
+
+    const socket = socketRef.current;
+
+    if (!socket) {
+      return;
+    }
+
+    socketRef.current = null;
+
+    unregisterSocket(socket);
+
+    if (
+      socket.readyState === WebSocket.OPEN ||
+      socket.readyState === WebSocket.CONNECTING
+    ) {
+      socket.close(1000, "Intentional call close");
+    }
+  }, []);
+
   useEffect(() => {
     if (!enabled || !sessionId) {
       return;
@@ -41,7 +68,14 @@ export function useCallSessionSocket(sessionId, enabled, handlers = {}) {
     let shouldReconnect = true;
     let reconnectTimeout = null;
 
+    // New call/session lifecycle.
+    intentionalCloseRef.current = false;
+
     const connect = () => {
+      if (!shouldReconnect || intentionalCloseRef.current) {
+        return;
+      }
+
       const socket = new WebSocket(
         buildSocketUrl(SOCKET_PATHS.call(sessionId)),
       );
@@ -80,6 +114,10 @@ export function useCallSessionSocket(sessionId, enabled, handlers = {}) {
 
           case "participant_joined":
             handlersRef.current.onParticipantJoined?.(data);
+            break;
+
+          case "participant_ready":
+            handlersRef.current.onParticipantReady?.(data);
             break;
 
           case "participant_left":
@@ -122,11 +160,32 @@ export function useCallSessionSocket(sessionId, enabled, handlers = {}) {
       socket.onclose = () => {
         unregisterSocket(socket);
 
+        /*
+         * Ignore this close if it wasn't the current socket.
+         */
+        if (socketRef.current !== socket) {
+          return;
+        }
+
+        socketRef.current = null;
+
+        /*
+         * Intentional close:
+         * don't notify as unexpected and don't reconnect.
+         */
+        if (intentionalCloseRef.current || !shouldReconnect) {
+          return;
+        }
+
         handlersRef.current.onDisconnected?.();
 
-        if (shouldReconnect) {
-          reconnectTimeout = setTimeout(connect, 3000);
-        }
+        reconnectTimeout = setTimeout(() => {
+          if (!shouldReconnect || intentionalCloseRef.current) {
+            return;
+          }
+
+          connect();
+        }, 3000);
       };
 
       socket.onerror = (error) => {
@@ -143,20 +202,30 @@ export function useCallSessionSocket(sessionId, enabled, handlers = {}) {
         clearTimeout(reconnectTimeout);
       }
 
+      intentionalCloseRef.current = true;
+
       const socket = socketRef.current;
 
-      if (socket) {
-        unregisterSocket(socket);
-
-        socket.close();
+      if (!socket) {
+        return;
       }
 
       socketRef.current = null;
+
+      unregisterSocket(socket);
+
+      if (
+        socket.readyState === WebSocket.OPEN ||
+        socket.readyState === WebSocket.CONNECTING
+      ) {
+        socket.close(1000, "Call session cleanup");
+      }
     };
   }, [enabled, sessionId]);
 
   return {
     socketRef,
     send,
+    closeIntentionally,
   };
 }

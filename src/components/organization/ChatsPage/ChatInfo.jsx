@@ -15,7 +15,7 @@ export default function ChatInfo({ currentRoom, setDetailCon }) {
 
       setDetails(res.data);
     };
-    if (currentRoom.id) {
+    if (currentRoom.id && currentRoom.type === "GROUP") {
       fetchGroupDetails();
     }
   }, [currentRoom]);

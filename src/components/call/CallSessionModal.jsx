@@ -15,18 +15,24 @@ export default function CallSessionModal({
   const localVideoRef = useRef(null);
 
   useEffect(() => {
-    if (!localVideoRef.current) {
+    const video = localVideoRef.current;
+
+    if (!video) {
       return;
     }
 
-    localVideoRef.current.srcObject = localStream || null;
+    video.srcObject = localStream || null;
+
+    if (localStream) {
+      video.play().catch((error) => {
+        console.warn("Local video playback failed:", error);
+      });
+    }
 
     return () => {
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = null;
-      }
+      video.srcObject = null;
     };
-  }, [localStream]);
+  }, [localStream, localMedia.video]);
 
   if (!session) {
     return null;
@@ -74,7 +80,7 @@ export default function CallSessionModal({
               )}
 
               <div className="absolute bottom-2 left-2 rounded bg-black/60 px-2 py-1 text-xs text-white">
-                {participant?.member?.full_name || "You"}
+                You
               </div>
             </div>
 

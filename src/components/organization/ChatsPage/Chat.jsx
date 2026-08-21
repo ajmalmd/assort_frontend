@@ -3,16 +3,26 @@ import ChatInfo from "./ChatInfo";
 import ChatMessages from "./ChatMessages";
 import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
-import { useAppDispatch } from "@/redux/hooks";
-import { setCallSession } from "@/redux/slices/callSessionSlice";
+import { useAppDispatch, useAuthState } from "@/redux/hooks";
+import {
+  setCallSession,
+  setParticipant,
+} from "@/redux/slices/callSessionSlice";
 import toast from "react-hot-toast";
+import { useEffect } from "react";
 
 export default function Chat({ currentRoom, setSelectedRoom }) {
   const [isDetailCon, setDetailCon] = useState(false);
   const [startingCall, setStartingCall] = useState(false);
   const [showStartCallConfirm, setShowStartCallConfirm] = useState(false);
 
+  const { user, activeOrganization } = useAuthState();
+
   const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    setDetailCon(false);
+  }, [currentRoom, setSelectedRoom]);
 
   const startCall = async () => {
     try {
@@ -24,12 +34,25 @@ export default function Chat({ currentRoom, setSelectedRoom }) {
       });
 
       const call = response.data;
+      const participant = {
+        member: {
+          id: activeOrganization.membership_id,
+          full_name: user.full_name,
+        },
+        role: "HOST",
+        status: "JOINED",
+        mic_enabled: false,
+        camera_enabled: false,
+        screen_sharing: false,
+      };
 
       console.log("Call started:", call);
 
       setShowStartCallConfirm(false);
 
       dispatch(setCallSession(call));
+
+      dispatch(setParticipant(participant));
     } catch (error) {
       console.error("Failed to start call:", error);
 

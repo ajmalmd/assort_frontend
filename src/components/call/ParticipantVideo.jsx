@@ -12,21 +12,38 @@ export default function ParticipantVideo({ participant, stream }) {
 
     video.srcObject = stream || null;
 
+    if (stream) {
+      video.play().catch((error) => {
+        console.warn("Remote media playback failed:", error);
+      });
+    }
+
     return () => {
       video.srcObject = null;
     };
   }, [stream]);
 
+  const videoEnabled = participant?.video;
+
   return (
     <div className="relative overflow-hidden rounded-lg bg-neutral-900">
-      {stream && participant.video ? (
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          className="h-full w-full object-cover"
-        />
-      ) : (
+      {/*
+       * Keep this mounted even when camera is OFF.
+       *
+       * The element must remain alive so remote AUDIO can play.
+       */}
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        className={
+          videoEnabled && stream
+            ? "h-full w-full object-cover"
+            : "absolute h-px w-px opacity-0"
+        }
+      />
+
+      {!videoEnabled && (
         <div className="flex h-full min-h-48 items-center justify-center text-white/60">
           <div className="text-center">
             <div className="mb-2 text-lg">{participant.member.full_name}</div>

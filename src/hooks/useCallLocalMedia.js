@@ -16,14 +16,34 @@ export default function useLocalMedia() {
           video,
         });
 
+        console.log("[MEDIA] local tracks", {
+          audio: stream.getAudioTracks().map((track) => ({
+            id: track.id,
+            enabled: track.enabled,
+            readyState: track.readyState,
+          })),
+          video: stream.getVideoTracks().map((track) => ({
+            id: track.id,
+            enabled: track.enabled,
+            readyState: track.readyState,
+          })),
+        });
+
+        // Ask for permission, but start with both media types OFF.
+        stream.getAudioTracks().forEach((track) => {
+          track.enabled = false;
+        });
+
+        stream.getVideoTracks().forEach((track) => {
+          track.enabled = false;
+        });
+
         streamRef.current = stream;
 
         dispatch(
           setLocalMedia({
-            audio: stream.getAudioTracks().some((track) => track.enabled),
-
-            video: stream.getVideoTracks().some((track) => track.enabled),
-
+            audio: false,
+            video: false,
             screen: false,
           }),
         );

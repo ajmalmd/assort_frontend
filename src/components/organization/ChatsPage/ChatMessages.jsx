@@ -5,6 +5,7 @@ import RoomChat from "../RoomChat";
 import ConfirmActionModal from "@/components/common/ConfirmActionModal";
 import toast from "react-hot-toast";
 import { formatEnum } from "@/appFunctions";
+import { useNavigate } from "react-router";
 
 export default function ChatMessages({
   currentRoom,
@@ -13,8 +14,9 @@ export default function ChatMessages({
   startCall,
   startingCall,
   showStartCallConfirm,
-  setShowStartCallConfirm
+  setShowStartCallConfirm,
 }) {
+  const navigate = useNavigate();
 
   if (!currentRoom?.id) return null;
 
