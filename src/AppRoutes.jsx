@@ -45,7 +45,7 @@ import SwitchOrganizationPage from "./pages/organization/SwitchOrganizationPage"
 import Profile from "./pages/organization/Profile";
 
 import OrganizationLayout from "./components/organization/OrganizationLayout";
-import Dashboard from "./pages/organization/Dashboard";
+import Dashboard from "./pages/organization/Dashboard/Dashboard";
 import MembersPage from "./pages/organization/MembersPage";
 import MemberDetailPage from "./pages/organization/MemberDetailPage";
 import DepartmentsPage from "./pages/organization/DepartmentsPage";
