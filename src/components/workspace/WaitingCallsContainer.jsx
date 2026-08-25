@@ -8,9 +8,13 @@ export default function WaitingCallsContainer() {
     return null;
   }
 
+  const orderedCalls = [...waitingCalls].sort(
+    (a, b) => new Date(a.received_at || 0) - new Date(b.received_at || 0),
+  );
+
   return (
     <div className="fixed top-4 right-4 z-[120] flex max-h-[calc(100vh-2rem)] w-80 flex-col gap-3 overflow-y-auto">
-      {waitingCalls.map((call) => (
+      {orderedCalls.map((call) => (
         <WaitingCallCard key={call.session_id} call={call} />
       ))}
     </div>

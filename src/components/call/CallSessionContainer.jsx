@@ -46,7 +46,7 @@ export default function CallSessionContainer() {
   const readyAnnouncedRef = useRef(false);
   const initialMediaStateSentRef = useRef(false);
 
-  const leavingForSwitchRef = useRef(false);
+  const leaveRequestedRef = useRef(false);
 
   const cleanupDoneRef = useRef(false);
 
@@ -71,7 +71,7 @@ export default function CallSessionContainer() {
 
     remoteStreamsRef.current.clear();
     readyMembersRef.current.clear();
-    
+
     readyAnnouncedRef.current = false;
     initialMediaStateSentRef.current = false;
 
@@ -95,13 +95,12 @@ export default function CallSessionContainer() {
     }
 
     cleanupDoneRef.current = false;
-    leavingForSwitchRef.current = false;
+    leaveRequestedRef.current = false;
 
     readyAnnouncedRef.current = false;
     initialMediaStateSentRef.current = false;
 
     readyMembersRef.current.clear();
-
     setReadyMembersVersion((value) => value + 1);
   }, [session?.id]);
 
@@ -123,15 +122,14 @@ export default function CallSessionContainer() {
       onDisconnected() {
         dispatch(setSocketConnected(false));
 
-        if (sessionSwitch.status === "REQUESTED" && sessionSwitch.requestId) {
-          cleanupCurrentCall();
+        // A reconnect requires a new readiness handshake.
+        readyAnnouncedRef.current = false;
+        initialMediaStateSentRef.current = false;
 
-          dispatch(
-            sessionSwitchReady({
-              requestId: sessionSwitch.requestId,
-            }),
-          );
-        }
+        readyMembersRef.current.clear();
+        setReadyMembersVersion((value) => value + 1);
+
+        webrtcRef.current?.removeAllPeers();
       },
 
       onPresenceState(data) {
@@ -148,7 +146,6 @@ export default function CallSessionContainer() {
 
       onParticipantReady(data) {
         const memberId = Number(data.member_id);
-
         const localMemberId = Number(participant?.member?.id);
 
         if (!memberId || memberId === localMemberId) {
@@ -159,31 +156,49 @@ export default function CallSessionContainer() {
 
         readyMembersRef.current.add(memberId);
 
-        console.log("[WebRTC] PARTICIPANT SIGNALING READY", {
-          memberId,
-          alreadyReady,
-        });
-
         if (!alreadyReady) {
           setReadyMembersVersion((value) => value + 1);
 
-          send({
-            type: "call_ready",
-          });
+          // Reannounce so a newly connected participant learns
+          // that this existing participant is also ready.
+          if (readyAnnouncedRef.current) {
+            send({
+              type: "call_ready",
+            });
+          }
         }
       },
 
       onParticipantLeft(data) {
         const memberId = Number(data.member_id);
+        const localMemberId = Number(participant?.member?.id);
+
+        // We left a group/project/meeting that continues.
+        if (memberId === localMemberId) {
+          const switching = sessionSwitch.status === "REQUESTED";
+
+          const requestId = sessionSwitch.requestId;
+
+          cleanupCurrentCall();
+          closeIntentionally();
+
+          if (switching && requestId) {
+            dispatch(
+              sessionSwitchReady({
+                requestId,
+              }),
+            );
+          }
+
+          return;
+        }
 
         readyMembersRef.current.delete(memberId);
-
         setReadyMembersVersion((value) => value + 1);
 
         dispatch(removeParticipant(memberId));
 
         webrtcRef.current?.removePeer(memberId);
-
         remoteStreamsRef.current.delete(memberId);
 
         setRemoteStreamsVersion((value) => value + 1);
@@ -231,12 +246,34 @@ export default function CallSessionContainer() {
     },
   );
 
+  const requestLeave = useCallback(() => {
+    if (leaveRequestedRef.current) {
+      return false;
+    }
+
+    const sent = send({
+      type: "leave_call",
+    });
+
+    if (!sent) {
+      return false;
+    }
+
+    leaveRequestedRef.current = true;
+
+    return true;
+  }, [send]);
+
   useEffect(() => {
-    if (!socketConnected) {
+    if (!socketConnected || !mediaReady) {
       return;
     }
 
     if (!participant?.member?.id) {
+      return;
+    }
+
+    if (!webrtcRef.current || !streamRef.current) {
       return;
     }
 
@@ -257,7 +294,7 @@ export default function CallSessionContainer() {
     console.log("[WebRTC] LOCAL SIGNALING READY", {
       memberId: participant.member.id,
     });
-  }, [socketConnected, participant?.member?.id, send]);
+  }, [socketConnected, mediaReady, participant?.member?.id, send, streamRef]);
 
   useEffect(() => {
     if (!socketConnected || !mediaReady) {
@@ -297,16 +334,18 @@ export default function CallSessionContainer() {
       return;
     }
 
-    if (leavingForSwitchRef.current) {
+    if (!socketConnected) {
       return;
     }
 
-    leavingForSwitchRef.current = true;
-
-    send({
-      type: "leave_call",
-    });
-  }, [session?.id, sessionSwitch.status, sessionSwitch.requestId, send]);
+    requestLeave();
+  }, [
+    session?.id,
+    sessionSwitch.status,
+    sessionSwitch.requestId,
+    socketConnected,
+    requestLeave,
+  ]);
 
   /*
    * ------------------------------------------------
@@ -385,7 +424,11 @@ export default function CallSessionContainer() {
         }
 
         setLocalStream(stream);
-        webrtcRef.current?.setLocalStream(stream);
+
+        if (webrtcRef.current) {
+          await webrtcRef.current.setLocalStream(stream);
+        }
+
         dispatch(setMediaReady(true));
       } catch (error) {
         if (!cancelled) {
@@ -403,42 +446,22 @@ export default function CallSessionContainer() {
   }, [participant?.member?.id, startMedia, dispatch]);
 
   useEffect(() => {
-    if (!socketConnected) {
+    if (
+      !socketConnected ||
+      !mediaReady ||
+      !webrtcRef.current ||
+      !participant?.member?.id ||
+      !participants.length ||
+      !readyMembersRef.current.size
+    ) {
       return;
     }
 
-    if (!mediaReady) {
-      return;
-    }
-
-    if (!webrtcRef.current) {
-      return;
-    }
-
-    if (!participant?.member?.id) {
-      return;
-    }
-
-    if (!participants.length) {
-      return;
-    }
-
-    if (!readyMembersRef.current.size) {
-      return;
-    }
-
-    console.log("[WebRTC] Negotiation conditions ready", {
-      socketConnected,
-      mediaReady,
-      localMemberId: participant.member.id,
-      readyMembers: Array.from(readyMembersRef.current),
-      participants,
-    });
-
-    webrtcRef.current.connectToParticipants(
-      participants,
-      readyMembersRef.current,
-    );
+    void webrtcRef.current
+      .connectToParticipants(participants, readyMembersRef.current)
+      .catch((error) => {
+        console.error("[WebRTC] Negotiation failed:", error);
+      });
   }, [
     socketConnected,
     mediaReady,
@@ -459,11 +482,21 @@ export default function CallSessionContainer() {
     remoteStreams[memberId] = stream;
   }
 
-  const handleToggleAudio = useCallback(() => {
-    const enabled = toggleAudio();
+  const handleToggleAudio = useCallback(async () => {
+    const enabled = await toggleAudio();
 
     if (typeof enabled !== "boolean") {
+      console.warn("Microphone is currently unavailable.");
+
       return;
+    }
+
+    /*
+     * A new track may have been acquired by toggleAudio().
+     * Attach it to every existing peer sender.
+     */
+    if (webrtcRef.current) {
+      await webrtcRef.current.setLocalStream(streamRef.current);
     }
 
     send({
@@ -472,13 +505,19 @@ export default function CallSessionContainer() {
     });
 
     return enabled;
-  }, [toggleAudio, send]);
+  }, [toggleAudio, send, streamRef]);
 
-  const handleToggleVideo = useCallback(() => {
-    const enabled = toggleVideo();
+  const handleToggleVideo = useCallback(async () => {
+    const enabled = await toggleVideo();
 
     if (typeof enabled !== "boolean") {
+      console.warn("Camera is currently unavailable.");
+
       return;
+    }
+
+    if (webrtcRef.current) {
+      await webrtcRef.current.setLocalStream(streamRef.current);
     }
 
     send({
@@ -487,7 +526,7 @@ export default function CallSessionContainer() {
     });
 
     return enabled;
-  }, [toggleVideo, send]);
+  }, [toggleVideo, send, streamRef]);
 
   /*
    * ------------------------------------------------
@@ -495,11 +534,9 @@ export default function CallSessionContainer() {
    * ------------------------------------------------
    */
 
-  const handleLeave = () => {
-    send({
-      type: "leave_call",
-    });
-  };
+  const handleLeave = useCallback(() => {
+    requestLeave();
+  }, [requestLeave]);
 
   if (!session) {
     return null;

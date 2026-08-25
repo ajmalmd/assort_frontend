@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   useAppDispatch,
@@ -24,7 +24,10 @@ import useCallSessionSwitch from "@/hooks/useCallSessionSwitch";
 
 export default function WaitingCallCard({ call }) {
   const [accepting, setAccepting] = useState(false);
+
   const [declining, setDeclining] = useState(false);
+
+  const joinInProgressRef = useRef(false);
 
   const dispatch = useAppDispatch();
 
@@ -34,20 +37,22 @@ export default function WaitingCallCard({ call }) {
 
   const { requestSwitch } = useCallSessionSwitch();
 
-  /*
-   * ------------------------------------------------
-   * Join waiting call
-   * ------------------------------------------------
-   */
+  const isSwitchTarget =
+    String(sessionSwitch.targetSessionId) === String(call.session_id);
 
   const joinWaitingCall = useCallback(async () => {
-    if (accepting || declining) {
+    if (joinInProgressRef.current || accepting || declining) {
       return;
     }
 
+    joinInProgressRef.current = true;
     setAccepting(true);
 
     try {
+      /*
+       * A different incoming-call modal may still be open.
+       * Move it to the waiting list before opening this call.
+       */
       if (incomingCall) {
         dispatch(moveIncomingCallToWaiting());
       }
@@ -56,79 +61,84 @@ export default function WaitingCallCard({ call }) {
         `${APP_POINTS.CALL}${call.session_id}/join/`,
       );
 
-      const data = response.data;
+      const { participant } = response.data;
 
+      /*
+       * Preserve the metadata already received through the
+       * workspace incoming-call payload.
+       */
       dispatch(
         setCallSession({
           id: call.session_id,
+          origin: call.origin,
+          mode: call.mode,
+          title: call.title,
+          organization: call.organization,
+          chat_room_id: call.chat_room_id ?? null,
         }),
       );
 
-      dispatch(setParticipant(data.participant));
+      dispatch(setParticipant(participant));
 
       dispatch(removeWaitingCall(call.session_id));
 
-      dispatch(clearSessionSwitch());
+      /*
+       * Clear only if this card was the requested target.
+       * A direct accept with IDLE status can also clear safely.
+       */
+      if (sessionSwitch.status === "IDLE" || isSwitchTarget) {
+        dispatch(clearSessionSwitch());
+      }
     } catch (error) {
       console.error("Failed to accept waiting call:", error);
 
-      dispatch(clearSessionSwitch());
+      if (isSwitchTarget) {
+        dispatch(clearSessionSwitch());
+      }
     } finally {
+      joinInProgressRef.current = false;
       setAccepting(false);
     }
-  }, [accepting, declining, call.session_id, dispatch]);
+  }, [
+    accepting,
+    declining,
+    incomingCall,
+    call,
+    dispatch,
+    sessionSwitch.status,
+    isSwitchTarget,
+  ]);
 
-  /*
-   * ------------------------------------------------
-   * Accept
-   * ------------------------------------------------
-   */
-
-  const acceptCall = async () => {
-    if (accepting || declining) {
+  const acceptCall = useCallback(() => {
+    if (accepting || declining || joinInProgressRef.current) {
       return;
     }
 
-    // If we're already inside another call, ask CallSessionContainer to leave it first.
     if (session?.id) {
       requestSwitch(call.session_id);
       return;
     }
 
-    // active call, Join immediately.
-    await joinWaitingCall();
-  };
-
-  /*
-   * ------------------------------------------------
-   * Wait for current call cleanup
-   * ------------------------------------------------
-   */
-
-  useEffect(() => {
-    if (
-      sessionSwitch.status !== "READY" ||
-      String(sessionSwitch.targetSessionId) !== String(call.session_id)
-    ) {
-      return;
-    }
-
-    joinWaitingCall();
+    void joinWaitingCall();
   }, [
-    sessionSwitch.status,
-    sessionSwitch.targetSessionId,
+    accepting,
+    declining,
+    session?.id,
     call.session_id,
+    requestSwitch,
     joinWaitingCall,
   ]);
 
-  /*
-   * ------------------------------------------------
-   * Decline
-   * ------------------------------------------------
-   */
+  useEffect(() => {
+    if (sessionSwitch.status !== "READY" || !isSwitchTarget) {
+      return;
+    }
 
-  const declineCall = async () => {
-    if (accepting || declining) {
+    void joinWaitingCall();
+  }, [sessionSwitch.status, isSwitchTarget, joinWaitingCall]);
+
+  const declineCall = useCallback(async () => {
+    if (accepting || declining || joinInProgressRef.current) {
       return;
     }
 
@@ -143,11 +153,9 @@ export default function WaitingCallCard({ call }) {
     } finally {
       setDeclining(false);
     }
-  };
+  }, [accepting, declining, call.session_id, dispatch]);
 
-  const switching =
-    sessionSwitch.status === "REQUESTED" &&
-    String(sessionSwitch.targetSessionId) === String(call.session_id);
+  const switching = sessionSwitch.status === "REQUESTED" && isSwitchTarget;
 
   return (
     <div className="rounded-lg border bg-card p-4 shadow-lg">

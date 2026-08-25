@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 
 import { buildSocketUrl, SOCKET_PATHS } from "./websocketConfig";
+
 import { registerSocket, unregisterSocket } from "./websocketManager";
 
 export function useWorkspaceSocket(enabled, handlers = {}) {
@@ -16,46 +17,80 @@ export function useWorkspaceSocket(enabled, handlers = {}) {
       return;
     }
 
-    let reconnectTimeout;
     let shouldReconnect = true;
+    let reconnectTimeout = null;
 
     const connect = () => {
+      if (!shouldReconnect) {
+        return;
+      }
+
+      const currentSocket = socketRef.current;
+
+      if (
+        currentSocket?.readyState === WebSocket.OPEN ||
+        currentSocket?.readyState === WebSocket.CONNECTING
+      ) {
+        return;
+      }
+
       const socket = new WebSocket(buildSocketUrl(SOCKET_PATHS.workspace()));
 
+      socketRef.current = socket;
       registerSocket(socket);
 
-      socketRef.current = socket;
-
       socket.onopen = () => {
+        if (socketRef.current !== socket) {
+          return;
+        }
+
+        reconnectTimeout = null;
+
         handlersRef.current.onConnected?.();
       };
 
       socket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
+        let message;
 
-        switch (data.type) {
+        try {
+          message = JSON.parse(event.data);
+        } catch (error) {
+          console.error("Invalid workspace socket message:", error);
+
+          return;
+        }
+
+        const { type, data } = message;
+
+        switch (type) {
           case "incoming_call":
-            handlersRef.current.onIncomingCall?.(data);
+            handlersRef.current.onIncomingCall?.({
+              data,
+            });
             break;
 
           case "incoming_call_waiting":
-            handlersRef.current.onCallWaiting?.(data);
+            handlersRef.current.onCallWaiting?.({
+              data,
+            });
             break;
 
           case "call_accepted_elsewhere":
-            handlersRef.current.onCallAcceptedElsewhere?.(data);
+            handlersRef.current.onCallAcceptedElsewhere?.({ data });
             break;
 
           case "call_ended":
-            handlersRef.current.onCallEnded?.(data);
+            handlersRef.current.onCallEnded?.({
+              data,
+            });
             break;
 
           case "workspace_summary":
-            handlersRef.current.onWorkspaceSummary?.(data);
+            handlersRef.current.onWorkspaceSummary?.({ data });
             break;
 
           case "workspace_summary_updated":
-            handlersRef.current.onSummaryUpdated?.(data);
+            handlersRef.current.onSummaryUpdated?.({ data });
             break;
 
           default:
@@ -64,13 +99,25 @@ export function useWorkspaceSocket(enabled, handlers = {}) {
       };
 
       socket.onclose = () => {
-        handlersRef.current.onDisconnected?.();
-
         unregisterSocket(socket);
 
-        if (shouldReconnect) {
-          reconnectTimeout = setTimeout(connect, 3000);
+        if (socketRef.current !== socket) {
+          return;
         }
+
+        socketRef.current = null;
+
+        if (!shouldReconnect) {
+          return;
+        }
+
+        handlersRef.current.onDisconnected?.();
+
+        reconnectTimeout = setTimeout(connect, 3000);
+      };
+
+      socket.onerror = (error) => {
+        handlersRef.current.onError?.(error);
       };
     };
 
@@ -79,9 +126,25 @@ export function useWorkspaceSocket(enabled, handlers = {}) {
     return () => {
       shouldReconnect = false;
 
-      clearTimeout(reconnectTimeout);
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+      }
 
-      socketRef.current?.close();
+      const socket = socketRef.current;
+      socketRef.current = null;
+
+      if (!socket) {
+        return;
+      }
+
+      unregisterSocket(socket);
+
+      if (
+        socket.readyState === WebSocket.OPEN ||
+        socket.readyState === WebSocket.CONNECTING
+      ) {
+        socket.close(1000, "Workspace cleanup");
+      }
     };
   }, [enabled]);
 

@@ -10,28 +10,47 @@ export default function ParticipantVideo({ participant, stream }) {
       return;
     }
 
-    video.srcObject = stream || null;
+    if (video.srcObject !== stream) {
+      video.srcObject = stream || null;
+    }
 
-    if (stream) {
-      video.play().catch((error) => {
-        console.warn("Remote media playback failed:", error);
-      });
+    if (!stream) {
+      return;
+    }
+
+    const startPlayback = async () => {
+      try {
+        await video.play();
+      } catch (error) {
+        /*
+         * AbortError is harmless. It means another source/load
+         * operation replaced the current play request.
+         */
+        if (error.name !== "AbortError") {
+          console.warn("Remote media playback failed:", error);
+        }
+      }
+    };
+
+    if (video.readyState >= 1) {
+      void startPlayback();
+    } else {
+      video.addEventListener("loadedmetadata", startPlayback, { once: true });
     }
 
     return () => {
-      video.srcObject = null;
+      video.removeEventListener("loadedmetadata", startPlayback);
+
+      if (video.srcObject === stream) {
+        video.srcObject = null;
+      }
     };
   }, [stream]);
 
-  const videoEnabled = participant?.video;
+  const videoEnabled = Boolean(participant?.video);
 
   return (
     <div className="relative overflow-hidden rounded-lg bg-neutral-900">
-      {/*
-       * Keep this mounted even when camera is OFF.
-       *
-       * The element must remain alive so remote AUDIO can play.
-       */}
       <video
         ref={videoRef}
         autoPlay

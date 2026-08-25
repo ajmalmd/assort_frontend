@@ -33,7 +33,22 @@ const callSessionSlice = createSlice({
   reducers: {
     setCallSession(state, action) {
       state.session = action.payload;
+
+      state.participant = null;
+      state.participants = [];
+
+      state.connected = false;
+      state.socketConnected = false;
+      state.mediaReady = false;
+
+      state.localMedia = {
+        audio: false,
+        video: false,
+        screen: false,
+      };
+
       state.active = true;
+      state.minimized = false;
     },
 
     setParticipant(state, action) {

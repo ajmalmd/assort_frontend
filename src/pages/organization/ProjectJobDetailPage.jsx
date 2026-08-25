@@ -2,13 +2,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Plus,
-  Trash,
-  CheckCircle,
-  XCircle,
-  FileClock,
-} from "lucide-react";
+import { Plus, Trash, CheckCircle, XCircle, FileClock } from "lucide-react";
 import {
   formatDate_d_m_yyyy,
   formatEnum,
@@ -31,8 +25,13 @@ export default function ProjectJobDetailPage() {
   const [job, setJob] = useState({});
   const [editJobModalOpen, setEditJobModalOpen] = useState(false);
   const [showLogModal, setShowLogModal] = useState(false);
-  const [deleteLogId, setDeleteLogId] = useState(null);
-  const [deleting, setDeleting] = useState(false);
+  const [confirmAction, setConfirmAction] = useState({
+    open: false,
+    type: null, // "delete" | "approve" | "reject"
+    logId: null,
+  });
+
+  const [actionLoading, setActionLoading] = useState(false);
   const [expandedLogs, setExpandedLogs] = useState({});
 
   const navigate = useNavigate();
@@ -83,70 +82,118 @@ export default function ProjectJobDetailPage() {
     }));
   };
 
-  const handleDelete = async () => {
-    if (!deleteLogId) return;
+  const deleteLog = async (logId) => {
+    await assort_api.delete(`${APP_POINTS.PROJECTS}log/${logId}/`);
+
+    setJob((prev) => ({
+      ...prev,
+      work_logs: prev.work_logs.filter((log) => log.id !== logId),
+    }));
+
+    toast.success("Log deleted");
+  };
+
+  const approveLog = async (logId) => {
+    const log = job.work_logs.find((log) => log.id === logId);
+
+    await assort_api.post(`${APP_POINTS.PROJECTS}log/${logId}/approve/`);
+
+    setJob((prev) => ({
+      ...prev,
+      work_logs: prev.work_logs.map((item) =>
+        item.id === logId ? { ...item, status: "APPROVED" } : item,
+      ),
+      worked_hours: prev.worked_hours + (log?.duration || 0),
+    }));
+
+    toast.success("Log Approved");
+  };
+
+  const rejectLog = async (logId) => {
+    await assort_api.post(`${APP_POINTS.PROJECTS}log/${logId}/reject/`);
+
+    setJob((prev) => ({
+      ...prev,
+      work_logs: prev.work_logs.map((item) =>
+        item.id === logId ? { ...item, status: "REJECTED" } : item,
+      ),
+    }));
+
+    toast.success("Log Rejected");
+  };
+
+  const handleConfirmAction = async () => {
+    const { type, logId } = confirmAction;
+
+    if (!logId || !type) return;
 
     try {
-      setDeleting(true);
+      setActionLoading(true);
 
-      await assort_api.delete(`${APP_POINTS.PROJECTS}log/${deleteLogId}/`);
+      if (type === "delete") {
+        await deleteLog(logId);
+      }
 
-      // remove from UI
-      setJob((prev) => ({
-        ...prev,
-        work_logs: prev.work_logs.filter((log) => log.id !== deleteLogId),
-      }));
+      if (type === "approve") {
+        await approveLog(logId);
+      }
 
-      toast.success("Log deleted");
-      setDeleteLogId(null);
+      if (type === "reject") {
+        await rejectLog(logId);
+      }
     } catch (error) {
       console.log(error);
-      const message = error?.response?.data?.message || "Failed to delete log";
+
+      const message = error?.response?.data?.message || `Couldn't ${type} log`;
+
       toast.error(message);
-      setDeleteLogId(null);
     } finally {
-      setDeleting(false);
+      setActionLoading(false);
+      closeConfirmAction();
     }
   };
 
-  const handleApprove = async (logId) => {
-    console.log(logId);
-    try {
-      await assort_api.post(`${APP_POINTS.PROJECTS}log/${logId}/approve/`);
-      toast.success("Log Approved");
-      setJob((prev) => ({
-        ...prev,
-        work_logs: prev.work_logs.map((log) =>
-          log.id === logId ? { ...log, status: "APPROVED" } : log,
-        ),
-        worked_hours:
-          prev.worked_hours +
-          prev.work_logs.find((log) => log.id === logId).duration,
-      }));
-    } catch (error) {
-      console.log(error);
-      const message = error?.response?.data?.message || "Couldn't approve";
-      toast.error(message);
-    }
+  const openConfirmAction = (type, logId) => {
+    setConfirmAction({
+      open: true,
+      type,
+      logId,
+    });
   };
 
-  const handleReject = async (logId) => {
-    console.log(logId);
-    try {
-      await assort_api.post(`${APP_POINTS.PROJECTS}log/${logId}/reject/`);
-      toast.success("Log Rejected");
-      setJob((prev) => ({
-        ...prev,
-        work_logs: prev.work_logs.map((log) =>
-          log.id === logId ? { ...log, status: "REJECTED" } : log,
-        ),
-      }));
-    } catch (error) {
-      console.log(error);
-      const message = error?.response?.data?.message || "Couldn't reject";
-      toast.error(message);
-    }
+  const closeConfirmAction = () => {
+    if (actionLoading) return;
+
+    setConfirmAction({
+      open: false,
+      type: null,
+      logId: null,
+    });
   };
+
+  const actionConfig = {
+    delete: {
+      title: "Delete Log",
+      description:
+        "Are you sure you want to delete this work log? This cannot be undone.",
+      confirmText: "Delete",
+      variant: "destructive",
+    },
+    approve: {
+      title: "Approve Log",
+      description: "Are you sure you want to approve this work log?",
+      confirmText: "Approve",
+      variant: "default",
+    },
+    reject: {
+      title: "Reject Log",
+      description: "Are you sure you want to reject this work log?",
+      confirmText: "Reject",
+      variant: "destructive",
+    },
+  };
+
+  const currentAction = actionConfig[confirmAction.type];
 
   const StatusIcon = ({ status }) => {
     switch (status) {
@@ -281,7 +328,7 @@ export default function ProjectJobDetailPage() {
                         <Button
                           size="sm"
                           className="bg-green-600 hover:bg-green-700 text-white"
-                          onClick={() => handleApprove(log.id)}
+                          onClick={() => openConfirmAction("approve", log.id)}
                         >
                           <CheckCircle className="h-4 w-4 mr-1" />
                           Approve
@@ -290,7 +337,7 @@ export default function ProjectJobDetailPage() {
                         <Button
                           size="sm"
                           variant="destructive"
-                          onClick={() => handleReject(log.id)}
+                          onClick={() => openConfirmAction("reject", log.id)}
                         >
                           <XCircle className="h-4 w-4 mr-1" />
                           Reject
@@ -302,7 +349,7 @@ export default function ProjectJobDetailPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => setDeleteLogId(log.id)}
+                        onClick={() => openConfirmAction("delete", log.id)}
                       >
                         <Trash className="h-4 w-4 mr-1 text-red-500" />
                         Delete
@@ -344,13 +391,16 @@ export default function ProjectJobDetailPage() {
           />
 
           <ConfirmActionModal
-            open={!!deleteLogId}
-            onOpenChange={() => setDeleteLogId(null)}
-            title="Delete Log"
-            description="Are you sure you want to delete this work log? This cannot be undone."
-            confirmText="Delete"
-            loading={deleting}
-            onConfirm={handleDelete}
+            open={confirmAction.open}
+            onOpenChange={(open) => {
+              if (!open) closeConfirmAction();
+            }}
+            title={currentAction?.title}
+            description={currentAction?.description}
+            confirmText={currentAction?.confirmText}
+            variant={currentAction?.variant}
+            loading={actionLoading}
+            onConfirm={handleConfirmAction}
           />
         </>
       )}

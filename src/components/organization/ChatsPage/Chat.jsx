@@ -33,24 +33,11 @@ export default function Chat({ currentRoom, setSelectedRoom }) {
         origin: currentRoom.type,
       });
 
-      const call = response.data;
-      const participant = {
-        member: {
-          id: activeOrganization.membership_id,
-          full_name: user.full_name,
-        },
-        role: "HOST",
-        status: "JOINED",
-        mic_enabled: false,
-        camera_enabled: false,
-        screen_sharing: false,
-      };
-
-      console.log("Call started:", call);
+      const { participant, participant_count, ...session } = response.data;
 
       setShowStartCallConfirm(false);
 
-      dispatch(setCallSession(call));
+      dispatch(setCallSession(session));
 
       dispatch(setParticipant(participant));
     } catch (error) {

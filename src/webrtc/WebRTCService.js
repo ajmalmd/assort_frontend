@@ -22,12 +22,12 @@ export default class WebRTCService {
     this.localStream = null;
   }
 
-  setLocalStream(stream) {
+  async setLocalStream(stream) {
     this.localStream = stream;
 
-    for (const peer of this.peers.values()) {
-      this.addLocalTracks(peer);
-    }
+    await Promise.all(
+      Array.from(this.peers.values()).map((peer) => this.addLocalTracks(peer)),
+    );
   }
 
   getPeer(memberId) {
@@ -54,6 +54,12 @@ export default class WebRTCService {
     peer = {
       memberId,
       connection,
+      remoteStream: new MediaStream(),
+
+      transceivers: {
+        audio: null,
+        video: null,
+      },
     };
 
     this.peers.set(memberId, peer);
@@ -62,8 +68,6 @@ export default class WebRTCService {
       localMemberId: this.localMemberId,
       remoteMemberId: memberId,
     });
-
-    this.addLocalTracks(peer);
 
     connection.onicecandidate = (event) => {
       if (!event.candidate) {
@@ -77,36 +81,54 @@ export default class WebRTCService {
       });
 
       if (!sent) {
-        console.warn(
-          `Failed to send ICE candidate to member ${memberId}: socket not ready`,
-        );
+        console.warn(`Failed to send ICE candidate to ${memberId}`);
       }
     };
 
     connection.ontrack = (event) => {
+      const remoteStream = peer.remoteStream;
+
+      const exists = remoteStream
+        .getTracks()
+        .some((track) => track.id === event.track.id);
+
+      if (!exists) {
+        remoteStream.addTrack(event.track);
+      }
+
       console.log("[WebRTC] REMOTE TRACK", {
         memberId,
         kind: event.track.kind,
         id: event.track.id,
+        muted: event.track.muted,
         readyState: event.track.readyState,
-        enabled: event.track.enabled,
-        streams: event.streams,
       });
-
-      const [stream] = event.streams;
-
-      if (!stream) {
-        console.warn("[WebRTC] Remote track has no stream", {
-          memberId,
-          kind: event.track.kind,
-        });
-        return;
-      }
 
       this.onRemoteStream?.({
         memberId,
-        stream,
+        stream: remoteStream,
       });
+
+      event.track.onunmute = () => {
+        console.log("[WebRTC] REMOTE TRACK UNMUTED", {
+          memberId,
+          kind: event.track.kind,
+        });
+
+        this.onRemoteStream?.({
+          memberId,
+          stream: remoteStream,
+        });
+      };
+
+      event.track.onended = () => {
+        remoteStream.removeTrack(event.track);
+
+        this.onRemoteStream?.({
+          memberId,
+          stream: remoteStream,
+        });
+      };
     };
 
     connection.onconnectionstatechange = () => {
@@ -131,6 +153,29 @@ export default class WebRTCService {
     };
 
     return peer;
+  }
+
+  ensureMediaTransceivers(peer) {
+    const { connection } = peer;
+
+    for (const transceiver of connection.getTransceivers()) {
+      const kind =
+        transceiver.receiver?.track?.kind || transceiver.sender?.track?.kind;
+
+      if (kind === "audio" || kind === "video") {
+        peer.transceivers[kind] = transceiver;
+      }
+    }
+
+    for (const kind of ["audio", "video"]) {
+      if (peer.transceivers[kind]) {
+        continue;
+      }
+
+      peer.transceivers[kind] = connection.addTransceiver(kind, {
+        direction: "sendrecv",
+      });
+    }
   }
 
   queueIceCandidate(memberId, candidate) {
@@ -169,55 +214,81 @@ export default class WebRTCService {
     this.pendingIceCandidates.delete(memberId);
   }
 
-  addLocalTracks(peer) {
-    if (!this.localStream) {
-      return;
-    }
+  async addLocalTracks(peer) {
+    this.ensureMediaTransceivers(peer);
 
-    const existingTrackIds = new Set(
-      peer.connection
-        .getSenders()
-        .map((sender) => sender.track?.id)
-        .filter(Boolean),
-    );
+    for (const kind of ["audio", "video"]) {
+      const transceiver = peer.transceivers[kind];
 
-    this.localStream.getTracks().forEach((track) => {
-      if (existingTrackIds.has(track.id)) {
-        return;
+      const track =
+        this.localStream
+          ?.getTracks()
+          .find((item) => item.kind === kind && item.readyState === "live") ??
+        null;
+
+      /*
+       * Ensure both sides can send and receive this media type.
+       */
+      transceiver.direction = "sendrecv";
+
+      if (typeof transceiver.sender.setStreams === "function") {
+        if (this.localStream) {
+          transceiver.sender.setStreams(this.localStream);
+        } else {
+          transceiver.sender.setStreams();
+        }
       }
 
-      peer.connection.addTrack(track, this.localStream);
-    });
+      if (transceiver.sender.track !== track) {
+        await transceiver.sender.replaceTrack(track);
+      }
+    }
   }
 
   async createOffer(memberId) {
     memberId = Number(memberId);
 
-    const existingPeer = this.peers.get(memberId);
-
-    if (existingPeer?.offerCreated) {
-      console.log("[WebRTC] Offer already created for", memberId);
-
+    if (this.offerCreated.has(memberId) || this.offerInProgress.has(memberId)) {
       return;
     }
 
-    const peer = await this.createPeer(memberId);
+    this.offerInProgress.add(memberId);
 
-    peer.offerCreated = true;
+    try {
+      const peer = await this.createPeer(memberId);
 
-    console.log("[WebRTC] Creating offer for", memberId);
+      const { connection } = peer;
 
-    const offer = await peer.connection.createOffer();
+      await this.addLocalTracks(peer);
 
-    await peer.connection.setLocalDescription(offer);
+      if (connection.signalingState !== "stable") {
+        return;
+      }
 
-    const sent = this.sendSignal({
-      type: "webrtc_offer",
-      target_member_id: memberId,
-      sdp: offer.sdp,
-    });
+      const offer = await connection.createOffer();
 
-    console.log(`[WebRTC] Offer sent to ${memberId}:`, sent);
+      await connection.setLocalDescription(offer);
+
+      const sent = this.sendSignal({
+        type: "webrtc_offer",
+        target_member_id: memberId,
+        sdp: connection.localDescription.sdp,
+      });
+
+      if (!sent) {
+        throw new Error("Failed to send WebRTC offer.");
+      }
+
+      this.offerCreated.add(memberId);
+
+      console.log("[WebRTC] Offer sent:", {
+        memberId,
+      });
+    } catch (error) {
+      console.error(`[WebRTC] Failed to create offer for ${memberId}:`, error);
+    } finally {
+      this.offerInProgress.delete(memberId);
+    }
   }
 
   async handleOffer({ from_member_id, sdp }) {
@@ -227,8 +298,14 @@ export default class WebRTCService {
 
     const peer = await this.createPeer(memberId);
 
+    const { connection } = peer;
+
     try {
-      await peer.connection.setRemoteDescription(
+      /*
+       * Apply the offer first. This creates transceivers
+       * corresponding to the offer's audio/video sections.
+       */
+      await connection.setRemoteDescription(
         new RTCSessionDescription({
           type: "offer",
           sdp,
@@ -236,21 +313,37 @@ export default class WebRTCService {
       );
 
       /*
-       * ICE may have arrived before the offer.
+       * Find the transceivers created by the offer and attach
+       * this user's local tracks before creating the answer.
        */
+      await this.addLocalTracks(peer);
+
       await this.flushIceCandidates(memberId);
 
-      const answer = await peer.connection.createAnswer();
+      const answer = await connection.createAnswer();
 
-      await peer.connection.setLocalDescription(answer);
+      await connection.setLocalDescription(answer);
+
+      console.log(
+        "[WebRTC] Answer transceivers",
+        connection.getTransceivers().map((transceiver) => ({
+          kind: transceiver.receiver?.track?.kind,
+          direction: transceiver.direction,
+          currentDirection: transceiver.currentDirection,
+          sendingTrack: transceiver.sender?.track?.kind ?? null,
+          sendingTrackEnabled: transceiver.sender?.track?.enabled ?? null,
+        })),
+      );
 
       const sent = this.sendSignal({
         type: "webrtc_answer",
         target_member_id: memberId,
-        sdp: answer.sdp,
+        sdp: connection.localDescription.sdp,
       });
 
-      console.log(`[WebRTC] Answer sent to ${memberId}:`, sent);
+      if (!sent) {
+        throw new Error("Failed to send WebRTC answer.");
+      }
     } catch (error) {
       console.error(`[WebRTC] Failed handling offer from ${memberId}:`, error);
     }
@@ -259,12 +352,10 @@ export default class WebRTCService {
   async handleAnswer({ from_member_id, sdp }) {
     const memberId = Number(from_member_id);
 
-    console.log(`[WebRTC] Handling answer from ${memberId}`);
-
     const peer = this.getPeer(memberId);
 
     if (!peer) {
-      console.warn(`[WebRTC] Received answer for unknown peer ${memberId}`);
+      console.warn(`Received answer for unknown peer ${memberId}`);
 
       return;
     }
@@ -278,11 +369,18 @@ export default class WebRTCService {
       );
 
       await this.flushIceCandidates(memberId);
-    } catch (error) {
-      console.error(
-        `[WebRTC] Failed to handle answer from ${memberId}:`,
-        error,
+
+      console.log(
+        "[WebRTC] Applied answer",
+        peer.connection.getTransceivers().map((transceiver) => ({
+          kind: transceiver.receiver?.track?.kind,
+          direction: transceiver.direction,
+          currentDirection: transceiver.currentDirection,
+          receivingTrack: transceiver.receiver?.track?.readyState,
+        })),
       );
+    } catch (error) {
+      console.error(`[WebRTC] Failed handling answer from ${memberId}:`, error);
     }
   }
 
@@ -343,6 +441,13 @@ export default class WebRTCService {
        * Only lower member ID creates the offer.
        */
       if (Number(this.localMemberId) < remoteMemberId) {
+        if (
+          this.offerCreated.has(remoteMemberId) ||
+          this.offerInProgress.has(remoteMemberId)
+        ) {
+          continue;
+        }
+
         console.log(
           "[WebRTC] Creating offer for signaling-ready member:",
           remoteMemberId,
@@ -419,6 +524,8 @@ export default class WebRTCService {
 
   destroy() {
     this.removeAllPeers();
-    this.stopLocalStream();
+
+    // useLocalMedia owns and stops the MediaStream.
+    this.localStream = null;
   }
 }
