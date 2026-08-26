@@ -24,7 +24,12 @@ function MyChat() {
           <Chat currentRoom={selectedRoom} setSelectedRoom={setSelectedRoom} />
         )}
 
-        {activeTab === "calls" && <CallDetails currentRoom={selectedRoom}/>}
+        {activeTab === "calls" && (
+          <CallDetails
+            currentRoom={selectedRoom}
+            setSelectedRoom={setSelectedRoom}
+          />
+        )}
       </div>
     </div>
   );

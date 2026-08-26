@@ -3,7 +3,7 @@ import ChatInfo from "./ChatInfo";
 import ChatMessages from "./ChatMessages";
 import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
-import { useAppDispatch, useAuthState } from "@/redux/hooks";
+import { useAppDispatch } from "@/redux/hooks";
 import {
   setCallSession,
   setParticipant,
@@ -15,8 +15,6 @@ export default function Chat({ currentRoom, setSelectedRoom }) {
   const [isDetailCon, setDetailCon] = useState(false);
   const [startingCall, setStartingCall] = useState(false);
   const [showStartCallConfirm, setShowStartCallConfirm] = useState(false);
-
-  const { user, activeOrganization } = useAuthState();
 
   const dispatch = useAppDispatch();
 

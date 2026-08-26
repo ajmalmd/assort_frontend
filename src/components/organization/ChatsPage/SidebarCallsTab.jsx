@@ -5,48 +5,24 @@ import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
 import { PhoneMissed } from "lucide-react";
 
-const mockCalls = [
-  {
-    chat_room_id: 101,
-    room_type: "DIRECT",
-    title: "John Doe",
-    image: null,
-    last_call: {
-      id: 501,
-      started_at: "2026-08-06T10:30:15Z",
-      duration: 320,
-      direction: "OUTGOING",
-      is_call_active: false,
-    },
-  },
-  {
-    chat_room_id: 102,
-    room_type: "GROUP",
-    title: "Project Alpha",
-    image: null,
-    last_call: {
-      id: 502,
-      started_at: "2026-08-06T15:45:00Z",
-      duration: 0,
-      direction: "INCOMING",
-      is_call_active: true,
-    },
-  },
-  {
-    chat_room_id: 103,
-    room_type: "DIRECT",
-    title: "Alice",
-    image: null,
-    last_call: null,
-  },
-];
-
 const formatDuration = (duration) => {
-  const totalSeconds = Math.floor(Number(duration) || 0);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
+  if (!duration) return null;
 
-  return `${minutes}m ${String(seconds).padStart(2, "0")}s`;
+  const parts = duration.split(":");
+
+  if (parts.length !== 3) return null;
+
+  const hours = Number(parts[0]) || 0;
+  const minutes = Number(parts[1]) || 0;
+  const seconds = Math.floor(Number(parts[2]) || 0);
+
+  const totalMinutes = hours * 60 + minutes;
+
+  if (totalMinutes === 0) {
+    return `${seconds}s`;
+  }
+
+  return `${totalMinutes}m ${String(seconds).padStart(2, "0")}s`;
 };
 
 export default function SidebarCallsTab({

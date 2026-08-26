@@ -1,8 +1,4 @@
-import { useState, useEffect } from "react";
 import { Video } from "lucide-react";
-
-import assort_api from "@/api/axios";
-import { APP_POINTS } from "@/api/apiConfig";
 import { useChatListSocket } from "@/websocket/useChatListSocket";
 
 export default function SidebarChatsTab({

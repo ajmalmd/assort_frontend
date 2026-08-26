@@ -76,11 +76,16 @@ export default function ChatSidebar({
     setSelectedRoom(chat);
   };
 
+  const hasSelectedRoom =
+    activeTab === "messages"
+      ? !!selectedRoom?.id
+      : selectedRoom === "meeting" || !!selectedRoom?.chat_room_id;
+
   return (
     <>
       <div
         className={`
-          ${selectedRoom?.id ? "hidden md:flex" : "flex"}
+          ${hasSelectedRoom ? "hidden md:flex" : "flex"}
           w-full md:w-80
           flex-col
           border-r
