@@ -1,9 +1,15 @@
-import { useState, useEffect } from "react";
-import { Video, Clock, PhoneIncoming, PhoneOutgoing } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import {
+  Video,
+  Clock,
+  PhoneIncoming,
+  PhoneOutgoing,
+  PhoneMissed,
+} from "lucide-react";
 
 import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
-import { PhoneMissed } from "lucide-react";
+import { useCallListSocket } from "@/websocket/useCallListSocket";
 
 const formatDuration = (duration) => {
   if (!duration) return null;
@@ -32,31 +38,97 @@ export default function SidebarCallsTab({
   setSelectedRoom,
 }) {
   const [calls, setCalls] = useState([]);
-  const [lastMeeting, setLastMeeting] = useState({});
+
+  const fetchCalls = useCallback(async () => {
+    try {
+      const res = await assort_api.get(`${APP_POINTS.CALL}rooms/`);
+
+      setCalls(res.data);
+
+      // Keep currently opened CallDetails synced
+      setSelectedRoom((current) => {
+        if (!current || current === "meeting") {
+          return current;
+        }
+
+        const updatedRoom = res.data.find(
+          (room) => room.chat_room_id === current.chat_room_id,
+        );
+
+        return updatedRoom || current;
+      });
+    } catch (err) {
+      console.error("Failed to fetch calls:", err);
+    }
+  }, [setSelectedRoom]);
 
   useEffect(() => {
-    const fetchCalls = async () => {
-      try {
-        const res = await assort_api.get(APP_POINTS.CALL + "rooms/");
-        setCalls(res.data);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
     fetchCalls();
-  }, []);
+  }, [fetchCalls]);
 
-  const filteredcallRooms = calls.filter((call) =>
+  useCallListSocket({
+    onCallStarted: (room) => {
+      console.log("OnCallStarted:", room);
+
+      // Socket event contains `type`, which isn't part of our room state.
+      const { type, ...updatedRoom } = room;
+
+      setCalls((prev) => {
+        const exists = prev.some(
+          (item) => item.chat_room_id === updatedRoom.chat_room_id,
+        );
+
+        // Move active/recent call to top
+        if (exists) {
+          return [
+            updatedRoom,
+            ...prev.filter(
+              (item) => item.chat_room_id !== updatedRoom.chat_room_id,
+            ),
+          ];
+        }
+
+        return [updatedRoom, ...prev];
+      });
+
+      // If user is currently viewing this room, update CallDetails immediately.
+      setSelectedRoom((current) => {
+        if (
+          current &&
+          current !== "meeting" &&
+          current.chat_room_id === updatedRoom.chat_room_id
+        ) {
+          return updatedRoom;
+        }
+
+        return current;
+      });
+    },
+
+    onCallEnded: ({ session_id, room_id }) => {
+      console.log("OnCallEnded:", {
+        session_id,
+        room_id,
+      });
+
+      fetchCalls();
+    },
+  });
+
+  const filteredCallRooms = calls.filter((call) =>
     call.title.toLowerCase().includes(searchTerm.toLowerCase()),
   );
+
   return (
     <>
+      {/* Meetings */}
       <button
         onClick={() => setSelectedRoom("meeting")}
-        className={`w-full border-b border-border px-4 py-3 flex items-center gap-3 transition-colors 
-                    ${selectedRoom === "meeting" ? "bg-accent text-accent-foreground" : "hover:bg-accent/50"}
-                    `}
+        className={`w-full border-b border-border px-4 py-3 flex items-center gap-3 transition-colors ${
+          selectedRoom === "meeting"
+            ? "bg-accent text-accent-foreground"
+            : "hover:bg-accent/50"
+        }`}
       >
         <div className="flex-1 min-w-0 flex justify-between gap-3">
           <div className="min-w-0 ml-6 flex-1">
@@ -64,26 +136,15 @@ export default function SidebarCallsTab({
               <p className="truncate text-lg font-bold">Meetings</p>
             </div>
 
-            {lastMeeting ? (
-              lastMeeting.is_call_active ? (
-                <div className="flex items-center gap-1 text-xs text-green-600 mt-1">
-                  <Video className="h-3 w-3" />
-                  <span>Ongoing meeting</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                  Click to view meeting history
-                </div>
-              )
-            ) : (
-              <p className="text-xs text-muted-foreground mt-1">No calls yet</p>
-            )}
+            <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+              Click to view meeting history
+            </div>
           </div>
         </div>
       </button>
 
-      {/* call rooms */}
-      {filteredcallRooms.map((room) => (
+      {/* Call rooms */}
+      {filteredCallRooms.map((room) => (
         <button
           key={room.chat_room_id}
           onClick={() => setSelectedRoom(room)}
@@ -141,6 +202,7 @@ export default function SidebarCallsTab({
                     {room.last_call.duration && (
                       <>
                         <span>•</span>
+
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
 

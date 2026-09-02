@@ -59,6 +59,11 @@ export default function IncomingCallModal({ call }) {
       dispatch(
         setCallSession({
           id: call.session_id,
+          origin: call.origin,
+          mode: call.mode,
+          title: call.title,
+          organization: call.organization,
+          chat_room_id: call.chat_room_id ?? null,
         }),
       );
 
@@ -80,10 +85,26 @@ export default function IncomingCallModal({ call }) {
     }
   };
 
+  const getCallLabel = () => {
+    if (call.mode === "MEETING") {
+      return "meeting";
+    }
+
+    if (call.origin === "GROUP") {
+      return "group call";
+    }
+
+    if (call.origin === "PROJECT") {
+      return "project call";
+    }
+
+    return "call";
+  };
+
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/40">
       <div className="w-96 rounded-xl bg-white p-6 shadow-xl">
-        <h2 className="text-xl font-semibold">Incoming Call</h2>
+        <h2 className="text-xl font-semibold">Incoming {getCallLabel()}</h2>
 
         <p className="mt-2 text-gray-600">{call.title}</p>
 

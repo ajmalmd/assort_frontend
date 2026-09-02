@@ -35,7 +35,12 @@ export default function Chat({ currentRoom, setSelectedRoom }) {
 
       setShowStartCallConfirm(false);
 
-      dispatch(setCallSession(session));
+      dispatch(
+        setCallSession({
+          ...session,
+          title: currentRoom?.title,
+        }),
+      );
 
       dispatch(setParticipant(participant));
     } catch (error) {

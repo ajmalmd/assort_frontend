@@ -1,114 +1,231 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useAppDispatch } from "@/redux/hooks";
 import { setLocalMedia } from "@/redux/slices/callSessionSlice";
 
-export default function useLocalMedia() {
+const initialDevices = {
+  audio: { available: null, error: null },
+  video: { available: null, error: null },
+};
+
+function getMediaErrorMessage(error, kind) {
+  const label = kind === "audio" ? "Microphone" : "Camera";
+
+  switch (error?.name) {
+    case "NotAllowedError":
+    case "PermissionDeniedError":
+      return `${label} permission was denied.`;
+
+    case "NotFoundError":
+    case "DevicesNotFoundError":
+      return `No ${label.toLowerCase()} was found.`;
+
+    case "NotReadableError":
+    case "TrackStartError":
+      return `The ${label.toLowerCase()} is being used by another application.`;
+
+    case "SecurityError":
+      return "Media access requires a secure HTTPS connection.";
+
+    default:
+      return `Unable to access the ${label.toLowerCase()}.`;
+  }
+}
+
+export default function useLocalMedia({ onTrackEnded } = {}) {
   const dispatch = useAppDispatch();
 
   const streamRef = useRef(null);
+  const onTrackEndedRef = useRef(onTrackEnded);
+
+  const [devices, setDevices] = useState(initialDevices);
+
+  useEffect(() => {
+    onTrackEndedRef.current = onTrackEnded;
+  }, [onTrackEnded]);
 
   const stopTracks = useCallback((stream) => {
     stream?.getTracks().forEach((track) => {
+      track.onended = null;
       track.stop();
     });
   }, []);
 
-  const requestTrack = useCallback(async (kind) => {
-    const constraints =
-      kind === "audio"
-        ? {
-            audio: true,
-            video: false,
-          }
-        : {
-            audio: false,
-            video: true,
-          };
+  const checkDevices = useCallback(async () => {
+    if (!navigator.mediaDevices?.enumerateDevices) {
+      setDevices({
+        audio: {
+          available: false,
+          error: "This browser does not support media devices.",
+        },
+        video: {
+          available: false,
+          error: "This browser does not support media devices.",
+        },
+      });
+
+      return;
+    }
 
     try {
-      const mediaStream =
-        await navigator.mediaDevices.getUserMedia(constraints);
+      const mediaDevices = await navigator.mediaDevices.enumerateDevices();
 
-      return (
-        mediaStream.getTracks().find((track) => track.kind === kind) ?? null
+      const audioAvailable = mediaDevices.some(
+        (device) => device.kind === "audioinput",
       );
-    } catch (error) {
-      console.warn(`[MEDIA] Unable to access ${kind}:`, error);
+      const videoAvailable = mediaDevices.some(
+        (device) => device.kind === "videoinput",
+      );
 
-      return null;
+      setDevices({
+        audio: {
+          available: audioAvailable,
+          error: audioAvailable ? null : "No microphone was detected.",
+        },
+        video: {
+          available: videoAvailable,
+          error: videoAvailable ? null : "No camera was detected.",
+        },
+      });
+    } catch (error) {
+      console.warn("[MEDIA] Unable to check devices:", error);
     }
   }, []);
+
+  const requestTrack = useCallback(
+    async (kind) => {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        const message = "This browser does not support media devices.";
+
+        return { track: null, error: message };
+      }
+
+      const constraints =
+        kind === "audio"
+          ? { audio: true, video: false }
+          : { audio: false, video: true };
+
+      try {
+        const mediaStream =
+          await navigator.mediaDevices.getUserMedia(constraints);
+        const track =
+          mediaStream.getTracks().find((item) => item.kind === kind) ?? null;
+
+        if (!track) {
+          stopTracks(mediaStream);
+
+          return {
+            track: null,
+            error: `No ${
+              kind === "audio" ? "microphone" : "camera"
+            } track was created.`,
+          };
+        }
+
+        setDevices((current) => ({
+          ...current,
+          [kind]: { available: true, error: null },
+        }));
+
+        return { track, error: null };
+      } catch (error) {
+        const message = getMediaErrorMessage(error, kind);
+        const noDevice =
+          error?.name === "NotFoundError" ||
+          error?.name === "DevicesNotFoundError";
+
+        setDevices((current) => ({
+          ...current,
+          [kind]: {
+            available: noDevice ? false : current[kind].available,
+            error: message,
+          },
+        }));
+
+        return { track: null, error: message };
+      }
+    },
+    [stopTracks],
+  );
+
+  const attachTrackEndedHandler = useCallback(
+    (track, kind) => {
+      track.onended = () => {
+        const stream = streamRef.current;
+
+        // Manual stops remove the track before calling stop(), so ignore them.
+        if (!stream?.getTracks().includes(track)) {
+          return;
+        }
+
+        stream.removeTrack(track);
+
+        const label = kind === "audio" ? "Microphone" : "Camera";
+        const message = `${label} was disconnected.`;
+
+        setDevices((current) => ({
+          ...current,
+          [kind]: { available: false, error: message },
+        }));
+
+        dispatch(setLocalMedia({ [kind]: false }));
+
+        onTrackEndedRef.current?.({ kind, stream, message });
+      };
+    },
+    [dispatch],
+  );
+
+  useEffect(() => {
+    if (!navigator.mediaDevices?.addEventListener) {
+      return undefined;
+    }
+
+    const handleDeviceChange = () => {
+      void checkDevices();
+    };
+
+    navigator.mediaDevices.addEventListener("devicechange", handleDeviceChange);
+
+    return () => {
+      navigator.mediaDevices.removeEventListener(
+        "devicechange",
+        handleDeviceChange,
+      );
+    };
+  }, [checkDevices]);
 
   const startMedia = useCallback(async () => {
     if (streamRef.current) {
       stopTracks(streamRef.current);
     }
 
-    const stream = new MediaStream();
+    streamRef.current = new MediaStream();
 
-    /*
-     * Request independently. A camera failure should not
-     * prevent microphone access, and vice versa.
-     */
-    const [audioTrack, videoTrack] = await Promise.all([
-      requestTrack("audio"),
-      requestTrack("video"),
-    ]);
+    dispatch(setLocalMedia({ audio: false, video: false, screen: false }));
 
-    if (audioTrack) {
-      audioTrack.enabled = false;
-      stream.addTrack(audioTrack);
+    await checkDevices();
+
+    return streamRef.current;
+  }, [checkDevices, dispatch, stopTracks]);
+
+  const removeTrack = useCallback((kind) => {
+    const stream = streamRef.current;
+
+    if (!stream) {
+      return;
     }
 
-    if (videoTrack) {
-      videoTrack.enabled = false;
-      stream.addTrack(videoTrack);
+    const track = stream.getTracks().find((item) => item.kind === kind);
+
+    if (!track) {
+      return;
     }
 
-    streamRef.current = stream;
-
-    dispatch(
-      setLocalMedia({
-        audio: false,
-        video: false,
-        screen: false,
-      }),
-    );
-
-    console.log("[MEDIA] initialization completed", {
-      audioAvailable: Boolean(audioTrack),
-      videoAvailable: Boolean(videoTrack),
-      tracks: stream.getTracks().map((track) => ({
-        id: track.id,
-        kind: track.kind,
-        enabled: track.enabled,
-        readyState: track.readyState,
-      })),
-    });
-
-    /*
-     * Return even if the stream is empty.
-     *
-     * The user must still become WebRTC-ready so they can
-     * receive the other participant's media.
-     */
-    return stream;
-  }, [dispatch, requestTrack, stopTracks]);
-
-  const stopMedia = useCallback(() => {
-    stopTracks(streamRef.current);
-
-    streamRef.current = null;
-
-    dispatch(
-      setLocalMedia({
-        audio: false,
-        video: false,
-        screen: false,
-      }),
-    );
-  }, [dispatch, stopTracks]);
+    track.onended = null;
+    stream.removeTrack(track);
+    track.stop();
+  }, []);
 
   const toggleAudio = useCallback(async () => {
     let stream = streamRef.current;
@@ -118,34 +235,29 @@ export default function useLocalMedia() {
       streamRef.current = stream;
     }
 
-    let track = stream
+    const existingTrack = stream
       .getAudioTracks()
-      .find((item) => item.readyState === "live");
+      .find((track) => track.readyState === "live");
 
-    /*
-     * Retry device access when the original request failed.
-     */
-    if (!track) {
-      track = await requestTrack("audio");
+    if (existingTrack) {
+      removeTrack("audio");
+      dispatch(setLocalMedia({ audio: false }));
 
-      if (!track) {
-        return undefined;
-      }
-
-      stream.addTrack(track);
-      track.enabled = true;
-    } else {
-      track.enabled = !track.enabled;
+      return { enabled: false, error: null };
     }
 
-    dispatch(
-      setLocalMedia({
-        audio: track.enabled,
-      }),
-    );
+    const { track, error } = await requestTrack("audio");
 
-    return track.enabled;
-  }, [dispatch, requestTrack]);
+    if (!track) {
+      return { enabled: false, error };
+    }
+
+    stream.addTrack(track);
+    attachTrackEndedHandler(track, "audio");
+    dispatch(setLocalMedia({ audio: true }));
+
+    return { enabled: true, error: null };
+  }, [attachTrackEndedHandler, dispatch, removeTrack, requestTrack]);
 
   const toggleVideo = useCallback(async () => {
     let stream = streamRef.current;
@@ -155,34 +267,36 @@ export default function useLocalMedia() {
       streamRef.current = stream;
     }
 
-    let track = stream
+    const existingTrack = stream
       .getVideoTracks()
-      .find((item) => item.readyState === "live");
+      .find((track) => track.readyState === "live");
 
-    /*
-     * Retry camera access when the original request failed.
-     */
-    if (!track) {
-      track = await requestTrack("video");
+    if (existingTrack) {
+      removeTrack("video");
+      dispatch(setLocalMedia({ video: false }));
 
-      if (!track) {
-        return undefined;
-      }
-
-      stream.addTrack(track);
-      track.enabled = true;
-    } else {
-      track.enabled = !track.enabled;
+      return { enabled: false, error: null };
     }
 
-    dispatch(
-      setLocalMedia({
-        video: track.enabled,
-      }),
-    );
+    const { track, error } = await requestTrack("video");
 
-    return track.enabled;
-  }, [dispatch, requestTrack]);
+    if (!track) {
+      return { enabled: false, error };
+    }
+
+    stream.addTrack(track);
+    attachTrackEndedHandler(track, "video");
+    dispatch(setLocalMedia({ video: true }));
+
+    return { enabled: true, error: null };
+  }, [attachTrackEndedHandler, dispatch, removeTrack, requestTrack]);
+
+  const stopMedia = useCallback(() => {
+    stopTracks(streamRef.current);
+    streamRef.current = null;
+
+    dispatch(setLocalMedia({ audio: false, video: false, screen: false }));
+  }, [dispatch, stopTracks]);
 
   useEffect(() => {
     return () => {
@@ -193,6 +307,8 @@ export default function useLocalMedia() {
 
   return {
     streamRef,
+    devices,
+    checkDevices,
     startMedia,
     stopMedia,
     toggleAudio,

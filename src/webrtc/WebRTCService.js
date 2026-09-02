@@ -25,9 +25,15 @@ export default class WebRTCService {
   async setLocalStream(stream) {
     this.localStream = stream;
 
-    await Promise.all(
+    const results = await Promise.allSettled(
       Array.from(this.peers.values()).map((peer) => this.addLocalTracks(peer)),
     );
+
+    results.forEach((result) => {
+      if (result.status === "rejected") {
+        console.error("[WebRTC] Failed to update local tracks:", result.reason);
+      }
+    });
   }
 
   getPeer(memberId) {
@@ -64,10 +70,10 @@ export default class WebRTCService {
 
     this.peers.set(memberId, peer);
 
-    console.log("[WebRTC] PEER CREATED", {
-      localMemberId: this.localMemberId,
-      remoteMemberId: memberId,
-    });
+    // console.log("[WebRTC] PEER CREATED", {
+    //   localMemberId: this.localMemberId,
+    //   remoteMemberId: memberId,
+    // });
 
     connection.onicecandidate = (event) => {
       if (!event.candidate) {
@@ -96,13 +102,13 @@ export default class WebRTCService {
         remoteStream.addTrack(event.track);
       }
 
-      console.log("[WebRTC] REMOTE TRACK", {
-        memberId,
-        kind: event.track.kind,
-        id: event.track.id,
-        muted: event.track.muted,
-        readyState: event.track.readyState,
-      });
+      // console.log("[WebRTC] REMOTE TRACK", {
+      //   memberId,
+      //   kind: event.track.kind,
+      //   id: event.track.id,
+      //   muted: event.track.muted,
+      //   readyState: event.track.readyState,
+      // });
 
       this.onRemoteStream?.({
         memberId,
@@ -110,10 +116,10 @@ export default class WebRTCService {
       });
 
       event.track.onunmute = () => {
-        console.log("[WebRTC] REMOTE TRACK UNMUTED", {
-          memberId,
-          kind: event.track.kind,
-        });
+        // console.log("[WebRTC] REMOTE TRACK UNMUTED", {
+        //   memberId,
+        //   kind: event.track.kind,
+        // });
 
         this.onRemoteStream?.({
           memberId,
@@ -134,13 +140,13 @@ export default class WebRTCService {
     connection.onconnectionstatechange = () => {
       const state = connection.connectionState;
 
-      console.log("[WebRTC] CONNECTION STATE", {
-        localMemberId: this.localMemberId,
-        remoteMemberId: memberId,
-        state,
-        iceConnectionState: connection.iceConnectionState,
-        signalingState: connection.signalingState,
-      });
+      // console.log("[WebRTC] CONNECTION STATE", {
+      //   localMemberId: this.localMemberId,
+      //   remoteMemberId: memberId,
+      //   state,
+      //   iceConnectionState: connection.iceConnectionState,
+      //   signalingState: connection.signalingState,
+      // });
 
       this.onConnectionStateChange?.({
         memberId,
@@ -242,6 +248,16 @@ export default class WebRTCService {
       if (transceiver.sender.track !== track) {
         await transceiver.sender.replaceTrack(track);
       }
+
+      // console.log("[WebRTC] Sender updated", {
+      //   remoteMemberId: peer.memberId,
+      //   kind,
+      //   trackId: transceiver.sender.track?.id ?? null,
+      //   enabled: transceiver.sender.track?.enabled ?? null,
+      //   readyState: transceiver.sender.track?.readyState ?? null,
+      //   direction: transceiver.direction,
+      //   currentDirection: transceiver.currentDirection,
+      // });
     }
   }
 
@@ -281,9 +297,9 @@ export default class WebRTCService {
 
       this.offerCreated.add(memberId);
 
-      console.log("[WebRTC] Offer sent:", {
-        memberId,
-      });
+      // console.log("[WebRTC] Offer sent:", {
+      //   memberId,
+      // });
     } catch (error) {
       console.error(`[WebRTC] Failed to create offer for ${memberId}:`, error);
     } finally {
@@ -294,7 +310,7 @@ export default class WebRTCService {
   async handleOffer({ from_member_id, sdp }) {
     const memberId = Number(from_member_id);
 
-    console.log("[WebRTC] Handling offer from", memberId);
+    // console.log("[WebRTC] Handling offer from", memberId);
 
     const peer = await this.createPeer(memberId);
 
@@ -324,16 +340,16 @@ export default class WebRTCService {
 
       await connection.setLocalDescription(answer);
 
-      console.log(
-        "[WebRTC] Answer transceivers",
-        connection.getTransceivers().map((transceiver) => ({
-          kind: transceiver.receiver?.track?.kind,
-          direction: transceiver.direction,
-          currentDirection: transceiver.currentDirection,
-          sendingTrack: transceiver.sender?.track?.kind ?? null,
-          sendingTrackEnabled: transceiver.sender?.track?.enabled ?? null,
-        })),
-      );
+      // console.log(
+      //   "[WebRTC] Answer transceivers",
+      //   connection.getTransceivers().map((transceiver) => ({
+      //     kind: transceiver.receiver?.track?.kind,
+      //     direction: transceiver.direction,
+      //     currentDirection: transceiver.currentDirection,
+      //     sendingTrack: transceiver.sender?.track?.kind ?? null,
+      //     sendingTrackEnabled: transceiver.sender?.track?.enabled ?? null,
+      //   })),
+      // );
 
       const sent = this.sendSignal({
         type: "webrtc_answer",
@@ -370,15 +386,15 @@ export default class WebRTCService {
 
       await this.flushIceCandidates(memberId);
 
-      console.log(
-        "[WebRTC] Applied answer",
-        peer.connection.getTransceivers().map((transceiver) => ({
-          kind: transceiver.receiver?.track?.kind,
-          direction: transceiver.direction,
-          currentDirection: transceiver.currentDirection,
-          receivingTrack: transceiver.receiver?.track?.readyState,
-        })),
-      );
+      // console.log(
+      //   "[WebRTC] Applied answer",
+      //   peer.connection.getTransceivers().map((transceiver) => ({
+      //     kind: transceiver.receiver?.track?.kind,
+      //     direction: transceiver.direction,
+      //     currentDirection: transceiver.currentDirection,
+      //     receivingTrack: transceiver.receiver?.track?.readyState,
+      //   })),
+      // );
     } catch (error) {
       console.error(`[WebRTC] Failed handling answer from ${memberId}:`, error);
     }
@@ -387,7 +403,7 @@ export default class WebRTCService {
   async handleIceCandidate({ from_member_id, candidate }) {
     const memberId = Number(from_member_id);
 
-    console.log(`[WebRTC] Handling ICE from ${memberId}`);
+    // console.log(`[WebRTC] Handling ICE from ${memberId}`);
 
     if (!candidate) {
       return;
@@ -396,7 +412,7 @@ export default class WebRTCService {
     const peer = await this.createPeer(memberId);
 
     if (!peer.connection.remoteDescription) {
-      console.log(`[WebRTC] Queueing ICE from ${memberId}`);
+      // console.log(`[WebRTC] Queueing ICE from ${memberId}`);
 
       this.queueIceCandidate(memberId, candidate);
 
@@ -412,7 +428,7 @@ export default class WebRTCService {
 
   async connectToParticipants(participants, readyMemberIds) {
     if (!this.localStream) {
-      console.log("[WebRTC] Cannot negotiate: local stream not ready");
+      // console.log("[WebRTC] Cannot negotiate: local stream not ready");
       return;
     }
 
@@ -424,7 +440,7 @@ export default class WebRTCService {
       return memberId !== Number(this.localMemberId) && readyIds.has(memberId);
     });
 
-    console.log("[WebRTC] Signaling-ready participants:", remoteParticipants);
+    // console.log("[WebRTC] Signaling-ready participants:", remoteParticipants);
 
     for (const participant of remoteParticipants) {
       const remoteMemberId = Number(
@@ -448,10 +464,10 @@ export default class WebRTCService {
           continue;
         }
 
-        console.log(
-          "[WebRTC] Creating offer for signaling-ready member:",
-          remoteMemberId,
-        );
+        // console.log(
+        //   "[WebRTC] Creating offer for signaling-ready member:",
+        //   remoteMemberId,
+        // );
 
         await this.createOffer(remoteMemberId);
       }
@@ -505,21 +521,9 @@ export default class WebRTCService {
   }
 
   removeAllPeers() {
-    for (const memberId of this.peers.keys()) {
+    for (const memberId of Array.from(this.peers.keys())) {
       this.removePeer(memberId);
     }
-  }
-
-  stopLocalStream() {
-    if (!this.localStream) {
-      return;
-    }
-
-    this.localStream.getTracks().forEach((track) => {
-      track.stop();
-    });
-
-    this.localStream = null;
   }
 
   destroy() {

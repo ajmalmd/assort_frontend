@@ -19,6 +19,7 @@ import WebRTCService from "@/webrtc/WebRTCService";
 import useLocalMedia from "@/hooks/useCallLocalMedia";
 
 import CallSessionModal from "./CallSessionModal";
+import toast from "react-hot-toast";
 
 export default function CallSessionContainer() {
   const dispatch = useAppDispatch();
@@ -50,8 +51,21 @@ export default function CallSessionContainer() {
 
   const cleanupDoneRef = useRef(false);
 
+  /*
+   * useLocalMedia is created before the call socket. Keep a stable
+   * forwarding callback here, then connect it to the socket-dependent
+   * handler after `send` has been initialized.
+   */
+  const localTrackEndedHandlerRef = useRef(null);
+
+  const forwardLocalTrackEnded = useCallback((data) => {
+    void localTrackEndedHandlerRef.current?.(data);
+  }, []);
+
   const { streamRef, startMedia, stopMedia, toggleAudio, toggleVideo } =
-    useLocalMedia();
+    useLocalMedia({
+      onTrackEnded: forwardLocalTrackEnded,
+    });
 
   /*
    * ------------------------------------------------
@@ -115,7 +129,7 @@ export default function CallSessionContainer() {
     !!session,
     {
       onConnected() {
-        console.log("CALL SOCKET CONNECTED");
+        // console.log("CALL SOCKET CONNECTED");
         dispatch(setSocketConnected(true));
       },
 
@@ -139,7 +153,7 @@ export default function CallSessionContainer() {
       onParticipantJoined(data) {
         const newParticipant = data.participant;
 
-        console.log("PARTICIPANT JOINED", newParticipant);
+        // console.log("PARTICIPANT JOINED", newParticipant);
 
         dispatch(addParticipant(newParticipant));
       },
@@ -209,17 +223,17 @@ export default function CallSessionContainer() {
       },
 
       onOffer(data) {
-        console.log("RECEIVED OFFER", data);
+        // console.log("RECEIVED OFFER", data);
         webrtcRef.current?.handleOffer(data);
       },
 
       onAnswer(data) {
-        console.log("RECEIVED ANSWER", data);
+        // console.log("RECEIVED ANSWER", data);
         webrtcRef.current?.handleAnswer(data);
       },
 
       onIceCandidate(data) {
-        console.log("RECEIVED ICE", data);
+        // console.log("RECEIVED ICE", data);
         webrtcRef.current?.handleIceCandidate(data);
       },
 
@@ -245,6 +259,28 @@ export default function CallSessionContainer() {
       },
     },
   );
+
+  const handleLocalTrackEnded = useCallback(
+    async ({ kind, stream, message }) => {
+      await webrtcRef.current?.setLocalStream(stream);
+
+      send({
+        type: "participant_update",
+        [kind]: false,
+      });
+
+      toast.error(message);
+    },
+    [send],
+  );
+
+  useEffect(() => {
+    localTrackEndedHandlerRef.current = handleLocalTrackEnded;
+
+    return () => {
+      localTrackEndedHandlerRef.current = null;
+    };
+  }, [handleLocalTrackEnded]);
 
   const requestLeave = useCallback(() => {
     if (leaveRequestedRef.current) {
@@ -291,9 +327,9 @@ export default function CallSessionContainer() {
 
     readyAnnouncedRef.current = true;
 
-    console.log("[WebRTC] LOCAL SIGNALING READY", {
-      memberId: participant.member.id,
-    });
+    // console.log("[WebRTC] LOCAL SIGNALING READY", {
+    //   memberId: participant.member.id,
+    // });
   }, [socketConnected, mediaReady, participant?.member?.id, send, streamRef]);
 
   useEffect(() => {
@@ -376,7 +412,7 @@ export default function CallSessionContainer() {
       },
 
       onConnectionStateChange({ memberId, state }) {
-        console.log(`WebRTC connection ${memberId}:`, state);
+        // console.log(`WebRTC connection ${memberId}:`, state);
       },
     });
 
@@ -413,10 +449,10 @@ export default function CallSessionContainer() {
           video: true,
         });
 
-        console.log("LOCAL MEDIA READY", {
-          stream,
-          socketConnected,
-        });
+        // console.log("LOCAL MEDIA READY", {
+        //   stream,
+        //   socketConnected,
+        // });
 
         if (cancelled) {
           stream.getTracks().forEach((track) => track.stop());
@@ -483,50 +519,55 @@ export default function CallSessionContainer() {
   }
 
   const handleToggleAudio = useCallback(async () => {
-    const enabled = await toggleAudio();
+    const result = await toggleAudio();
 
-    if (typeof enabled !== "boolean") {
-      console.warn("Microphone is currently unavailable.");
-
+    if (result.error) {
+      toast.error(result.error);
       return;
     }
 
-    /*
-     * A new track may have been acquired by toggleAudio().
-     * Attach it to every existing peer sender.
-     */
-    if (webrtcRef.current) {
-      await webrtcRef.current.setLocalStream(streamRef.current);
-    }
+    const audioTrack =
+      streamRef.current
+        ?.getAudioTracks()
+        .find((track) => track.readyState === "live") ?? null;
+
+    // console.log("[AUDIO] Local track", {
+    //   result,
+    //   track: audioTrack
+    //     ? {
+    //         id: audioTrack.id,
+    //         enabled: audioTrack.enabled,
+    //         muted: audioTrack.muted,
+    //         readyState: audioTrack.readyState,
+    //         label: audioTrack.label,
+    //       }
+    //     : null,
+    // });
+
+    await webrtcRef.current?.setLocalStream(streamRef.current);
 
     send({
       type: "participant_update",
-      audio: enabled,
+      audio: result.enabled,
     });
-
-    return enabled;
-  }, [toggleAudio, send, streamRef]);
+  }, [send, streamRef, toggleAudio]);
 
   const handleToggleVideo = useCallback(async () => {
-    const enabled = await toggleVideo();
+    const result = await toggleVideo();
 
-    if (typeof enabled !== "boolean") {
-      console.warn("Camera is currently unavailable.");
-
+    if (result.error) {
+      console.warn(result.error);
+      toast.error(result.error);
       return;
     }
 
-    if (webrtcRef.current) {
-      await webrtcRef.current.setLocalStream(streamRef.current);
-    }
+    await webrtcRef.current?.setLocalStream(streamRef.current);
 
     send({
       type: "participant_update",
-      video: enabled,
+      video: result.enabled,
     });
-
-    return enabled;
-  }, [toggleVideo, send, streamRef]);
+  }, [send, streamRef, toggleVideo]);
 
   /*
    * ------------------------------------------------

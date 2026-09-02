@@ -137,7 +137,12 @@ export default function CallDetails({ currentRoom, setSelectedRoom }) {
 
       setShowStartCallConfirm(false);
 
-      dispatch(setCallSession(session));
+      dispatch(
+        setCallSession({
+          ...session,
+          title: isMeeting ? "Meeting" : currentRoom?.title,
+        }),
+      );
       dispatch(setParticipant(participant));
     } catch (error) {
       console.error("Failed to start call:", error);

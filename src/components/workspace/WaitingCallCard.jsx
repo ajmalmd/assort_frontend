@@ -157,10 +157,26 @@ export default function WaitingCallCard({ call }) {
 
   const switching = sessionSwitch.status === "REQUESTED" && isSwitchTarget;
 
+  const getCallLabel = () => {
+    if (call.mode === "MEETING") {
+      return "meeting";
+    }
+
+    if (call.origin === "GROUP") {
+      return "group call";
+    }
+
+    if (call.origin === "PROJECT") {
+      return "project call";
+    }
+
+    return "call";
+  };
+
   return (
     <div className="rounded-lg border bg-card p-4 shadow-lg">
       <div className="mb-3">
-        <p className="font-medium">Incoming Call</p>
+        <p className="font-medium">Incoming {getCallLabel()}</p>
 
         <p className="text-sm text-muted-foreground">
           {call.title || "Unknown user"}
