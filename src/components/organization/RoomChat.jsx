@@ -9,17 +9,24 @@ export default function RoomChat({
   className = "",
   chatType,
   setSelectedRoom,
+  onTypingChange,
 }) {
   const {
     messages,
     memberStatus,
+    typingMembers,
     hasMore,
     loadingOlder,
     messagesRef,
     sendMessage,
+    sendTyping,
   } = useRoomChat(room.id);
 
   const { activeOrganization } = useAuthState();
+
+  useEffect(() => {
+    onTypingChange?.(typingMembers);
+  }, [typingMembers, onTypingChange]);
 
   // member status update (direct chat only)
   useEffect(() => {
@@ -56,7 +63,7 @@ export default function RoomChat({
           chatType={chatType}
         />
 
-        <MessageInput sendMessage={sendMessage} />
+        <MessageInput sendMessage={sendMessage} sendTyping={sendTyping} />
       </div>
     </div>
   );

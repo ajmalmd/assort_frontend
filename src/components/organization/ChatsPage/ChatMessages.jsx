@@ -1,3 +1,6 @@
+import { useState } from "react";
+import { useNavigate } from "react-router";
+
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { Video } from "lucide-react";
@@ -5,7 +8,6 @@ import RoomChat from "../RoomChat";
 import ConfirmActionModal from "@/components/common/ConfirmActionModal";
 import toast from "react-hot-toast";
 import { formatEnum } from "@/appFunctions";
-import { useNavigate } from "react-router";
 
 export default function ChatMessages({
   currentRoom,
@@ -17,8 +19,11 @@ export default function ChatMessages({
   setShowStartCallConfirm,
 }) {
   const navigate = useNavigate();
+  const [typingMembers, setTypingMembers] = useState({});
 
   if (!currentRoom?.id) return null;
+
+  const typingNames = Object.values(typingMembers);
 
   const handleStartCallClick = () => {
     if (currentRoom.active_call) {
@@ -52,9 +57,13 @@ export default function ChatMessages({
           >
             <p className="font-semibold">{currentRoom.title}</p>
             <p className="text-xs text-muted-foreground">
-              {currentRoom.type === "DIRECT"
-                ? formatEnum(currentRoom.status)
-                : currentRoom.type}
+              {typingNames.length > 0
+                ? typingNames.length === 1
+                  ? `${typingNames[0]} is typing...`
+                  : `${typingNames.join(", ")} are typing...`
+                : currentRoom.type === "DIRECT"
+                  ? formatEnum(currentRoom.status)
+                  : currentRoom.type}
             </p>
           </div>
         </div>
@@ -75,6 +84,7 @@ export default function ChatMessages({
           className="h-full"
           chatType={currentRoom.type}
           setSelectedRoom={setSelectedRoom}
+          onTypingChange={setTypingMembers}
         />
       </div>
 

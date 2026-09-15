@@ -1,10 +1,63 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FileText, Paperclip, Send, X } from "lucide-react";
 
-export default function MessageInput({sendMessage}) {
+export default function MessageInput({ sendMessage, sendTyping }) {
   const [messageInput, setMessageInput] = useState("");
   const [attachments, setAttachments] = useState([]);
+
+  const typingTimeoutRef = useRef(null);
+  const isTypingRef = useRef(false);
+
+  const stopTyping = () => {
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
+
+    if (isTypingRef.current) {
+      sendTyping(false);
+      isTypingRef.current = false;
+    }
+  };
+
+  const handleMessageChange = (e) => {
+    const value = e.target.value;
+
+    setMessageInput(value);
+
+    if (!value.trim()) {
+      stopTyping();
+      return;
+    }
+
+    if (!isTypingRef.current) {
+      sendTyping(true);
+      isTypingRef.current = true;
+    }
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      sendTyping(false);
+      isTypingRef.current = false;
+      typingTimeoutRef.current = null;
+    }, 1500);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+
+      if (isTypingRef.current) {
+        sendTyping(false);
+      }
+    };
+  }, [sendTyping]);
 
   const removeAttachment = (indexToRemove) => {
     setAttachments((prev) =>
@@ -44,6 +97,8 @@ export default function MessageInput({sendMessage}) {
       return;
     }
 
+    stopTyping();
+
     await sendMessage({
       text: messageInput,
       attachments,
@@ -52,6 +107,7 @@ export default function MessageInput({sendMessage}) {
     setMessageInput("");
     setAttachments([]);
   };
+
   return (
     <div className="shrink-0 border-t border-border bg-card p-4">
       {attachments.length > 0 && (
@@ -118,7 +174,7 @@ export default function MessageInput({sendMessage}) {
         <textarea
           rows={1}
           value={messageInput}
-          onChange={(e) => setMessageInput(e.target.value)}
+          onChange={handleMessageChange}
           placeholder="Type a message..."
           className="flex-1 resize-none rounded-md border p-2"
         />

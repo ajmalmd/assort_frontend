@@ -14,7 +14,7 @@ export function chatEventRouter(event, handlers) {
       break;
 
     case "typing":
-      handlers.onTyping?.(event.member_id, event.is_typing);
+      handlers.onTyping?.(event.member_id, event.member_name, event.is_typing);
       break;
 
     case "seen":
@@ -33,6 +33,7 @@ export function chatEventRouter(event, handlers) {
 export function useRoomChat(roomId) {
   const [messages, setMessages] = useState([]);
   const [memberStatus, setMemberStatus] = useState({});
+  const [typingMembers, setTypingMembers] = useState({});
   const [nextCursor, setNextCursor] = useState(null);
   const [loadingOlder, setLoadingOlder] = useState(false);
 
@@ -97,8 +98,20 @@ export function useRoomChat(roomId) {
           console.log("Seen by", member_id, last_read_message_id);
         },
 
-        onTyping: (member_id, is_typing) => {
-          console.log(member_id, is_typing);
+        onTyping: (member_id, member_name, is_typing) => {
+          setTypingMembers((prev) => {
+            if (is_typing) {
+              return {
+                ...prev,
+                [member_id]: member_name,
+              };
+            }
+
+            const next = { ...prev };
+            delete next[member_id];
+
+            return next;
+          });
         },
       }),
   });
@@ -133,6 +146,7 @@ export function useRoomChat(roomId) {
     if (!roomId || !messageURL) return;
 
     setMessages([]);
+    setTypingMembers({});
     setNextCursor(null);
 
     const controller = new AbortController();
@@ -280,13 +294,33 @@ export function useRoomChat(roomId) {
     [messageURL, roomSocket],
   );
 
+  const sendTyping = useCallback(
+    (isTyping) => {
+      const socket = roomSocket.current;
+
+      if (!socket || socket.readyState !== WebSocket.OPEN) {
+        return;
+      }
+
+      socket.send(
+        JSON.stringify({
+          type: "typing",
+          is_typing: isTyping,
+        }),
+      );
+    },
+    [roomSocket],
+  );
+
   return {
     messages,
     memberStatus,
+    typingMembers,
     hasMore: !!nextCursor,
     loadingOlder,
     messagesRef,
     sendMessage,
+    sendTyping,
     loadOlderMessages,
     markSeen,
   };
