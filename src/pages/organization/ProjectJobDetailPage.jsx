@@ -154,6 +154,8 @@ export default function ProjectJobDetailPage() {
   };
 
   const openConfirmAction = (type, logId) => {
+    console.log("Action", type, logId);
+
     setConfirmAction({
       open: true,
       type,
@@ -381,28 +383,26 @@ export default function ProjectJobDetailPage() {
         />
       )}
 
-      {canLog() && (
-        <>
-          <AddTimeLogModal
-            open={showLogModal}
-            onOpenChange={setShowLogModal}
-            job={{ id: jobId, title: job.title }}
-            addedLogDetails={addLog}
-          />
+      <ConfirmActionModal
+        open={confirmAction.open}
+        onOpenChange={(open) => {
+          if (!open) closeConfirmAction();
+        }}
+        title={currentAction?.title}
+        description={currentAction?.description}
+        confirmText={currentAction?.confirmText}
+        variant={currentAction?.variant}
+        loading={actionLoading}
+        onConfirm={handleConfirmAction}
+      />
 
-          <ConfirmActionModal
-            open={confirmAction.open}
-            onOpenChange={(open) => {
-              if (!open) closeConfirmAction();
-            }}
-            title={currentAction?.title}
-            description={currentAction?.description}
-            confirmText={currentAction?.confirmText}
-            variant={currentAction?.variant}
-            loading={actionLoading}
-            onConfirm={handleConfirmAction}
-          />
-        </>
+      {canLog() && (
+        <AddTimeLogModal
+          open={showLogModal}
+          onOpenChange={setShowLogModal}
+          job={{ id: jobId, title: job.title }}
+          addedLogDetails={addLog}
+        />
       )}
     </div>
   );
