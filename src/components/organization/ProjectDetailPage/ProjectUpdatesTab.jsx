@@ -1,61 +1,48 @@
-import { useMemo, useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
 import {
   Download,
   Eye,
   File,
   FileText,
   ImageIcon,
+  Loader2,
   Paperclip,
   Plus,
+  Send,
   X,
 } from "lucide-react";
+import toast from "react-hot-toast";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Card, CardContent } from "@/components/ui/card";
+
 import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
-import toast from "react-hot-toast";
-
-/* -------------------------------------------------------------------------- */
-/*                                   HELPERS                                  */
-/* -------------------------------------------------------------------------- */
 
 const SAFE_FILE_TYPES = [
-  // images
   "image/jpeg",
   "image/jpg",
   "image/png",
   "image/webp",
   "image/gif",
-
-  // pdf
   "application/pdf",
-
-  // documents
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-
-  // excel
   "application/vnd.ms-excel",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-
-  // ppt
   "application/vnd.ms-powerpoint",
   "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-
-  // text/data
   "text/plain",
   "text/csv",
   "application/json",
   "application/xml",
   "text/xml",
-
-  // archives
   "application/zip",
   "application/x-zip-compressed",
   "application/x-rar-compressed",
   "application/x-7z-compressed",
-
-  // media
   "video/mp4",
   "video/quicktime",
 ];
@@ -64,206 +51,326 @@ const isImage = (type) => type?.startsWith("image/");
 const isPdf = (type) => type === "application/pdf";
 
 const formatRelativeTime = (timestamp) => {
-  const diff = Date.now() - new Date(timestamp).getTime();
+  const date = new Date(timestamp);
 
-  const mins = Math.floor(diff / 60000);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const diff = Date.now() - date.getTime();
+
+  const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
 
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins} min ago`;
-  if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+  if (minutes < 1) return "Just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days < 7) return `${days}d ago`;
 
-  return `${days} day${days > 1 ? "s" : ""} ago`;
+  return date.toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+    year:
+      date.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined,
+  });
 };
 
-const getFileIcon = (type) => {
+const formatFileSize = (bytes) => {
+  if (!bytes && bytes !== 0) return null;
+
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+const getInitials = (name = "") => {
+  return (
+    name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase() || "?"
+  );
+};
+
+const FileTypeIcon = ({ type, className = "h-5 w-5" }) => {
   if (isImage(type)) {
-    return <ImageIcon className="h-5 w-5 text-primary" />;
+    return <ImageIcon className={`${className} text-muted-foreground`} />;
   }
 
   if (isPdf(type)) {
-    return <FileText className="h-5 w-5 text-primary" />;
+    return <FileText className={`${className} text-muted-foreground`} />;
   }
 
-  return <File className="h-5 w-5 text-primary" />;
+  return <File className={`${className} text-muted-foreground`} />;
 };
-
-/* -------------------------------------------------------------------------- */
-/*                              MAIN COMPONENT                                */
-/* -------------------------------------------------------------------------- */
 
 export function ProjectUpdatesTab({ projectId }) {
   const [showForm, setShowForm] = useState(false);
-  const [updates, setUpdates] = useState([]);
   const [newUpdate, setNewUpdate] = useState("");
   const [attachments, setAttachments] = useState([]);
+  const [previewFile, setPreviewFile] = useState(null);
 
   const acceptedFileTypes = useMemo(() => SAFE_FILE_TYPES.join(","), []);
 
-  useEffect(() => {
-    const fetchUpdates = async () => {
-      try {
-        const res = await assort_api.get(
-          `${APP_POINTS.PROJECTS}${projectId}/updates/`,
-        );
-        setUpdates(res.data);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    fetchUpdates();
-  }, []);
+  const queryClient = useQueryClient();
 
-  /* ---------------------------------------------------------------------- */
-  /*                            FILE HANDLING                               */
-  /* ---------------------------------------------------------------------- */
+  const { data: updates = [], isLoading } = useQuery({
+    queryKey: ["project-updates", projectId],
 
-  const handleFilesChange = (e) => {
-    const files = Array.from(e.target.files || []);
+    queryFn: async () => {
+      const response = await assort_api.get(
+        `${APP_POINTS.PROJECTS}${projectId}/updates/`,
+      );
 
-    const validFiles = files.filter((file) =>
-      SAFE_FILE_TYPES.includes(file.type),
-    );
+      return response.data;
+    },
 
-    const mappedFiles = validFiles.map((file) => ({
-      file_name: file.name,
-      file_type: file.type,
-      file_size: file.size,
-      original_file: file,
-      file_data:
-        isImage(file.type) || isPdf(file.type)
-          ? URL.createObjectURL(file)
-          : null,
-    }));
+    enabled: !!projectId,
+  });
 
-    setAttachments((prev) => [...prev, ...mappedFiles]);
-
-    e.target.value = "";
-  };
-
-  const removeAttachment = (index) => {
-    setAttachments((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleSubmit = async () => {
-    if (!newUpdate.trim() && attachments.length === 0) return;
-
-    try {
+  const postUpdateMutation = useMutation({
+    mutationFn: async ({ text, files }) => {
       const payload = new FormData();
 
-      payload.append("text", newUpdate);
+      payload.append("text", text);
 
-      attachments.forEach((file) => {
+      files.forEach((file) => {
         payload.append("files", file.original_file);
       });
 
       const response = await assort_api.post(
         `${APP_POINTS.PROJECTS}${projectId}/updates/`,
         payload,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        },
       );
 
-      setUpdates((prev) => [response.data, ...prev]);
+      return response.data;
+    },
 
-      setNewUpdate("");
-      setAttachments([]);
-      setShowForm(false);
+    onSuccess: (createdUpdate) => {
+      queryClient.setQueryData(
+        ["project-updates", projectId],
+        (current = []) => [createdUpdate, ...current],
+      );
 
+      resetForm();
       toast.success("Update posted");
-    } catch (error) {
-      console.log(error);
+    },
+
+    onError: (error) => {
+      console.error("Failed to post project update:", error);
       toast.error("Couldn't post the update");
+    },
+  });
+
+  const handleFilesChange = (event) => {
+    const selectedFiles = Array.from(event.target.files || []);
+
+    const validFiles = selectedFiles.filter((file) =>
+      SAFE_FILE_TYPES.includes(file.type),
+    );
+
+    if (validFiles.length !== selectedFiles.length) {
+      toast.error("Some unsupported files were skipped");
+    }
+
+    setAttachments((current) => {
+      const existingFiles = new Set(
+        current.map(
+          (file) =>
+            `${file.file_name}-${file.file_size}-${file.original_file.lastModified}`,
+        ),
+      );
+
+      const newFiles = validFiles
+        .filter(
+          (file) =>
+            !existingFiles.has(
+              `${file.name}-${file.size}-${file.lastModified}`,
+            ),
+        )
+        .map((file) => ({
+          file_name: file.name,
+          file_type: file.type,
+          file_size: file.size,
+          original_file: file,
+          file_data: isImage(file.type) ? URL.createObjectURL(file) : null,
+        }));
+
+      return [...current, ...newFiles];
+    });
+
+    event.target.value = "";
+  };
+
+  const revokePreviewUrl = (file) => {
+    if (file?.file_data) {
+      URL.revokeObjectURL(file.file_data);
     }
   };
 
-  const openFileModal = (file) => {
-    if (!isImage(file.file_type) && !isPdf(file.file_type)) return;
-    window.open(file.download_url, "_blank");
+  const revokeAllPreviewUrls = (files) => {
+    files.forEach(revokePreviewUrl);
+  };
+
+  const removeAttachment = (index) => {
+    setAttachments((current) => {
+      const removedFile = current[index];
+
+      revokePreviewUrl(removedFile);
+
+      return current.filter((_, fileIndex) => fileIndex !== index);
+    });
+  };
+
+  const resetForm = () => {
+    revokeAllPreviewUrls(attachments);
+
+    setNewUpdate("");
+    setAttachments([]);
+    setShowForm(false);
+  };
+
+  const handleSubmit = () => {
+    const text = newUpdate.trim();
+
+    if ((!text && attachments.length === 0) || postUpdateMutation.isPending) {
+      return;
+    }
+
+    postUpdateMutation.mutate({
+      text,
+      files: attachments,
+    });
+  };
+
+  const handlePreview = (file) => {
+    if (isImage(file.file_type)) {
+      setPreviewFile(file);
+      return;
+    }
+
+    if (isPdf(file.file_type) && file.download_url) {
+      window.open(file.download_url, "_blank", "noopener,noreferrer");
+    }
   };
 
   const handleDownload = async (file) => {
+    if (!file.download_url) {
+      toast.error("File is unavailable");
+      return;
+    }
+
     try {
       const response = await fetch(file.download_url);
 
+      if (!response.ok) {
+        throw new Error(`Download failed: ${response.status}`);
+      }
+
       const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
 
-      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
 
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = file.file_name;
+      anchor.href = objectUrl;
+      anchor.download = file.file_name || "download";
+      anchor.style.display = "none";
 
-      document.body.appendChild(a);
-      a.click();
+      document.body.appendChild(anchor);
 
-      a.remove();
-      window.URL.revokeObjectURL(url);
+      anchor.click();
+      anchor.remove();
+
+      URL.revokeObjectURL(objectUrl);
     } catch (error) {
-      console.log(error);
+      console.error("Failed to download attachment:", error);
       toast.error("Download failed");
     }
   };
 
-  const getPreviewUrl = (file) => {
-    return file.preview_url || file.file_data || null;
-  };
-
-  /* ---------------------------------------------------------------------- */
-  /*                                 RENDER                                 */
-  /* ---------------------------------------------------------------------- */
-
   return (
-    <div className="space-y-4 w-full overflow-hidden">
-      {/* New Update Button */}
-      <div className="flex justify-end">
-        <Button onClick={() => setShowForm(!showForm)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          New Update
-        </Button>
+    <div className="mx-auto w-full max-w-4xl">
+      {/* Header */}
+      <div className="mb-5 flex items-center justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-semibold">Project updates</h2>
+          <p className="text-sm text-muted-foreground">
+            Share progress, notes and files with the team.
+          </p>
+        </div>
+
+        {!showForm && (
+          <Button onClick={() => setShowForm(true)} size="sm">
+            <Plus className="mr-2 h-4 w-4" />
+            New update
+          </Button>
+        )}
       </div>
 
-      {/* Update Form */}
+      {/* Composer */}
       {showForm && (
-        <Card className="border-primary/50">
-          <CardContent className="pt-6 space-y-4">
+        <Card className="mb-6 shadow-sm">
+          <CardContent className="p-4 sm:p-5">
             <textarea
-              placeholder="Share an update about the project..."
+              autoFocus
+              placeholder="What's new with this project?"
               value={newUpdate}
               onChange={(e) => setNewUpdate(e.target.value)}
-              className="w-full p-3 border rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary"
               rows={4}
+              className="
+                min-h-[110px] w-full resize-none
+                border-0 bg-transparent p-0 text-sm
+                outline-none placeholder:text-muted-foreground
+                focus:ring-0
+              "
             />
 
-            {/* Selected Files */}
+            {/* Selected attachments */}
             {attachments.length > 0 && (
-              <div className="space-y-2">
+              <div className="mt-4 grid gap-2 sm:grid-cols-2">
                 {attachments.map((file, index) => (
                   <div
                     key={`${file.file_name}-${index}`}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-muted rounded-lg px-3 py-2"
+                    className="
+                      flex min-w-0 items-center gap-3
+                      rounded-lg border bg-muted/30 p-2.5
+                    "
                   >
-                    <div className="flex items-start sm:items-center gap-2 min-w-0 w-full">
-                      {getFileIcon(file.file_type)}
-
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium truncate break-all">
-                          {file.file_name}
-                        </p>
-
-                        <p className="text-xs text-muted-foreground">
-                          {(file.file_size / 1024).toFixed(1)} KB
-                        </p>
+                    {isImage(file.file_type) && file.file_data ? (
+                      <img
+                        src={file.file_data}
+                        alt=""
+                        className="h-10 w-10 shrink-0 rounded-md object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-muted">
+                        <FileTypeIcon type={file.file_type} />
                       </div>
+                    )}
+
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">
+                        {file.file_name}
+                      </p>
+
+                      <p className="text-xs text-muted-foreground">
+                        {formatFileSize(file.file_size)}
+                      </p>
                     </div>
 
                     <button
+                      type="button"
                       onClick={() => removeAttachment(index)}
-                      className="hover:text-destructive"
+                      className="
+                        flex h-7 w-7 shrink-0 items-center justify-center
+                        rounded-md text-muted-foreground
+                        transition-colors
+                        hover:bg-muted hover:text-destructive
+                      "
+                      aria-label={`Remove ${file.file_name}`}
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -272,32 +379,58 @@ export function ProjectUpdatesTab({ projectId }) {
               </div>
             )}
 
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="mt-4 flex items-center justify-between border-t pt-4">
+              <label
+                className="
+                  inline-flex h-9 cursor-pointer items-center gap-2
+                  rounded-md px-3 text-sm font-medium
+                  text-muted-foreground transition-colors
+                  hover:bg-muted hover:text-foreground
+                "
+              >
+                <Paperclip className="h-4 w-4" />
+                <span className="hidden sm:inline">Attach files</span>
+
+                <input
+                  type="file"
+                  hidden
+                  multiple
+                  accept={acceptedFileTypes}
+                  onChange={handleFilesChange}
+                />
+              </label>
+
               <div className="flex items-center gap-2">
-                <label className="cursor-pointer">
-                  <Paperclip className="h-5 w-5 text-muted-foreground hover:text-foreground" />
-
-                  <input
-                    type="file"
-                    hidden
-                    multiple
-                    accept={acceptedFileTypes}
-                    onChange={handleFilesChange}
-                  />
-                </label>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                 <Button
-                  variant="outline"
-                  onClick={() => setShowForm(false)}
-                  className="w-full sm:w-auto"
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={postUpdateMutation.isPending}
+                  onClick={resetForm}
                 >
                   Cancel
                 </Button>
 
-                <Button onClick={handleSubmit} className="w-full sm:w-auto">
-                  Post Update
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={
+                    postUpdateMutation.isPending ||
+                    (!newUpdate.trim() && attachments.length === 0)
+                  }
+                  onClick={handleSubmit}
+                >
+                  {postUpdateMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Posting
+                    </>
+                  ) : (
+                    <>
+                      <Send className="mr-2 h-4 w-4" />
+                      Post update
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
@@ -305,99 +438,287 @@ export function ProjectUpdatesTab({ projectId }) {
         </Card>
       )}
 
-      {/* Updates List */}
-      <div className="space-y-3">
-        {updates.map((update) => (
-          <Card key={update.id}>
-            <CardContent className="pt-4 sm:pt-6 space-y-4">
-              {/* Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <div>
-                  <p className="font-bold text-sm">{update.member.full_name}</p>
+      {/* Loading */}
+      {isLoading && (
+        <div className="flex min-h-[220px] items-center justify-center">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Loading updates...
+          </div>
+        </div>
+      )}
 
-                  <p className="text-xs text-muted-foreground">
-                    {update.member.role}
-                  </p>
-                </div>
+      {/* Empty state */}
+      {!isLoading && updates.length === 0 && (
+        <div className="rounded-xl border border-dashed px-6 py-14 text-center">
+          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+            <FileText className="h-5 w-5 text-muted-foreground" />
+          </div>
 
-                <p className="text-xs text-muted-foreground">
-                  {formatRelativeTime(update.created_at)}
-                </p>
-              </div>
+          <h3 className="text-sm font-semibold">No updates yet</h3>
 
-              {/* Text */}
-              {update.text && (
-                <p className="text-sm text-foreground">{update.text}</p>
-              )}
+          <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
+            Share project progress, decisions, notes or files with your team.
+          </p>
 
-              {/* Attachments */}
-              {update.attachments?.length > 0 && (
-                <div className="space-y-3">
-                  {update.attachments.map((file, index) => (
-                    <div
-                      key={index}
-                      className="border rounded-lg overflow-hidden"
-                    >
-                      {/* IMAGE PREVIEW */}
-                      {isImage(file.file_type) && file.preview_url && (
-                        <div className="bg-muted flex justify-center">
-                          <img
-                            src={getPreviewUrl(file)}
-                            alt={file.file_name}
-                            className="w-full max-h-[300px] sm:max-h-[400px] object-cover"
-                          />
-                        </div>
-                      )}
+          {!showForm && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="mt-4"
+              onClick={() => setShowForm(true)}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add first update
+            </Button>
+          )}
+        </div>
+      )}
 
-                      {/* FILE INFO */}
-                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          {getFileIcon(file.file_type)}
+      {/* Feed */}
+      {!isLoading && updates.length > 0 && (
+        <div className="relative">
 
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium truncate">
-                              {file.file_name}
-                            </p>
+          <div className="space-y-6">
+            {updates.map((update) => {
+              const images =
+                update.attachments?.filter((file) => isImage(file.file_type)) ||
+                [];
 
-                            <p className="text-xs text-muted-foreground">
-                              {file.file_type}
-                            </p>
-                          </div>
-                        </div>
+              const files =
+                update.attachments?.filter(
+                  (file) => !isImage(file.file_type),
+                ) || [];
 
-                        <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
-                          {(isImage(file.file_type) ||
-                            isPdf(file.file_type)) && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="gap-2 w-full sm:w-auto"
-                              onClick={() => openFileModal(file)}
-                            >
-                              <Eye className="h-4 w-4" />
-                              View
-                            </Button>
+              return (
+                <article key={update.id} className="relative sm:pl-14">
+                  {/* Avatar */}
+                  {/* <div
+                    className="
+                      absolute left-0 top-0 z-10 hidden h-10 w-10
+                      items-center justify-center rounded-full
+                      border bg-background text-xs font-semibold
+                      sm:flex
+                    "
+                  >
+                    {getInitials(update.member?.full_name)}
+                  </div> */}
+
+                  <div className="rounded-xl border bg-card p-4 shadow-sm sm:p-5">
+                    {/* Member */}
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                          <p className="truncate text-sm font-semibold">
+                            {update.member?.full_name}
+                          </p>
+
+                          {update.member?.role && (
+                            <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                              {update.member.role}
+                            </span>
                           )}
-
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="gap-2 w-full sm:w-auto"
-                            onClick={() => handleDownload(file)}
-                          >
-                            <Download className="h-4 w-4" />
-                            Download
-                          </Button>
                         </div>
+
+                        <p
+                          className="mt-0.5 text-xs text-muted-foreground"
+                          title={new Date(update.created_at).toLocaleString()}
+                        >
+                          {formatRelativeTime(update.created_at)}
+                        </p>
                       </div>
                     </div>
-                  ))}
+
+                    {/* Update text */}
+                    {update.text && (
+                      <p className="mt-4 whitespace-pre-wrap break-words text-sm leading-6 text-foreground">
+                        {update.text}
+                      </p>
+                    )}
+
+                    {/* Images */}
+                    {images.length > 0 && (
+                      <div
+                        className={`mt-4 grid gap-2 ${images.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}
+                      >
+                        {images.map((file, index) => (
+                          <div
+                            key={file.id || index}
+                            className="group relative overflow-hidden rounded-lg border bg-muted"
+                          >
+                            <button
+                              type="button"
+                              onClick={() => handlePreview(file)}
+                              className="block w-full cursor-zoom-in"
+                            >
+                              <img
+                                src={file.preview_url || file.download_url}
+                                alt={file.file_name}
+                                loading="lazy"
+                                className={`
+                                  w-full object-contain
+                                  ${images.length === 1 ? "max-h-[420px]" : "h-48 sm:h-56"}
+                                `}
+                              />
+                            </button>
+
+                            {/* Image actions */}
+                            <div
+                              className="
+                                absolute right-2 top-2 flex items-center gap-1 rounded-lg border bg-background/90 p-1 opacity-0
+                                shadow-sm backdrop-blur-sm transition-opacity group-hover:opacity-100 focus-within:opacity-100
+                              "
+                            >
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8"
+                                onClick={() => handlePreview(file)}
+                                title="Preview image"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8"
+                                onClick={() => handleDownload(file)}
+                                title="Download image"
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            </div>
+
+                            {/* Filename */}
+                            <div
+                              className="
+                                absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent
+                                px-3 pb-2 pt-8 opacity-0 transition-opacity group-hover:opacity-100
+                              "
+                            >
+                              <p className="truncate text-xs font-medium text-white">
+                                {file.file_name}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Other files */}
+                    {files.length > 0 && (
+                      <div className="mt-4 space-y-2">
+                        {files.map((file, index) => (
+                          <div
+                            key={file.id || index}
+                            className="
+                              flex min-w-0 items-center gap-3
+                              rounded-lg border bg-muted/20
+                              px-3 py-2.5
+                            "
+                          >
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted">
+                              <FileTypeIcon type={file.file_type} />
+                            </div>
+
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-medium">
+                                {file.file_name}
+                              </p>
+
+                              <p className="truncate text-xs text-muted-foreground">
+                                {file.file_type}
+                                {file.file_size
+                                  ? ` · ${formatFileSize(file.file_size)}`
+                                  : ""}
+                              </p>
+                            </div>
+
+                            <div className="flex shrink-0 items-center gap-1">
+                              {isPdf(file.file_type) && (
+                                <Button
+                                  type="button"
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8"
+                                  onClick={() => openFile(file)}
+                                  title="View file"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              )}
+
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8"
+                                onClick={() => handleDownload(file)}
+                                title="Download file"
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <Dialog
+        open={Boolean(previewFile)}
+        onOpenChange={(open) => {
+          if (!open) setPreviewFile(null);
+        }}
+      >
+        <DialogContent className="max-w-[95vw] overflow-hidden p-0 sm:max-w-5xl">
+          {previewFile && (
+            <div>
+              <div className="flex items-center justify-between gap-4 border-b px-4 py-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">
+                    {previewFile.file_name}
+                  </p>
+
+                  {previewFile.file_size != null && (
+                    <p className="text-xs text-muted-foreground">
+                      {formatFileSize(previewFile.file_size)}
+                    </p>
+                  )}
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="mr-6 shrink-0 gap-2"
+                  onClick={() => handleDownload(previewFile)}
+                >
+                  <Download className="h-4 w-4" />
+                  Download
+                </Button>
+              </div>
+
+              <div className="flex max-h-[80vh] items-center justify-center overflow-auto bg-muted/30 p-4">
+                <img
+                  src={previewFile.preview_url || previewFile.download_url}
+                  alt={previewFile.file_name}
+                  className="max-h-[75vh] max-w-full object-contain"
+                />
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
