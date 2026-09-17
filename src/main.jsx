@@ -4,11 +4,14 @@ import "./index.css";
 import App from "./App.jsx";
 import { Provider } from "react-redux";
 import { store } from "@/redux/store";
+import QueryProvider from "./api/QueryProvider";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <Provider store={store}>
-      <App />
+      <QueryProvider>
+        <App />
+      </QueryProvider>
     </Provider>
   </StrictMode>,
 );

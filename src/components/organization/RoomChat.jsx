@@ -6,11 +6,14 @@ import { useAuthState } from "@/redux/hooks";
 
 export default function RoomChat({
   room,
+  roomId,
   className = "",
   chatType,
   setSelectedRoom,
-  onTypingChange,
+  renderHeader,
 }) {
+  const resolvedRoomId = room?.id ?? roomId;
+
   const {
     messages,
     memberStatus,
@@ -20,17 +23,13 @@ export default function RoomChat({
     messagesRef,
     sendMessage,
     sendTyping,
-  } = useRoomChat(room.id);
+  } = useRoomChat(resolvedRoomId);
 
   const { activeOrganization } = useAuthState();
 
+  // Member status update — direct chat only
   useEffect(() => {
-    onTypingChange?.(typingMembers);
-  }, [typingMembers, onTypingChange]);
-
-  // member status update (direct chat only)
-  useEffect(() => {
-    if (!room?.direct_key) return;
+    if (!room?.direct_key || !setSelectedRoom) return;
 
     const memberIds = room.direct_key.split("_").map(Number);
 
@@ -44,17 +43,22 @@ export default function RoomChat({
 
     if (!status) return;
 
-    setSelectedRoom((prev) => {
-      return {
-        ...prev,
-        status,
-      };
-    });
-  }, [memberStatus]);
+    setSelectedRoom((prev) => ({
+      ...prev,
+      status,
+    }));
+  }, [
+    room?.direct_key,
+    memberStatus,
+    activeOrganization?.membership_id,
+    setSelectedRoom,
+  ]);
 
   return (
     <div className={className}>
       <div className="flex h-full flex-col">
+        {renderHeader?.(typingMembers)}
+
         <MessageList
           messages={messages}
           hasMore={hasMore}

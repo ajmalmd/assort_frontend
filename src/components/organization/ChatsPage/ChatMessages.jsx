@@ -36,57 +36,61 @@ export default function ChatMessages({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex items-center justify-between border-b border-border bg-card px-4 py-3">
-        <div className="flex items-center gap-3">
-          <Button
-            size="icon"
-            variant="ghost"
-            className="md:hidden"
-            onClick={() => setSelectedRoom({})}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+      <RoomChat
+        room={currentRoom}
+        className="h-full"
+        chatType={currentRoom.type}
+        setSelectedRoom={setSelectedRoom}
+        renderHeader={(typingMembers) => {
+          const typingNames = Object.values(typingMembers);
 
-          <div
-            onClick={() => {
-              currentRoom.type === "GROUP" && setDetailCon(true);
-              currentRoom.type === "PROJECT" &&
-                navigate(`/app/project/${currentRoom.project}`);
-            }}
-            className="cursor-pointer"
-          >
-            <p className="font-semibold">{currentRoom.title}</p>
-            <p className="text-xs text-muted-foreground">
-              {typingNames.length > 0
-                ? typingNames.length === 1
-                  ? `${typingNames[0]} is typing...`
-                  : `${typingNames.join(", ")} are typing...`
-                : currentRoom.type === "DIRECT"
-                  ? formatEnum(currentRoom.status)
-                  : currentRoom.type}
-            </p>
-          </div>
-        </div>
+          return (
+            <div className="flex items-center justify-between border-b border-border bg-card px-4 py-3">
+              <div className="flex items-center gap-3">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="md:hidden"
+                  onClick={() => setSelectedRoom({})}
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
 
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={handleStartCallClick}
-          disabled={startingCall}
-        >
-          <Video className="h-5 w-5" />
-        </Button>
-      </div>
+                <div
+                  onClick={() => {
+                    currentRoom.type === "GROUP" && setDetailCon(true);
 
-      <div className="flex-1 min-h-0">
-        <RoomChat
-          room={currentRoom}
-          className="h-full"
-          chatType={currentRoom.type}
-          setSelectedRoom={setSelectedRoom}
-          onTypingChange={setTypingMembers}
-        />
-      </div>
+                    currentRoom.type === "PROJECT" &&
+                      navigate(`/app/project/${currentRoom.project}`);
+                  }}
+                  className="cursor-pointer"
+                >
+                  <p className="font-semibold">{currentRoom.title}</p>
+
+                  <p className="text-xs text-muted-foreground">
+                    {typingNames.length > 0
+                      ? typingNames.length === 1
+                        ? `${typingNames[0]} is typing...`
+                        : `${typingNames.join(", ")} are typing...`
+                      : currentRoom.type === "DIRECT"
+                        ? formatEnum(currentRoom.status)
+                        : currentRoom.type}
+                  </p>
+                </div>
+              </div>
+
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={handleStartCallClick}
+                disabled={startingCall}
+              >
+                <Video className="h-5 w-5" />
+              </Button>
+            </div>
+          );
+        }}
+      />
 
       <ConfirmActionModal
         open={showStartCallConfirm}
