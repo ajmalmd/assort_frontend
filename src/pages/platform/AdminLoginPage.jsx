@@ -58,7 +58,7 @@ const AdminLoginPage = () => {
         const { access, is_admin, user } = response.data;
 
         setAccessToken(access, is_admin);
-        dispatch(setLoginData({ user, organizations: [] }));
+        dispatch(setLoginData({ user, organizations: [], isAdmin: is_admin }));
 
         navigate("/platform", { replace: true });
       }

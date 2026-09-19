@@ -16,4 +16,5 @@ export const APP_POINTS = {
   CHAT: "chat/",
   CALL: "call/",
   NOTIFICATIONS: "notifications/",
+  TICKETS: "tickets/",
 };

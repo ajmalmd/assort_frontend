@@ -2,7 +2,21 @@ import { useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bell, Check, Trash2, CheckCheck } from "lucide-react";
+
+import {
+  Bell,
+  Check,
+  Trash2,
+  CheckCheck,
+  BriefcaseBusiness,
+  ListTodo,
+  ClipboardList,
+  FolderKanban,
+  Phone,
+  TicketCheck,
+  Pin,
+} from "lucide-react";
+
 import { formatDistanceToNow } from "date-fns";
 
 import { useNavigate } from "react-router";
@@ -34,14 +48,20 @@ export function NotificationModal({ open, onOpenChange }) {
   const displayedNotifications =
     activeTab === "unread" ? unreadNotifications : readNotifications;
 
-  const icons = {
-    job: "💼",
-    task: "✓",
-    timesheet: "📝",
-    project: "📁",
+  const notificationIcons = {
+    job: BriefcaseBusiness,
+    task: ListTodo,
+    timesheet: ClipboardList,
+    project: FolderKanban,
+    call: Phone,
+    ticket: TicketCheck,
   };
-  
-  const getNotificationIcon = (type) => icons[type.split("_")[0]] ?? "📌";
+
+  const getNotificationIcon = (type) => {
+    const prefix = type.split("_")[0];
+
+    return notificationIcons[prefix] ?? Pin;
+  };
 
   const gotoPage = async (notification) => {
     if (!notification.is_read) {
@@ -55,6 +75,8 @@ export function NotificationModal({ open, onOpenChange }) {
       task: `/app/project/task/${notification.data.task_id}`,
       job: `/app/project/job/${notification.data.job_id}`,
       timesheet: `/app/project/job/${notification.data.job_id}`,
+      call: `/app/chats`,
+      ticket: `/ticket/${notification.data.ticket_id}`,
     };
 
     navigate(routes[prefix] ?? "/app");
@@ -142,72 +164,79 @@ export function NotificationModal({ open, onOpenChange }) {
               </div>
             ) : (
               <div className="divide-y px-6">
-                {displayedNotifications.map((notification) => (
-                  <div
-                    key={notification.id}
-                    className={`py-4 hover:bg-muted/50 transition-colors border-l-4 pl-3 -ml-3 ${
-                      !notification.is_read
-                        ? "border-l-primary bg-muted/20"
-                        : "border-l-transparent"
-                    }`}
-                    onClick={() => gotoPage(notification)}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-3 flex-1 min-w-0">
-                        <span className="text-xl mt-0.5 flex-shrink-0">
-                          {getNotificationIcon(notification.type)}
-                        </span>
+                {displayedNotifications.map((notification) => {
+                  const NotificationIcon = getNotificationIcon(
+                    notification.type,
+                  );
 
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-sm">
-                            {notification.title}
-                          </h4>
+                  return (
+                    <div
+                      key={notification.id}
+                      className={`cursor-pointer py-4 hover:bg-muted/50 transition-colors border-l-4 pl-3 -ml-3 ${
+                        !notification.is_read
+                          ? "border-l-primary bg-muted/20"
+                          : "border-l-transparent"
+                      }`}
+                      onClick={() => gotoPage(notification)}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3 flex-1 min-w-0">
+                          {/* Notification icon */}
+                          <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted">
+                            <NotificationIcon className="h-4 w-4 text-muted-foreground" />
+                          </div>
 
-                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                            {notification.body}
-                          </p>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-sm">
+                              {notification.title}
+                            </h4>
 
-                          <p className="text-xs text-muted-foreground mt-2">
-                            {formatDistanceToNow(
-                              new Date(notification.created_at),
-                              {
-                                addSuffix: true,
-                              },
-                            )}
-                          </p>
+                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                              {notification.body}
+                            </p>
+
+                            <p className="text-xs text-muted-foreground mt-2">
+                              {formatDistanceToNow(
+                                new Date(notification.created_at),
+                                {
+                                  addSuffix: true,
+                                },
+                              )}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          {activeTab === "unread" ? (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                markRead(notification.id);
+                              }}
+                            >
+                              <Check className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 hover:text-destructive"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteNotification(notification.id);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                       </div>
-
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        {activeTab === "unread" ? (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              markRead(notification.id);
-                            }}
-                          >
-                            <Check className="h-4 w-4" />
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 hover:text-destructive"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deleteNotification(notification.id);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </ScrollArea>

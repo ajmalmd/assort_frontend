@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from "react-router";
+import { NavLink, useLocation, useNavigate } from "react-router";
 import {
   LayoutDashboard,
   Briefcase,
@@ -48,6 +48,7 @@ export function OrganizationSidebar({
   disabled = false,
 }) {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
 
   const { activeOrganization } = useAuthState();
   const activeRole = activeOrganization.role;
@@ -142,9 +143,11 @@ export function OrganizationSidebar({
           })}
         </nav>
         {!isCollapsed && (
-          <h1 className="text-xl font-semibold text-gray-900 flex p-3 truncate">
-            Assort
-          </h1>
+          <div onClick={() => navigate("/")}>
+            <h1 className="text-xl font-semibold text-gray-900 flex p-3 truncate cursor-default">
+              Assort
+            </h1>
+          </div>
         )}
       </aside>
     </>

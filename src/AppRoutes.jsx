@@ -36,6 +36,7 @@ import AdminOrganizationListPage from "./pages/platform/AdminOrganizationListPag
 import OrganizationDetailPage from "./pages/platform/OrganizationDetailPage";
 import AdminSubscriptionListPage from "./pages/platform/AdminSubscriptionListPage";
 import AdminTicketsPage from "./pages/platform/AdminTicketsPage";
+import AdminTicketDetailPage from "./pages/platform/AdminTicketDetailPage";
 
 import ProtectedOrganizationRoute from "./components/organization/ProtectedOrganizationRoute";
 
@@ -43,6 +44,8 @@ import CompleteProfilePage from "./pages/onboarding/CompleteProfilePage";
 import { SubscriptionRoute } from "./components/organization/SubscriptionRoute";
 import SwitchOrganizationPage from "./pages/organization/SwitchOrganizationPage";
 import Profile from "./pages/organization/Profile";
+import TicketsPage from "./pages/organization/TicketsPage";
+import TicketDetailPage from "./pages/organization/TicketDetailPage";
 
 import OrganizationLayout from "./components/organization/OrganizationLayout";
 import Dashboard from "./pages/organization/Dashboard/Dashboard";
@@ -77,6 +80,7 @@ function AppRoutes() {
           setLoginData({
             user,
             organizations: organizations || [],
+            isAdmin: is_admin || false,
           }),
         );
 
@@ -147,6 +151,8 @@ function AppRoutes() {
         />
         <Route path="/workspaces" element={<SwitchOrganizationPage />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/tickets" element={<TicketsPage />} />
+        <Route path="/ticket/:ticketId" element={<TicketDetailPage />} />
 
         <Route path="/app" element={<OrganizationLayout />}>
           <Route index element={<Dashboard />} />
@@ -181,6 +187,7 @@ function AppRoutes() {
           <Route path="organizations" element={<AdminOrganizationListPage />} />
           <Route path="organization/:id" element={<OrganizationDetailPage />} />
           <Route path="tickets" element={<AdminTicketsPage />} />
+          <Route path="tickets/:ticketId" element={<AdminTicketDetailPage />} />
           <Route
             path="subscription-plans"
             element={<AdminSubscriptionListPage />}

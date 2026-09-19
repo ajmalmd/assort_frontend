@@ -6,8 +6,12 @@ import NotificationProvider from "@/notifications/NotificationProvider";
 const VALID_SUBSCRIPTIONS = ["ACTIVE", "TRIAL"];
 
 const ProtectedOrganizationRoute = () => {
-  const { user, organizations, activeOrganization } = useAuthState();
+  const { user, organizations, activeOrganization, isAdmin } = useAuthState();
   const location = useLocation();
+
+  if (isAdmin){
+    return <Navigate to="/platform" replace />;
+  }
 
   if (!user) {
     return <Navigate to="/login" replace />;

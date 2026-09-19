@@ -1,13 +1,19 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
+
 import {
   Search,
   CircleAlert,
   Clock3,
   CircleCheck,
   CircleX,
+  Loader2,
 } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
+
+import assort_api from "@/api/axios";
+import { APP_POINTS } from "@/api/apiConfig";
 
 const TICKET_STATUS = {
   OPEN: "OPEN",
@@ -15,57 +21,6 @@ const TICKET_STATUS = {
   RESOLVED: "RESOLVED",
   CLOSED: "CLOSED",
 };
-
-const tickets = [
-  {
-    id: 1,
-    title: "Login page not responding",
-    description:
-      "Users are unable to access the login page. Getting a 500 error.",
-    creator: "John Doe",
-    organization: "Acme Corporation",
-    createdAt: "2024-02-25",
-    status: TICKET_STATUS.OPEN,
-  },
-  {
-    id: 2,
-    title: "Dashboard performance issue",
-    description: "Dashboard loading time is slow, taking more than 5 seconds.",
-    creator: "Jane Smith",
-    organization: "Tech Innovations Ltd",
-    createdAt: "2024-02-24",
-    status: TICKET_STATUS.IN_PROGRESS,
-  },
-  {
-    id: 3,
-    title: "Export feature not working",
-    description:
-      "Unable to export data in CSV format. Feature throws an error.",
-    creator: "Mike Johnson",
-    organization: "Global Solutions GmbH",
-    createdAt: "2024-02-23",
-    status: TICKET_STATUS.IN_PROGRESS,
-  },
-  {
-    id: 4,
-    title: "Notification email not received",
-    description: "Users not receiving notification emails for project updates.",
-    creator: "Sarah Wilson",
-    organization: "Creative Agency Co",
-    createdAt: "2024-02-22",
-    status: TICKET_STATUS.RESOLVED,
-  },
-  {
-    id: 5,
-    title: "UI inconsistency in sidebar",
-    description:
-      "Sidebar styling is different on different pages. Need to standardize.",
-    creator: "Tom Brown",
-    organization: "Acme Corporation",
-    createdAt: "2024-02-21",
-    status: TICKET_STATUS.CLOSED,
-  },
-];
 
 const filters = [
   { label: "All", value: "ALL" },
@@ -102,36 +57,67 @@ const statusConfig = {
   },
 };
 
+const formatDate = (dateString) => {
+  if (!dateString) return "-";
+
+  return new Date(dateString).toLocaleDateString([], {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+};
+
 const AdminTicketsPage = () => {
+  const navigate = useNavigate();
+
+  const [tickets, setTickets] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState("ALL");
 
-  const getStatusCount = (status) => {
-    if (status === "ALL") {
-      return tickets.length;
-    }
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-    return tickets.filter((ticket) => ticket.status === status).length;
-  };
+  // Debounce search
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedSearch(searchQuery.trim());
+    }, 400);
 
-  const filteredTickets = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
+    return () => clearTimeout(timeout);
+  }, [searchQuery]);
 
-    return tickets.filter((ticket) => {
-      const matchesStatus =
-        activeFilter === "ALL" || ticket.status === activeFilter;
+  useEffect(() => {
+    const fetchTickets = async () => {
+      try {
+        setLoading(true);
+        setError("");
 
-      const matchesSearch =
-        !query ||
-        ticket.title.toLowerCase().includes(query) ||
-        ticket.description.toLowerCase().includes(query) ||
-        ticket.creator.toLowerCase().includes(query) ||
-        ticket.organization.toLowerCase().includes(query) ||
-        String(ticket.id).includes(query);
+        const params = {};
 
-      return matchesStatus && matchesSearch;
-    });
-  }, [activeFilter, searchQuery]);
+        if (debouncedSearch) {
+          params.search = debouncedSearch;
+        }
+
+        if (activeFilter !== "ALL") {
+          params.status = activeFilter;
+        }
+
+        const res = await assort_api.get(APP_POINTS.PLATFORM + "tickets/", {
+          params,
+        });
+
+        setTickets(res.data);
+      } catch (error) {
+        console.error("Failed to fetch tickets:", error);
+        setError("Unable to load tickets.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTickets();
+  }, [debouncedSearch, activeFilter]);
 
   return (
     <div className="p-2">
@@ -140,7 +126,7 @@ const AdminTicketsPage = () => {
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
         <Input
-          placeholder="Search tickets by issue, description, or creator..."
+          placeholder="Search tickets by issue, description, creator or organization..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="h-10 pl-9"
@@ -163,96 +149,133 @@ const AdminTicketsPage = () => {
                   : "bg-slate-50 text-slate-600 hover:bg-slate-100"
               }`}
             >
-              {filter.label} ({getStatusCount(filter.value)})
+              {filter.label}
             </button>
           );
         })}
       </div>
 
+      {/* Loading */}
+      {loading && (
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        </div>
+      )}
+
+      {/* Error */}
+      {!loading && error && (
+        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      )}
+
       {/* Ticket list */}
-      <div className="mt-4 space-y-2">
-        {filteredTickets.map((ticket) => {
-          const config = statusConfig[ticket.status];
-          const StatusIcon = config.icon;
+      {!loading && !error && (
+        <div className="mt-4 space-y-2">
+          {tickets.map((ticket) => {
+            const config = statusConfig[ticket.status];
+            const StatusIcon = config?.icon || CircleAlert;
 
-          return (
-            <div
-              key={ticket.id}
-              className="rounded-lg border bg-white px-4 py-4 transition-colors hover:bg-slate-50/50"
-            >
-              <div className="flex gap-3">
-                {/* Status icon */}
-                <div className="pt-0.5">
-                  <StatusIcon
-                    className={`h-4 w-4 ${config.iconClass}`}
-                    strokeWidth={2}
-                  />
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  {/* Title + ID */}
-                  <div className="flex items-start justify-between gap-4">
-                    <h3 className="font-semibold text-slate-800">
-                      {ticket.title}
-                    </h3>
-
-                    <span className="shrink-0 text-xs text-muted-foreground">
-                      ID: {ticket.id}
-                    </span>
+            return (
+              <button
+                key={ticket.id}
+                type="button"
+                onClick={() => navigate(`/platform/tickets/${ticket.id}`)}
+                className="w-full rounded-lg border bg-white px-4 py-4 text-left transition-colors hover:bg-slate-50/50"
+              >
+                <div className="flex gap-3">
+                  <div className="pt-0.5">
+                    <StatusIcon
+                      className={`h-4 w-4 ${
+                        config?.iconClass || "text-slate-500"
+                      }`}
+                      strokeWidth={2}
+                    />
                   </div>
 
-                  {/* Description */}
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {ticket.description}
-                  </p>
+                  <div className="min-w-0 flex-1">
+                    {/* Title */}
+                    <div className="flex items-start justify-between gap-4">
+                      <h3 className="font-semibold text-slate-800">
+                        {ticket.title}
+                      </h3>
 
-                  {/* Footer */}
-                  <div className="mt-3 flex items-end justify-between gap-4">
-                    <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-slate-500">
-                      <span>
-                        Created by:{" "}
-                        <span className="text-slate-600">{ticket.creator}</span>
-                      </span>
-
-                      <span>
-                        Organization:{" "}
-                        <span className="text-slate-600">
-                          {ticket.organization}
-                        </span>
-                      </span>
-
-                      <span>
-                        Created:{" "}
-                        <span className="text-slate-600">
-                          {ticket.createdAt}
-                        </span>
+                      <span className="shrink-0 text-xs text-muted-foreground">
+                        ID: {ticket.id}
                       </span>
                     </div>
 
-                    {/* Status */}
-                    <span
-                      className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${config.badgeClass}`}
-                    >
-                      {config.label}
-                    </span>
+                    {/* Description */}
+                    <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                      {ticket.description}
+                    </p>
+
+                    {/* Metadata */}
+                    <div className="mt-3 flex items-end justify-between gap-4">
+                      <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-slate-500">
+                        <span>
+                          Created by:{" "}
+                          <span className="text-slate-600">
+                            {ticket.created_by}
+                          </span>
+                        </span>
+
+                        <span>
+                          Organization:{" "}
+                          <span className="text-slate-600">
+                            {ticket.organization}
+                          </span>
+                        </span>
+
+                        <span>
+                          Category:{" "}
+                          <span className="text-slate-600">
+                            {ticket.category_display}
+                          </span>
+                        </span>
+
+                        <span>
+                          Priority:{" "}
+                          <span className="text-slate-600">
+                            {ticket.priority_display}
+                          </span>
+                        </span>
+
+                        <span>
+                          Created:{" "}
+                          <span className="text-slate-600">
+                            {formatDate(ticket.created_at)}
+                          </span>
+                        </span>
+                      </div>
+
+                      <span
+                        className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${
+                          config?.badgeClass || "bg-slate-100 text-slate-600"
+                        }`}
+                      >
+                        {config?.label || ticket.status_display}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          );
-        })}
+              </button>
+            );
+          })}
 
-        {filteredTickets.length === 0 && (
-          <div className="rounded-lg border border-dashed py-12 text-center">
-            <p className="text-sm font-medium text-slate-700">
-              No tickets found
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Try changing the search or status filter.
-            </p>
-          </div>
-        )}
-      </div>
+          {tickets.length === 0 && (
+            <div className="rounded-lg border border-dashed py-12 text-center">
+              <p className="text-sm font-medium text-slate-700">
+                No tickets found
+              </p>
+
+              <p className="mt-1 text-xs text-muted-foreground">
+                Try changing the search or status filter.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

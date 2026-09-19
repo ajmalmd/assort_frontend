@@ -5,6 +5,7 @@ const initialState = {
   user: null,
   organizations: [],
   activeOrganization: null,
+  isAdmin: false,
 };
 
 const authSlice = createSlice({
@@ -13,10 +14,11 @@ const authSlice = createSlice({
 
   reducers: {
     setLoginData: (state, action) => {
-      const { user, organizations } = action.payload;
+      const { user, organizations, isAdmin } = action.payload;
 
       state.user = user;
       state.organizations = organizations;
+      state.isAdmin = isAdmin || false;
 
       if (organizations.length === 1) {
         state.activeOrganization = organizations[0];
@@ -50,6 +52,7 @@ const authSlice = createSlice({
       state.user = null;
       state.organizations = [];
       state.activeOrganization = null;
+      state.isAdmin = false;
 
       setActiveOrgId(null);
     },
