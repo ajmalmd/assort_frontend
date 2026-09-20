@@ -1,3 +1,4 @@
+import RequestState from "@/components/common/RequestState";
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +22,9 @@ import { useAuthState } from "@/redux/hooks";
 import JobInfoCard from "@/components/organization/JobDetailPage/JobInfoCard";
 
 export default function ProjectJobDetailPage() {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [job, setJob] = useState({});
   const [editJobModalOpen, setEditJobModalOpen] = useState(false);
   const [showLogModal, setShowLogModal] = useState(false);
@@ -41,16 +44,22 @@ export default function ProjectJobDetailPage() {
   useEffect(() => {
     const fetchJob = async () => {
       if (jobId) {
+        setLoading(true);
+        setError(false);
         try {
           const res = await assort_api.get(
             `${APP_POINTS.PROJECTS}job/${jobId}/`,
           );
           setJob(res.data);
-        } catch (error) {}
+        } catch {
+          setError(true);
+        } finally {
+          setLoading(false);
+        }
       }
     };
     fetchJob();
-  }, [jobId]);
+  }, [jobId, attempt]);
 
   const toggleExpand = (id) => {
     setExpandedLogs((prev) => ({
@@ -210,8 +219,18 @@ export default function ProjectJobDetailPage() {
     }
   };
 
+  if (error)
+    return (
+      <RequestState
+        error
+        title="Unable to load job"
+        description="Please try again to retrieve this job and its time logs."
+        onRetry={() => setAttempt((n) => n + 1)}
+      />
+    );
+
   if (loading) {
-    return <div className="text-center py-10">Loading...</div>;
+    return <RequestState loading title="Loading job and time logs" />;
   }
 
   if (!job) {

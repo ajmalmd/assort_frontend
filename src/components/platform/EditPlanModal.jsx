@@ -86,8 +86,8 @@ export function EditPlanModal({ isOpen, onClose, plan, onUpdatePlan }) {
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white">
-          <h2 className="text-xl font-semibold text-gray-900">
+        <div className="flex items-center justify-between p-6 border-b border-border sticky top-0 bg-white">
+          <h2 className="text-xl font-semibold text-foreground">
             Edit Subscription Plan
           </h2>
           <button
@@ -101,7 +101,7 @@ export function EditPlanModal({ isOpen, onClose, plan, onUpdatePlan }) {
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Plan Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               Plan Name
             </label>
             <input
@@ -115,7 +115,7 @@ export function EditPlanModal({ isOpen, onClose, plan, onUpdatePlan }) {
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               Description
             </label>
             <textarea
@@ -234,7 +234,7 @@ export function EditPlanModal({ isOpen, onClose, plan, onUpdatePlan }) {
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+          <div className="flex justify-end gap-3 pt-4 border-t border-border">
             <button
               type="button"
               onClick={onClose}
@@ -244,7 +244,7 @@ export function EditPlanModal({ isOpen, onClose, plan, onUpdatePlan }) {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-gray-900 text-white rounded-lg"
+              className="px-4 py-2 bg-primary text-white rounded-lg"
             >
               Save Changes
             </button>

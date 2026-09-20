@@ -101,7 +101,7 @@ export default function SetPasswordPage() {
     <AuthLayout>
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-normal text-gray-900">Set Password</h2>
+          <h2 className="text-2xl font-normal text-foreground">Set Password</h2>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -113,7 +113,7 @@ export default function SetPasswordPage() {
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               Password
             </label>
 
@@ -124,13 +124,13 @@ export default function SetPasswordPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
                 required
-                className="w-full px-4 py-3 pr-12 bg-gray-100 text-gray-900 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 border border-gray-200"
+                className="w-full px-4 py-3 pr-12 bg-gray-100 text-foreground placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 border border-border"
               />
 
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-900 transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
@@ -139,7 +139,7 @@ export default function SetPasswordPage() {
 
           {/* Confirm Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               Confirm Password
             </label>
 
@@ -150,13 +150,13 @@ export default function SetPasswordPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirm your password"
                 required
-                className="w-full px-4 py-3 pr-12 bg-gray-100 text-gray-900 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 border border-gray-200"
+                className="w-full px-4 py-3 pr-12 bg-gray-100 text-foreground placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 border border-border"
               />
 
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword((prev) => !prev)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-900 transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
               >
                 {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
@@ -167,7 +167,7 @@ export default function SetPasswordPage() {
           <button
             type="submit"
             disabled={loading || !password || !confirmPassword}
-            className="w-full bg-gray-900 hover:bg-gray-800 disabled:bg-gray-700 text-white font-medium py-3 rounded-lg transition-colors mt-6"
+            className="w-full bg-primary hover:bg-primary/90 disabled:bg-gray-700 text-white font-medium py-3 rounded-lg transition-colors mt-6"
           >
             {loading ? "Submitting..." : "Submit"}
           </button>

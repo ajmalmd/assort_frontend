@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 import { Upload, LogOut } from "lucide-react";
-import DotsBg from "@/assets/images/DotsBg.png";
 import { getInitials } from "@/appFunctions";
 import { logout } from "@/api/utility";
 import { APP_POINTS } from "@/api/apiConfig";
@@ -137,31 +136,28 @@ export default function CompleteProfilePage() {
 
   return (
     <div
-      className="min-h-screen flex bg-repeat py-12 px-4 sm:px-6 lg:px-8"
-      style={{
-        backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url(${DotsBg})`,
-      }}
+      className="min-h-screen flex bg-background py-12 px-4 sm:px-6 lg:px-8"
     >
       <div className="max-w-2xl mx-auto">
         <div className="mb-8 flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-semibold text-gray-900">
+            <h1 className="text-3xl font-semibold text-foreground">
               Organization Profile
             </h1>
-            <p className="text-gray-600 mt-2">
+            <p className="text-muted-foreground mt-2">
               Let's set up your organization before you get started
             </p>
           </div>
 
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-100 border border-gray-300 rounded-lg bg-gray-800 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-100 border border-gray-300 rounded-lg bg-gray-800 hover:bg-gray-100 hover:text-foreground transition-colors"
           >
             <LogOut size={18} /> Logout
           </button>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+        <div className="bg-white rounded-lg border border-border shadow-sm">
           <form onSubmit={handleSave}>
             <div className="p-8 space-y-8">
               {/* Logo */}
@@ -198,7 +194,7 @@ export default function CompleteProfilePage() {
                   </div>
 
                   <label className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                    <Upload size={16} className="text-gray-600" />
+                    <Upload size={16} className="text-muted-foreground" />
                     <span className="text-sm font-medium text-gray-700">
                       {formData.logo && formData.logo.length > 20
                         ? "Change Logo"
@@ -216,10 +212,11 @@ export default function CompleteProfilePage() {
 
               {/* Name */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="organization-name" className="block text-sm font-medium text-gray-700 mb-2">
                   Organization Name
                 </label>
                 <input
+                  id="organization-name"
                   disabled
                   value={activeOrganization?.title || ""}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg"
@@ -228,10 +225,11 @@ export default function CompleteProfilePage() {
 
               {/* Email */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="organization-email" className="block text-sm font-medium text-gray-700 mb-2">
                   Contact Email
                 </label>
                 <input
+                  id="organization-email"
                   type="email"
                   name="email"
                   value={formData.email}
@@ -243,7 +241,9 @@ export default function CompleteProfilePage() {
 
               {/* City + Country */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <input
+                <label className="space-y-2 text-sm font-medium">
+                  City
+                  <input
                   name="city"
                   value={formData.city}
                   onChange={handleInputChange}
@@ -251,7 +251,10 @@ export default function CompleteProfilePage() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                   required
                 />
-                <input
+                </label>
+                <label className="space-y-2 text-sm font-medium">
+                  Country
+                  <input
                   name="country"
                   value={formData.country}
                   onChange={handleInputChange}
@@ -259,6 +262,7 @@ export default function CompleteProfilePage() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                   required
                 />
+                </label>
               </div>
             </div>
 
@@ -266,7 +270,7 @@ export default function CompleteProfilePage() {
               <button
                 type="submit"
                 disabled={isSaving}
-                className="px-6 py-2 bg-gray-900 text-white rounded-lg"
+                className="px-6 py-2 bg-primary text-white rounded-lg"
               >
                 {isSaving ? "Saving..." : "Continue"}
               </button>

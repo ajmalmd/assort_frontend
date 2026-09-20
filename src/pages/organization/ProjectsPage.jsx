@@ -1,7 +1,8 @@
+import RequestState from "@/components/common/RequestState";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -29,6 +30,8 @@ export default function ProjectsPage() {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   const projectStatuses = [
     "ALL_STATUS",
@@ -39,19 +42,27 @@ export default function ProjectsPage() {
   const { activeOrganization } = useAuthState();
 
   useEffect(() => {
+    let cancelled = false;
     const fetchProjects = async () => {
       try {
         const res = await assort_api.get(APP_POINTS.PROJECTS);
-        setProjects(res.data);
+        if (!cancelled) {
+          setProjects(res.data);
+          setError(false);
+        }
       } catch (err) {
         console.error(err);
+        if (!cancelled) setError(true);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchProjects();
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [attempt]);
 
   const filteredProjects = projects?.filter((project) => {
     const matchesSearch = project.title
@@ -67,7 +78,13 @@ export default function ProjectsPage() {
   return (
     <div className="space-y-6">
       {/* Create Button */}
-      <div className="flex items-center justify-end">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">Projects</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Keep your team aligned, from the first phase to delivery.
+          </p>
+        </div>
         {isOrgOwnerorAdmin(activeOrganization.role) && (
           <Button onClick={() => setCreateModalOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
@@ -81,6 +98,7 @@ export default function ProjectsPage() {
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <Input
+            aria-label="Search projects"
             placeholder="Search projects..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -89,7 +107,10 @@ export default function ProjectsPage() {
         </div>
 
         <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-full sm:w-48 bg-white">
+          <SelectTrigger
+            aria-label="Filter projects by status"
+            className="w-full sm:w-48 bg-white"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -104,13 +125,34 @@ export default function ProjectsPage() {
 
       {/* Content */}
       {loading ? (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">Loading projects...</p>
-        </div>
+        <RequestState
+          loading
+          title="Loading projects"
+          description="Getting your team’s latest progress."
+        />
+      ) : error ? (
+        <RequestState
+          error
+          title="Unable to load projects"
+          description="Your projects could not be retrieved. Please try again."
+          onRetry={() => {
+            setLoading(true);
+            setAttempt((n) => n + 1);
+          }}
+        />
       ) : filteredProjects.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">No projects found</p>
-        </div>
+        <RequestState
+          title={
+            projects.length
+              ? "No matching projects"
+              : "Your projects will appear here"
+          }
+          description={
+            projects.length
+              ? "Try another search or status filter."
+              : "Create a project to organize phases, assign work, and track progress."
+          }
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProjects.map((project) => {
@@ -122,21 +164,29 @@ export default function ProjectsPage() {
             return (
               <Card
                 key={project.id}
-                className="cursor-pointer hover:shadow-lg transition-shadow h-full"
+                role="link"
+                tabIndex={0}
+                aria-label={`Open project ${project.title}`}
+                onKeyDown={(event) => {
+                  if (
+                    event.target === event.currentTarget &&
+                    event.key === "Enter"
+                  )
+                    navigate(`/app/project/${project.id}`);
+                }}
+                className="cursor-pointer hover:border-primary/40 hover:shadow-md transition-all h-full"
                 onClick={(e) => {
                   if (e.target.closest("button")) return;
                   navigate(`/app/project/${project.id}`);
                 }}
               >
-                <CardContent className="pt-6 space-y-4">
+                <CardContent className="space-y-4">
                   {/* Title + Status */}
                   <div className="flex items-start justify-between gap-3">
                     <h3 className="font-semibold line-clamp-2 flex-1">
                       {project.title}
                     </h3>
-                    <Badge className="shrink-0 whitespace-nowrap">
-                      {formatEnum(project.status)}
-                    </Badge>
+                    <StatusBadge status={project.status} className="shrink-0" />
                   </div>
 
                   {/* Manager + Deadline */}

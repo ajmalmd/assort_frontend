@@ -7,7 +7,6 @@ import { useNavigate } from "react-router";
 import assort_api from "../../api/axios";
 import { formatEnum } from "@/appFunctions";
 
-
 const PricingSection = () => {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,14 +35,16 @@ const PricingSection = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center space-y-4 mb-16">
-          <h2 className="text-4xl font-bold text-gray-900">
+          <h2 className="text-4xl font-bold text-foreground">
             Simple, Transparent Pricing
           </h2>
         </div>
 
         {/* Loading State */}
         {loading && (
-          <div className="text-center text-gray-600">Loading plans...</div>
+          <div className="text-center text-muted-foreground">
+            Loading plans...
+          </div>
         )}
 
         {/* Plans */}
@@ -61,12 +62,12 @@ const PricingSection = () => {
                 className={`relative rounded-2xl transition-all ${
                   plan.popular
                     ? "bg-white border-2 border-gray-900 shadow-xl"
-                    : "bg-white border border-gray-200 shadow-lg"
+                    : "bg-white border border-border shadow-lg"
                 }`}
               >
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-gray-900 text-white px-4 py-1 text-xs font-semibold">
+                    <Badge className="bg-primary text-white px-4 py-1 text-xs font-semibold">
                       Most Popular
                     </Badge>
                   </div>
@@ -74,29 +75,31 @@ const PricingSection = () => {
 
                 <div className={`p-8 ${plan.popular ? "pt-12" : ""}`}>
                   {/* Plan name */}
-                  <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                  <h3 className="text-2xl font-bold text-foreground mb-1">
                     {plan.name}
                   </h3>
 
-                  <p className="text-sm text-gray-600 mb-6">
+                  <p className="text-sm text-muted-foreground mb-6">
                     {plan.description}
                   </p>
 
                   {/* Price */}
                   <div className="mb-6">
                     <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-bold text-gray-900">
+                      <span className="text-4xl font-bold text-foreground">
                         ₹{plan.price}
                       </span>
                       {plan.billing_cycle && (
-                        <span className="text-gray-600">{formatEnum(plan.billing_cycle)}</span>
+                        <span className="text-muted-foreground">
+                          {formatEnum(plan.billing_cycle)}
+                        </span>
                       )}
                     </div>
                   </div>
 
                   {/* CTA */}
                   <Button
-                    className="w-full rounded-full py-6 font-semibold mb-8 bg-gray-900 hover:bg-gray-800 text-white"
+                    className="w-full rounded-full py-6 font-semibold mb-8 bg-primary hover:bg-primary/90 text-white"
                     onClick={() => navigate("/create-organization")}
                   >
                     Get Started

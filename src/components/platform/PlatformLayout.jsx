@@ -27,7 +27,13 @@ const PlatformLayout = () => {
     "Platform";
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-background">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:rounded-lg focus:bg-card focus:p-3 focus:text-primary"
+      >
+        Skip to content
+      </a>
       {/* Sidebar */}
       <PlatformSidebar
         isOpen={sidebarOpen}
@@ -37,8 +43,8 @@ const PlatformLayout = () => {
 
       {/* Main Content */}
       <div
-        className={`flex-1 transition-all duration-300 ${
-          sidebarCollapsed ? "lg:ml-20" : "lg:ml-48"
+        className={`min-w-0 flex-1 transition-all duration-300 ${
+          sidebarCollapsed ? "lg:ml-20" : "lg:ml-64"
         }`}
       >
         <PlatformTopBar
@@ -48,8 +54,14 @@ const PlatformLayout = () => {
           sidebarCollapsed={sidebarCollapsed}
         />
 
-        <main className="pt-20 px-4 lg:px-8 pb-8">
-          <Outlet />
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="pt-20 px-4 lg:px-8 pb-8"
+        >
+          <div className="mx-auto w-full max-w-[1600px]">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

@@ -112,18 +112,18 @@ export function InviteMemberModal({ isOpen, onClose, onSendInvitation }) {
     <>
       <div className="fixed h-full inset-0 bg-black/30 z-[50]" />
       <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-lg shadow-lg z-50 mx-4 z-[65]">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
-            <h2 className="text-2xl font-normal text-gray-900">
+            <h2 className="text-2xl font-normal text-foreground">
               Invite Member
             </h2>
-            <p className="text-gray-600 text-sm mt-1">
+            <p className="text-muted-foreground text-sm mt-1">
               Send an invitation to a new member to join your organization.
             </p>
           </div>
           <button
             onClick={() => onClose()}
-            className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-1 text-gray-400 hover:text-muted-foreground transition-colors"
           >
             <MinusSquareIcon size={24} />
           </button>
@@ -132,7 +132,7 @@ export function InviteMemberModal({ isOpen, onClose, onSendInvitation }) {
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Name */}
           <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
+            <label className="block text-sm font-semibold text-foreground mb-2">
               Name
             </label>
             <input
@@ -153,7 +153,7 @@ export function InviteMemberModal({ isOpen, onClose, onSendInvitation }) {
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
+            <label className="block text-sm font-semibold text-foreground mb-2">
               Email
             </label>
             <input
@@ -175,7 +175,7 @@ export function InviteMemberModal({ isOpen, onClose, onSendInvitation }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Department */}
             <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">
+              <label className="block text-sm font-semibold text-foreground mb-2">
                 Department (Optional)
               </label>
               <Select
@@ -207,7 +207,7 @@ export function InviteMemberModal({ isOpen, onClose, onSendInvitation }) {
 
             {/* Role */}
             <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">
+              <label className="block text-sm font-semibold text-foreground mb-2">
                 Role
               </label>
               <Select
@@ -230,7 +230,7 @@ export function InviteMemberModal({ isOpen, onClose, onSendInvitation }) {
           </div>
         </form>
 
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200">
+        <div className="flex items-center justify-end gap-3 p-6 border-t border-border">
           <button
             onClick={handleClose}
             className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
@@ -240,7 +240,7 @@ export function InviteMemberModal({ isOpen, onClose, onSendInvitation }) {
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? "Sending..." : "Send Invitation"}
           </button>

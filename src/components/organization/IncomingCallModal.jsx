@@ -106,7 +106,7 @@ export default function IncomingCallModal({ call }) {
       <div className="w-96 rounded-xl bg-white p-6 shadow-xl">
         <h2 className="text-xl font-semibold">Incoming {getCallLabel()}</h2>
 
-        <p className="mt-2 text-gray-600">{call.title}</p>
+        <p className="mt-2 text-muted-foreground">{call.title}</p>
 
         <div className="mt-6 flex justify-end gap-3">
           <button

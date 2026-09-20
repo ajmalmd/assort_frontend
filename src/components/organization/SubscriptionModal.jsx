@@ -177,10 +177,10 @@ export const SubscriptionModal = ({
       >
         {/* Header */}
         <div className="text-center p-4 sm:p-6 border-b">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
             {title}
           </h2>
-          <p className="text-gray-600 mt-2 text-sm sm:text-base">
+          <p className="text-muted-foreground mt-2 text-sm sm:text-base">
             {description ||
               (activeOrganization.subscription_status === "NONE"
                 ? "Select a subscription or start a free trial"
@@ -191,7 +191,9 @@ export const SubscriptionModal = ({
         {/* Content */}
         <div className="overflow-y-auto max-h-[75vh] p-4 sm:p-8">
           {loading && (
-            <div className="text-center text-gray-600">Loading plans...</div>
+            <div className="text-center text-muted-foreground">
+              Loading plans...
+            </div>
           )}
 
           {!loading && plans.length === 0 && (
@@ -206,30 +208,30 @@ export const SubscriptionModal = ({
                   className={`rounded-2xl border ${
                     plan.popular
                       ? "border-gray-900 shadow-xl"
-                      : "border-gray-200 shadow-md"
+                      : "border-border shadow-md"
                   }`}
                 >
                   {plan.popular && (
                     <div className="flex justify-center -mt-4">
-                      <Badge className="bg-gray-900 text-white px-3 py-1 text-xs">
+                      <Badge className="bg-primary text-white px-3 py-1 text-xs">
                         Most Popular
                       </Badge>
                     </div>
                   )}
 
                   <div className="p-6">
-                    <h3 className="text-xl font-bold text-gray-900">
+                    <h3 className="text-xl font-bold text-foreground">
                       {plan.name}
                     </h3>
 
-                    <p className="text-sm text-gray-600 mt-1 mb-4">
+                    <p className="text-sm text-muted-foreground mt-1 mb-4">
                       {plan.description}
                     </p>
 
                     <div className="mb-4">
                       <span className="text-3xl font-bold">₹{plan.price}</span>
                       {plan.billing_cycle && (
-                        <span className="text-gray-600 ml-1">
+                        <span className="text-muted-foreground ml-1">
                           {formatEnum(plan.billing_cycle)}
                         </span>
                       )}
@@ -237,7 +239,7 @@ export const SubscriptionModal = ({
 
                     <Button
                       disabled={isSaving}
-                      className="w-full mb-6 bg-gray-900 text-white hover:bg-gray-800"
+                      className="w-full mb-6 bg-primary text-white hover:bg-primary/90"
                       onClick={() => handleSubscribe(plan.id)}
                     >
                       {isSaving && plan.id === selectedPlan

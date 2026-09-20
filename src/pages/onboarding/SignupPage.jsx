@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from "react-router";
 import { setAccessToken } from "@/api/authStore";
 import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
-import DotsBg from "@/assets/images/DotsBg.png";
 import { Eye, EyeOff } from "lucide-react";
 import { useAppDispatch } from "@/redux/hooks";
 import { setLoginData } from "@/redux/slices/authSlice";
@@ -87,16 +86,13 @@ const SignupPage = () => {
 
   return (
     <div
-      className="min-h-screen flex bg-repeat py-12 px-4 sm:px-6 lg:px-8 justify-center items-center"
-      style={{
-        backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url(${DotsBg})`,
-      }}
+      className="min-h-screen flex bg-background py-12 px-4 sm:px-6 lg:px-8 justify-center items-center"
     >
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8 border border-gray-200">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8 border border-border">
         <div className="max-w-md mx-auto w-full space-y-6 bg-white">
           <div>
-            <h2 className="text-2xl font-normal text-gray-900">Set Password</h2>
-            <p className="text-sm text-gray-600 mt-1">
+            <h2 className="text-2xl font-normal text-foreground">Set Password</h2>
+            <p className="text-sm text-muted-foreground mt-1">
               Complete your account to accept the invitation
             </p>
           </div>
@@ -109,7 +105,7 @@ const SignupPage = () => {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Full Name
               </label>
               <input
@@ -117,26 +113,26 @@ const SignupPage = () => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 maxLength={100}
-                className="w-full px-4 py-3 bg-gray-100 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 border border-gray-200"
+                className="w-full px-4 py-3 bg-gray-100 text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 border border-border"
               />
             </div>
 
             {email && (
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Email
                 </label>
                 <input
                   type="email"
                   value={email}
                   disabled
-                  className="w-full px-4 py-3 bg-gray-100 text-gray-600 rounded-lg border border-gray-200"
+                  className="w-full px-4 py-3 bg-gray-100 text-muted-foreground rounded-lg border border-border"
                 />
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Password
               </label>
               <div className="relative">
@@ -146,12 +142,12 @@ const SignupPage = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
                   required
-                  className="w-full px-4 py-3 pr-12 bg-gray-100 text-gray-900 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 border border-gray-200"
+                  className="w-full px-4 py-3 pr-12 bg-gray-100 text-foreground placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 border border-border"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-900"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
@@ -159,7 +155,7 @@ const SignupPage = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Confirm Password
               </label>
               <div className="relative">
@@ -169,12 +165,12 @@ const SignupPage = () => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm your password"
                   required
-                  className="w-full px-4 py-3 pr-12 bg-gray-100 text-gray-900 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 border border-gray-200"
+                  className="w-full px-4 py-3 pr-12 bg-gray-100 text-foreground placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 border border-border"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword((prev) => !prev)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-900"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
                   {showConfirmPassword ? (
                     <EyeOff size={20} />
@@ -188,7 +184,7 @@ const SignupPage = () => {
             <button
               type="submit"
               disabled={loading || !password || !confirmPassword}
-              className="w-full bg-gray-900 hover:bg-gray-800 disabled:bg-gray-700 text-white font-medium py-3 rounded-lg transition-colors mt-6"
+              className="w-full bg-primary hover:bg-primary/90 disabled:bg-gray-700 text-white font-medium py-3 rounded-lg transition-colors mt-6"
             >
               {loading ? "Submitting..." : "Submit"}
             </button>

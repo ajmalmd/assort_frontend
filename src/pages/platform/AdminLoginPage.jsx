@@ -84,7 +84,7 @@ const AdminLoginPage = () => {
     <AuthLayout>
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-normal text-gray-900 mb-2">
+          <h2 className="text-3xl font-normal text-foreground mb-2">
             Admin Login
           </h2>
         </div>
@@ -94,7 +94,7 @@ const AdminLoginPage = () => {
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               Email
             </label>
             <div className="relative">
@@ -107,14 +107,14 @@ const AdminLoginPage = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your@email.com"
-                className="w-full pl-12 pr-4 py-3 bg-gray-50 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 border border-gray-200"
+                className="w-full pl-12 pr-4 py-3 bg-gray-50 text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 border border-border"
               />
             </div>
           </div>
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               Password
             </label>
             <div className="relative">
@@ -127,12 +127,12 @@ const AdminLoginPage = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-12 pr-12 py-3 bg-gray-50 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 border border-gray-200"
+                className="w-full pl-12 pr-12 py-3 bg-gray-50 text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 border border-border"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-muted-foreground"
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
@@ -143,7 +143,7 @@ const AdminLoginPage = () => {
           <button
             type="submit"
             disabled={loading || !isFormValid}
-            className="w-full bg-gray-900 hover:bg-gray-800 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition-colors mt-8"
+            className="w-full bg-primary hover:bg-primary/90 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition-colors mt-8"
           >
             {loading ? "Signing in..." : "SIGN IN"}
           </button>

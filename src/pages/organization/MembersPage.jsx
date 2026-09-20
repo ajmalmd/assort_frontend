@@ -64,7 +64,7 @@ const MembersPage = () => {
       <div className="flex items-center justify-end">
         <button
           onClick={() => setIsModalOpen(true)}
-          className="px-4 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 transition-colors"
+          className="px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-primary/90 transition-colors"
         >
           + Invite Member
         </button>
@@ -98,24 +98,24 @@ const MembersPage = () => {
         </select>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-lg border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="px-6 py-3 text-center text-xs font-semibold text-gray-900">
+              <tr className="border-b border-border bg-gray-50">
+                <th className="px-6 py-3 text-center text-xs font-semibold text-foreground">
                   Name
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-semibold text-gray-900">
+                <th className="px-6 py-3 text-center text-xs font-semibold text-foreground">
                   Email
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-semibold text-gray-900">
+                <th className="px-6 py-3 text-center text-xs font-semibold text-foreground">
                   Role
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-semibold text-gray-900">
+                <th className="px-6 py-3 text-center text-xs font-semibold text-foreground">
                   Department
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-semibold text-gray-900">
+                <th className="px-6 py-3 text-center text-xs font-semibold text-foreground">
                   Status
                 </th>
               </tr>
@@ -124,10 +124,10 @@ const MembersPage = () => {
               {filteredMembers.map((member) => (
                 <tr
                   key={member.id}
-                  className="border-b border-gray-200 hover:bg-gray-50 cursor-pointer"
+                  className="border-b border-border hover:bg-gray-50 cursor-pointer"
                   onClick={() => navigate(`/app/member/${member.id}`)}
                 >
-                  <td className="px-6 py-4 text-center text-sm font-medium text-gray-900">
+                  <td className="px-6 py-4 text-center text-sm font-medium text-foreground">
                     {member.name}
                   </td>
                   <td className="px-6 py-4 text-center text-sm text-gray-700">
@@ -159,7 +159,7 @@ const MembersPage = () => {
         </div>
         {filteredMembers.length === 0 && (
           <div className="p-8 text-center">
-            <p className="text-gray-600">No members found</p>
+            <p className="text-muted-foreground">No members found</p>
           </div>
         )}
       </div>

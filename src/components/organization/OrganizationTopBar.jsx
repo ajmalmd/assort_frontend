@@ -25,15 +25,16 @@ export function OrganizationTopBar({
   return (
     <div
       className={`
-        fixed top-0 right-0 h-16 bg-white border-b border-gray-200
+        fixed top-0 right-0 h-16 bg-white/95 backdrop-blur-md border-b border-border
         flex items-center justify-between px-4 lg:px-8
         transition-all duration-300 z-[30]
         left-0
-        ${sidebarCollapsed ? "lg:ml-20" : "lg:ml-48"}
+        ${sidebarCollapsed ? "lg:ml-20" : "lg:ml-64"}
       `}
     >
-      <div className="flex items-center gap-2 lg:gap-4">
+      <div className="flex min-w-0 items-center gap-2 lg:gap-4">
         <button
+          aria-label="Open navigation"
           onClick={onMenuClick}
           className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
         >
@@ -41,6 +42,9 @@ export function OrganizationTopBar({
         </button>
 
         <button
+          aria-label={
+            sidebarCollapsed ? "Expand navigation" : "Collapse navigation"
+          }
           onClick={onFoldClick}
           className="hidden lg:flex p-2 hover:bg-gray-100 rounded-lg"
         >
@@ -51,12 +55,13 @@ export function OrganizationTopBar({
           )}
         </button>
 
-        <h2 className="text-xl font-semibold">{title}</h2>
+        <h2 className="truncate text-lg font-semibold">{title}</h2>
       </div>
 
       <div className="flex items-center gap-4">
         <div className="relative inline-flex">
           <Button
+            aria-label="Open notifications"
             variant="ghost"
             size="icon"
             onClick={() => setNotificationModalOpen(true)}
@@ -79,7 +84,9 @@ export function OrganizationTopBar({
         <ProfileMenu
           user={user}
           canSwitch={organizations.length > 1}
-          totalUnread={summary.total_unread - summary.organization_unread}
+          totalUnread={
+            (summary?.total_unread ?? 0) - (summary?.organization_unread ?? 0)
+          }
         />
       </div>
 

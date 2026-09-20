@@ -70,10 +70,10 @@ export default function ForgotPasswordPage() {
     <AuthLayout>
       <div className="w-full max-w-md">
         <div className="mb-8">
-          <h1 className="text-3xl font-normal text-gray-900 mb-2">
+          <h1 className="text-3xl font-normal text-foreground mb-2">
             Forgot Password
           </h1>
-          <p className="text-gray-600">Enter your email to get OTP</p>
+          <p className="text-muted-foreground">Enter your email to get OTP</p>
         </div>
 
         {success && (
@@ -101,7 +101,7 @@ export default function ForgotPasswordPage() {
                   setError("");
                 }}
                 placeholder="you@example.com"
-                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white text-gray-900"
+                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white text-foreground"
                 disabled={loading}
               />
             </div>
@@ -112,18 +112,18 @@ export default function ForgotPasswordPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gray-900 hover:bg-gray-800 disabled:bg-gray-600 text-white font-semibold py-3 px-4 rounded-lg transition duration-200"
+            className="w-full bg-primary hover:bg-primary/90 disabled:bg-gray-600 text-white font-semibold py-3 px-4 rounded-lg transition duration-200"
           >
             {loading ? "Sending..." : "SEND OTP"}
           </button>
         </form>
 
         <div className="mt-6 text-center">
-          <p className="text-gray-600 text-sm">
+          <p className="text-muted-foreground text-sm">
             Know your password?{" "}
             <Link
               to="/login"
-              className="text-gray-900 font-semibold hover:underline"
+              className="text-foreground font-semibold hover:underline"
             >
               Sign In
             </Link>

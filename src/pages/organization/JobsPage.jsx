@@ -1,3 +1,4 @@
+import RequestState from "@/components/common/RequestState";
 import { useMemo, useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,9 @@ import { APP_POINTS } from "@/api/apiConfig";
 export default function JobsPage() {
   const [jobs, setJobs] = useState([]);
   const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -38,17 +42,27 @@ export default function JobsPage() {
   );
 
   useEffect(() => {
+    let cancelled = false;
     const fetchWorks = async () => {
       try {
         const res = await assort_api.get(APP_POINTS.PROJECTS + "work-items/");
-        setJobs(res.data.jobs || []);
-        setTasks(res.data.tasks || []);
+        if (!cancelled) {
+          setJobs(res.data.jobs || []);
+          setTasks(res.data.tasks || []);
+          setError(false);
+        }
       } catch (error) {
         console.log(error);
+        if (!cancelled) setError(true);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     };
     fetchWorks();
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [attempt]);
 
   const filteredJobs = jobs.filter((job) => {
     const matchesSearch =
@@ -78,12 +92,33 @@ export default function JobsPage() {
 
   const defaultTab = hasJobs ? "jobs" : hasTasks ? "tasks" : null;
 
+  if (loading) return <RequestState loading title="Loading your work" />;
+  if (error)
+    return (
+      <RequestState
+        error
+        title="Unable to load your work"
+        description="Please try again to see your assigned tasks and jobs."
+        onRetry={() => {
+          setLoading(true);
+          setAttempt((n) => n + 1);
+        }}
+      />
+    );
+
   return (
-    <>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold">My work</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Your assigned tasks and jobs, across every project.
+        </p>
+      </div>
       {!defaultTab ? (
-        <Card className="p-12 text-center border border-border">
-          <p className="text-muted-foreground">No jobs found</p>
-        </Card>
+        <RequestState
+          title="You’re all caught up"
+          description="Tasks and jobs will appear here when they are assigned to you."
+        />
       ) : (
         <Tabs defaultValue={defaultTab} className="space-y-6">
           {/* Top Tabs */}
@@ -108,6 +143,7 @@ export default function JobsPage() {
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
 
                   <Input
+                    aria-label="Search jobs"
                     placeholder="Search jobs by title, project, or task..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -157,6 +193,7 @@ export default function JobsPage() {
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
 
                   <Input
+                    aria-label="Search tasks"
                     placeholder="Search tasks by title or project..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -198,6 +235,6 @@ export default function JobsPage() {
           )}
         </Tabs>
       )}
-    </>
+    </div>
   );
 }

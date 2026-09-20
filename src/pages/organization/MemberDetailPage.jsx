@@ -190,7 +190,7 @@ const MemberDetailPage = () => {
       <div className="flex gap-2 justify-end">
         <button
           onClick={() => toggleStatus()}
-          className="px-6 py-2 bg-white text-gray-900 font-medium rounded-lg hover:bg-gray-200 transition-colors"
+          className="px-6 py-2 bg-white text-foreground font-medium rounded-lg hover:bg-gray-200 transition-colors"
         >
           {member.is_active ? "Disable Membership" : "Enable Membership"}
         </button>
@@ -205,7 +205,7 @@ const MemberDetailPage = () => {
       {showRemoveConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-sm mx-auto">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <h3 className="text-lg font-semibold text-foreground mb-2">
               Remove Member
             </h3>
             <p className="text-sm text-gray-700 mb-6">

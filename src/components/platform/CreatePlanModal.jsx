@@ -91,8 +91,8 @@ export function CreatePlanModal({ isOpen, onClose, onCreatePlan }) {
     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white">
-          <h2 className="text-xl font-semibold text-gray-900">
+        <div className="flex items-center justify-between p-6 border-b border-border sticky top-0 bg-white">
+          <h2 className="text-xl font-semibold text-foreground">
             Create New Subscription Plan
           </h2>
           <button
@@ -107,7 +107,7 @@ export function CreatePlanModal({ isOpen, onClose, onCreatePlan }) {
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Plan Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               Plan Name
             </label>
             <input
@@ -122,7 +122,7 @@ export function CreatePlanModal({ isOpen, onClose, onCreatePlan }) {
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               Description
             </label>
             <textarea
@@ -137,7 +137,7 @@ export function CreatePlanModal({ isOpen, onClose, onCreatePlan }) {
           {/* Price and Duration */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Price (₹)
               </label>
               <input
@@ -152,7 +152,7 @@ export function CreatePlanModal({ isOpen, onClose, onCreatePlan }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Duration
               </label>
               <Select
@@ -200,7 +200,7 @@ export function CreatePlanModal({ isOpen, onClose, onCreatePlan }) {
           {/* Features */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <label className="block text-sm font-medium text-gray-900">
+              <label className="block text-sm font-medium text-foreground">
                 Features
               </label>
               <button
@@ -220,7 +220,7 @@ export function CreatePlanModal({ isOpen, onClose, onCreatePlan }) {
                   onDragStart={() => handleDragStart(feature.id)}
                   onDragOver={handleDragOver}
                   onDrop={() => handleDrop(feature.id)}
-                  className={`flex items-center gap-2 p-2 bg-white border border-gray-200 rounded-lg transition-all ${
+                  className={`flex items-center gap-2 p-2 bg-white border border-border rounded-lg transition-all ${
                     draggedId === feature.id ? "opacity-50" : ""
                   }`}
                 >
@@ -252,12 +252,12 @@ export function CreatePlanModal({ isOpen, onClose, onCreatePlan }) {
 
           {/* Plan Limits */}
           <div>
-            <h3 className="text-sm font-medium text-gray-900 mb-3">
+            <h3 className="text-sm font-medium text-foreground mb-3">
               Plan Limits
             </h3>
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs text-gray-600 mb-1">
+                <label className="block text-xs text-muted-foreground mb-1">
                   Max Projects
                 </label>
                 <input
@@ -269,7 +269,7 @@ export function CreatePlanModal({ isOpen, onClose, onCreatePlan }) {
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-600 mb-1">
+                <label className="block text-xs text-muted-foreground mb-1">
                   Max Members
                 </label>
                 <input
@@ -281,7 +281,7 @@ export function CreatePlanModal({ isOpen, onClose, onCreatePlan }) {
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-600 mb-1">
+                <label className="block text-xs text-muted-foreground mb-1">
                   Storage (GB)
                 </label>
                 <input
@@ -295,7 +295,7 @@ export function CreatePlanModal({ isOpen, onClose, onCreatePlan }) {
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+          <div className="flex justify-end gap-3 pt-4 border-t border-border">
             <button
               type="button"
               onClick={onClose}
@@ -305,7 +305,7 @@ export function CreatePlanModal({ isOpen, onClose, onCreatePlan }) {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-gray-900 text-white hover:bg-gray-800 rounded-lg transition-colors"
+              className="px-4 py-2 bg-primary text-white hover:bg-primary/90 rounded-lg transition-colors"
             >
               Create Plan
             </button>

@@ -1,26 +1,31 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { SquareCheckBig, Calendar } from "lucide-react";
-import { formatDate_d_m_yyyy, formatEnum } from "@/appFunctions";
+import { formatDate_d_m_yyyy } from "@/appFunctions";
 import { useNavigate } from "react-router";
 
 export default function TaskCard({ task }) {
   const navigate = useNavigate();
   return (
     <Card
+      role="link"
+      tabIndex={0}
+      aria-label={`Open ${task.title}`}
+      onKeyDown={(event) => {
+        if (event.target === event.currentTarget && event.key === "Enter")
+          navigate(`/app/project/task/${task.id}`);
+      }}
       key={task.id}
-      className="h-full p-5 md:p-6 hover:shadow-lg transition-shadow cursor-pointer border border-border flex flex-col"
+      className="h-full hover:border-primary/40 hover:shadow-md transition-shadow cursor-pointer border border-border flex flex-col"
       onClick={() => {
         navigate(`/app/project/task/${task.id}`);
       }}
     >
-      <CardContent className="pt-6 space-y-4">
+      <CardContent className="space-y-4">
         {/* Title + Status */}
         <div className="flex items-start justify-between gap-3 mb-4 pb-4 border-b border-border">
           <h3 className="font-semibold line-clamp-2 flex-1">{task.title}</h3>
-          <Badge className="shrink-0 whitespace-nowrap">
-            {formatEnum(task.status)}
-          </Badge>
+          <StatusBadge status={task.status} className="shrink-0" />
         </div>
 
         {/* Project Hierarchy */}
