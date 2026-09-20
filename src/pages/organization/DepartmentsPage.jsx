@@ -26,7 +26,7 @@ const DepartmentsPage = () => {
       <div className="flex items-center justify-end">
         <button
           onClick={() => setCreateModalOpen(true)}
-          className="px-4 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 transition-colors"
+          className="px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-primary/90 transition-colors"
         >
           + Create Department
         </button>

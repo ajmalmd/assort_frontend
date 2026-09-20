@@ -202,14 +202,14 @@ const AdminUserListPage = () => {
 
                     <TableCell>
                       <button
-                        className="p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                        className="p-1 text-muted-foreground hover:bg-gray-100 rounded transition-colors"
                         title="View"
                         onClick={() => navigate(`/platform/user/${user.id}`)}
                       >
                         <Eye size={16} />
                       </button>
                       <button
-                        className="p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                        className="p-1 text-muted-foreground hover:bg-gray-100 rounded transition-colors"
                         title="Edit"
                         onClick={() => setEditUser(user)}
                       >
@@ -219,7 +219,7 @@ const AdminUserListPage = () => {
                         className={`p-1 rounded transition-colors ${
                           user.is_active
                             ? "text-green-600 hover:bg-green-100"
-                            : "text-gray-600 hover:bg-gray-100"
+                            : "text-muted-foreground hover:bg-gray-100"
                         }`}
                         title={user.is_active ? "Deactivate" : "Activate"}
                         onClick={() => toggleStatus(user)}

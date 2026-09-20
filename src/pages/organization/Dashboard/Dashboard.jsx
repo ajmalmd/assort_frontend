@@ -1,3 +1,4 @@
+import RequestState from "@/components/common/RequestState";
 import { useEffect, useState } from "react";
 
 import OrgAdminDashboard from "./OrganizationDashboard";
@@ -21,6 +22,7 @@ const Dashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (!activeOrganization?.id) return;
@@ -42,14 +44,21 @@ const Dashboard = () => {
     };
 
     fetchDashboard();
-  }, [activeOrganization?.id]);
+  }, [activeOrganization?.id, attempt]);
 
   if (loading) {
-    return <div>Loading dashboard...</div>;
+    return <RequestState loading title="Loading your workspace" />;
   }
 
   if (error || !data) {
-    return <div>Unable to load dashboard.</div>;
+    return (
+      <RequestState
+        error
+        title="Unable to load your dashboard"
+        description="Please try again to see the latest workspace activity."
+        onRetry={() => setAttempt((n) => n + 1)}
+      />
+    );
   }
 
   const DashboardComponent = Dashboards[activeOrganization?.role];
@@ -58,7 +67,22 @@ const Dashboard = () => {
     return <div>No dashboard available for this role.</div>;
   }
 
-  return <DashboardComponent data={data} />;
+  return (
+    <div className="space-y-6">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-widest text-primary">
+          Workspace overview
+        </p>
+        <h1 className="mt-1 text-2xl font-semibold">
+          A clear view of your team’s progress
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Track active work, upcoming deadlines, and what needs attention.
+        </p>
+      </div>
+      <DashboardComponent data={data} />
+    </div>
+  );
 };
 
 export default Dashboard;

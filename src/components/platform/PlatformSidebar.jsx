@@ -1,3 +1,4 @@
+import { useNavigationDrawer } from "@/hooks/useNavigationDrawer";
 import { NavLink, useLocation } from "react-router";
 import {
   LayoutDashboard,
@@ -26,6 +27,7 @@ const SIDEBAR_ITEMS = [
 
 export function PlatformSidebar({ isOpen, onClose, isCollapsed = false }) {
   const { pathname } = useLocation();
+  const drawerRef = useNavigationDrawer(isOpen, onClose);
   const { user } = useAuthState();
 
   const isActive = (to) => {
@@ -33,7 +35,14 @@ export function PlatformSidebar({ isOpen, onClose, isCollapsed = false }) {
       return pathname === "/platform" || pathname === "/platform/";
     }
 
-    return pathname.startsWith(to);
+    const detailRoutes = {
+      "/platform/organizations": "/platform/organization/",
+      "/platform/users": "/platform/user/",
+    };
+    return (
+      pathname.startsWith(to) ||
+      Boolean(detailRoutes[to] && pathname.startsWith(detailRoutes[to]))
+    );
   };
 
   const handleLogout = async () => {
@@ -45,25 +54,27 @@ export function PlatformSidebar({ isOpen, onClose, isCollapsed = false }) {
       {/* Mobile Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-40 lg:hidden"
           onClick={onClose}
         />
       )}
 
       {/* Sidebar */}
       <aside
+        ref={drawerRef}
+        aria-label="Workspace navigation"
         className={`
-          fixed top-0 left-0 z-50 w-48 lg:w-auto bg-gray-50 border-r border-gray-200
-          flex flex-col h-screen
+          fixed top-0 left-0 z-50 w-64 ${isCollapsed ? "lg:w-20" : "lg:w-64"} bg-sidebar border-r border-border
+          flex flex-col h-dvh
           transform transition-transform duration-300 ease-in-out
-          ${isOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0
+          ${isOpen ? "visible translate-x-0" : "invisible -translate-x-full"} lg:visible lg:translate-x-0
         `}
       >
         {/* Logo & Close */}
-        <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+        <div className="h-16 px-5 border-b border-border flex items-center justify-between">
           <div className="flex-1 flex justify-center lg:justify-start">
             {!isCollapsed ? (
-              <h1 className="text-xl font-bold text-gray-900">Assort</h1>
+              <h1 className="text-xl font-bold text-foreground">Assort</h1>
             ) : (
               <img
                 src={Logo}
@@ -74,6 +85,7 @@ export function PlatformSidebar({ isOpen, onClose, isCollapsed = false }) {
           </div>
 
           <button
+            aria-label="Close navigation"
             onClick={onClose}
             className="lg:hidden p-1 hover:bg-gray-200 rounded transition-colors"
           >
@@ -82,34 +94,41 @@ export function PlatformSidebar({ isOpen, onClose, isCollapsed = false }) {
         </div>
 
         {/* Scrollable Navigation */}
-        <nav className="flex-1 overflow-y-auto p-4 space-y-2">
+        <nav
+          aria-label="Main navigation"
+          className="flex-1 overflow-y-auto p-4 space-y-2"
+        >
           {SIDEBAR_ITEMS.map(({ label, icon: Icon, to }) => {
             const active = isActive(to);
             return (
               <NavLink
                 key={to}
+                aria-label={label}
+                aria-current={active ? "page" : undefined}
                 to={to}
                 onClick={onClose}
                 className={`flex items-center ${
-                  isCollapsed ? "justify-center" : "gap-3"
-                } px-4 py-3 rounded-lg transition-colors ${
+                  isCollapsed ? "gap-3 lg:justify-center" : "gap-3"
+                } px-3 py-2.5 rounded-lg transition-colors ${
                   active
-                    ? "bg-gray-900 text-white"
-                    : "text-gray-700 hover:bg-gray-100"
+                    ? "bg-accent text-accent-foreground shadow-xs"
+                    : "text-sidebar-foreground hover:bg-muted"
                 }`}
                 title={isCollapsed ? label : undefined}
               >
                 <Icon size={20} />
-                {!isCollapsed && (
-                  <span className="text-sm font-medium">{label}</span>
-                )}
+                <span
+                  className={`text-sm font-medium ${isCollapsed ? "lg:hidden" : ""}`}
+                >
+                  {label}
+                </span>
               </NavLink>
             );
           })}
         </nav>
 
         {/* User & Logout */}
-        <div className="border-t border-gray-200">
+        <div className="border-t border-border">
           <div
             className={`flex items-center ${isCollapsed ? "justify-center" : "gap-3"} p-4`}
           >
@@ -118,7 +137,7 @@ export function PlatformSidebar({ isOpen, onClose, isCollapsed = false }) {
             </div>
             {!isCollapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
+                <p className="text-sm font-medium text-foreground truncate">
                   {user?.full_name}
                 </p>
                 <p className="text-xs text-gray-500 truncate">{user?.email}</p>

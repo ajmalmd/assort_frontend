@@ -76,11 +76,11 @@ const MemberProfilePage = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 lg:px-8 py-8">
-      <div className="bg-white rounded-lg border border-gray-200 p-8">
+      <div className="bg-white rounded-lg border border-border p-8">
         {/* Personal Information */}
         <div>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-foreground">
               Personal Information
             </h2>
 
@@ -192,7 +192,7 @@ const MemberProfilePage = () => {
                 type="email"
                 value={profile.email}
                 disabled
-                className="w-full px-4 py-2 border border-gray-200 bg-gray-100 rounded-lg cursor-not-allowed"
+                className="w-full px-4 py-2 border border-border bg-gray-100 rounded-lg cursor-not-allowed"
               />
             </div>
 
@@ -256,13 +256,13 @@ const MemberProfilePage = () => {
                   setIsEditing(false);
                   fetchProfile();
                 }}
-                className="px-6 py-2 bg-gray-100 text-gray-900 font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                className="px-6 py-2 bg-gray-100 text-foreground font-medium rounded-lg hover:bg-gray-200 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveChanges}
-                className="px-6 py-2 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
+                className="px-6 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-colors"
               >
                 Save Changes
               </button>

@@ -195,8 +195,8 @@ export default function OTPVerificationPage() {
     <AuthLayout>
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-normal text-gray-900">Verify OTP</h2>
-          <p className="text-sm text-gray-600 mt-1">
+          <h2 className="text-2xl font-normal text-foreground">Verify OTP</h2>
+          <p className="text-sm text-muted-foreground mt-1">
             Enter the 6-digit code sent to your email
           </p>
         </div>
@@ -219,14 +219,14 @@ export default function OTPVerificationPage() {
                 onKeyDown={(e) => handleKeyDown(e, index)}
                 maxLength={1}
                 disabled={loading}
-                className="w-12 h-12 text-center text-lg font-bold bg-gray-900 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-700 border border-gray-800"
+                className="w-12 h-12 text-center text-lg font-bold bg-primary text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-700 border border-gray-800"
               />
             ))}
           </div>
 
           {/* Resend */}
           <div className="flex justify-between items-center text-sm">
-            <span className="text-gray-600">Didn’t receive the code?</span>
+            <span className="text-muted-foreground">Didn’t receive the code?</span>
 
             {timer > 0 ? (
               <span className="text-gray-400 font-medium">
@@ -237,7 +237,7 @@ export default function OTPVerificationPage() {
                 type="button"
                 onClick={handleResendOTP}
                 disabled={resendLoading}
-                className="text-gray-900 font-semibold hover:underline disabled:opacity-50"
+                className="text-foreground font-semibold hover:underline disabled:opacity-50"
               >
                 {resendLoading ? "Sending..." : "Resend OTP"}
               </button>
@@ -248,7 +248,7 @@ export default function OTPVerificationPage() {
           <button
             type="submit"
             disabled={loading || otp.join("").length !== 6}
-            className="w-full bg-gray-900 hover:bg-gray-800 disabled:bg-gray-700 text-white font-medium py-3 rounded-lg transition-colors mt-6"
+            className="w-full bg-primary hover:bg-primary/90 disabled:bg-gray-700 text-white font-medium py-3 rounded-lg transition-colors mt-6"
           >
             {loading ? "Verifying..." : "Verify"}
           </button>

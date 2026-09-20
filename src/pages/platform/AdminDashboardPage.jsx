@@ -83,12 +83,14 @@ const AdminDashboardPage = () => {
           return (
             <div
               key={idx}
-              className="bg-white rounded-lg border border-gray-200 p-6"
+              className="bg-white rounded-lg border border-border p-6"
             >
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-gray-600 text-sm mb-1">{card.label}</p>
-                  <p className="text-3xl font-bold text-gray-900">
+                  <p className="text-muted-foreground text-sm mb-1">
+                    {card.label}
+                  </p>
+                  <p className="text-3xl font-bold text-foreground">
                     {card.value}
                   </p>
                   <p className="text-xs text-gray-500 mt-2">{card.subtext}</p>
@@ -102,8 +104,8 @@ const AdminDashboardPage = () => {
 
       {/* Revenue Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="bg-white rounded-lg border border-border p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">
             Revenue by Plan
           </h2>
 
@@ -120,14 +122,14 @@ const AdminDashboardPage = () => {
                     <span className="text-sm font-medium text-gray-700">
                       {item.plan}
                     </span>
-                    <span className="text-sm font-semibold text-gray-900">
+                    <span className="text-sm font-semibold text-foreground">
                       ₹{item.revenue}
                     </span>
                   </div>
 
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
-                      className="bg-gray-900 h-2 rounded-full"
+                      className="bg-primary h-2 rounded-full"
                       style={{ width: `${percentage}%` }}
                     />
                   </div>
@@ -142,8 +144,8 @@ const AdminDashboardPage = () => {
         </div>
 
         {/* Organization Stats */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="bg-white rounded-lg border border-border p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">
             Organizations Overview
           </h2>
 
@@ -184,8 +186,8 @@ const AdminDashboardPage = () => {
       {/* Members & Member Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Members Stats */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="bg-white rounded-lg border border-border p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">
             Members Overview
           </h2>
           <div className="space-y-4">
@@ -225,24 +227,24 @@ const AdminDashboardPage = () => {
       {/* Top Organizations and Members */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Organizations */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="bg-white rounded-lg border border-border p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">
             Top Organizations
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-200 text-center">
-                  <th className="py-3 px-4 text-xs font-semibold text-gray-600">
+                <tr className="border-b border-border text-center">
+                  <th className="py-3 px-4 text-xs font-semibold text-muted-foreground">
                     Organization
                   </th>
-                  <th className="py-3 px-4 text-xs font-semibold text-gray-600">
+                  <th className="py-3 px-4 text-xs font-semibold text-muted-foreground">
                     Current Plan
                   </th>
-                  <th className="py-3 px-4 text-xs font-semibold text-gray-600">
+                  <th className="py-3 px-4 text-xs font-semibold text-muted-foreground">
                     Total Revenue
                   </th>
-                  <th className="py-3 px-4 text-xs font-semibold text-gray-600">
+                  <th className="py-3 px-4 text-xs font-semibold text-muted-foreground">
                     Members
                   </th>
                 </tr>
@@ -256,16 +258,16 @@ const AdminDashboardPage = () => {
                       key={org.id}
                       className="border-b border-gray-100 hover:bg-gray-50 text-center"
                     >
-                      <td className="py-3 px-4 text-sm font-medium text-gray-900">
+                      <td className="py-3 px-4 text-sm font-medium text-foreground">
                         {org.name}
                       </td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                      <td className="py-3 px-4 text-sm text-muted-foreground">
                         {org.plan}
                       </td>
-                      <td className="py-3 px-4 text-sm font-semibold text-gray-900">
+                      <td className="py-3 px-4 text-sm font-semibold text-foreground">
                         ₹{org.totalRevenue}
                       </td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                      <td className="py-3 px-4 text-sm text-muted-foreground">
                         {org.members}
                       </td>
                     </tr>
@@ -276,21 +278,21 @@ const AdminDashboardPage = () => {
         </div>
 
         {/* Top Members */}
-        {/* <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+        {/* <div className="bg-white rounded-lg border border-border p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">
             Top 10 Members
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600">
+                <tr className="border-b border-border">
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground">
                     Name
                   </th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600">
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground">
                     Org Count
                   </th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600">
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground">
                     Hours
                   </th>
                 </tr>
@@ -306,10 +308,10 @@ const AdminDashboardPage = () => {
                     >
                       <td className="py-3 px-4">
                         <div>
-                          <p className="text-sm font-medium text-gray-900">
+                          <p className="text-sm font-medium text-foreground">
                             {member.name}
                           </p>
-                          <p className="text-xs text-gray-600">
+                          <p className="text-xs text-muted-foreground">
                             {member.email}
                           </p>
                         </div>
@@ -325,7 +327,7 @@ const AdminDashboardPage = () => {
                           {member.organizationCount}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-sm font-semibold text-gray-900">
+                      <td className="py-3 px-4 text-sm font-semibold text-foreground">
                         {member.hoursContributed}h
                       </td>
                     </tr>

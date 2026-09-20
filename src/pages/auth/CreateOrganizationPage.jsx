@@ -95,7 +95,7 @@ const CreateOrganizationPage = () => {
     <AuthLayout>
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-normal text-gray-900 mb-2">
+          <h2 className="text-2xl font-normal text-foreground mb-2">
             Create Organization
           </h2>
         </div>
@@ -108,7 +108,7 @@ const CreateOrganizationPage = () => {
 
           {/* Organization Title */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               Organization Name
             </label>
             <input
@@ -116,7 +116,7 @@ const CreateOrganizationPage = () => {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={100}
-              className="w-full px-4 py-3 bg-gray-100 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 border border-gray-200"
+              className="w-full px-4 py-3 bg-gray-100 text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 border border-border"
             />
             {errors.title && (
               <p className="text-sm text-red-600 mt-1">{errors.title}</p>
@@ -125,7 +125,7 @@ const CreateOrganizationPage = () => {
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               Organization Email
             </label>
             <input
@@ -133,7 +133,7 @@ const CreateOrganizationPage = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@company.com"
-              className="w-full px-4 py-3 bg-gray-100 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 border border-gray-200"
+              className="w-full px-4 py-3 bg-gray-100 text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 border border-border"
             />
             {errors.email && (
               <p className="text-sm text-red-600 mt-1">{errors.email}</p>
@@ -144,7 +144,7 @@ const CreateOrganizationPage = () => {
           <button
             type="submit"
             disabled={loading || !isFormValid}
-            className="w-full bg-gray-900 hover:bg-gray-800 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-medium py-3 rounded-lg transition-colors mt-6"
+            className="w-full bg-primary hover:bg-primary/90 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-medium py-3 rounded-lg transition-colors mt-6"
           >
             {loading ? "Sending OTP..." : "Send OTP"}
           </button>

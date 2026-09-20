@@ -113,10 +113,10 @@ const LoginPage = () => {
     <AuthLayout>
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-normal text-gray-900 mb-2">
+          <h2 className="text-3xl font-normal text-foreground mb-2">
             Welcome back
           </h2>
-          <p className="text-gray-600 text-sm">
+          <p className="text-muted-foreground text-sm">
             Enter your credentials to access your account
           </p>
         </div>
@@ -126,7 +126,7 @@ const LoginPage = () => {
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               Email
             </label>
             <div className="relative">
@@ -141,14 +141,14 @@ const LoginPage = () => {
                 autoComplete="username"
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your@email.com"
-                className="w-full pl-12 pr-4 py-3 bg-gray-50 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 border border-gray-200"
+                className="w-full pl-12 pr-4 py-3 bg-gray-50 text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 border border-border"
               />
             </div>
           </div>
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               Password
             </label>
             <div className="relative">
@@ -163,12 +163,12 @@ const LoginPage = () => {
                 autoComplete="current-password"
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-12 pr-12 py-3 bg-gray-50 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 border border-gray-200"
+                className="w-full pl-12 pr-12 py-3 bg-gray-50 text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 border border-border"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-muted-foreground"
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
@@ -179,7 +179,7 @@ const LoginPage = () => {
           <div className="flex justify-end">
             <Link
               to="/forgot-password"
-              className="text-sm font-medium text-gray-900 hover:underline"
+              className="text-sm font-medium text-foreground hover:underline"
             >
               Forgot Password?
             </Link>
@@ -189,19 +189,19 @@ const LoginPage = () => {
           <button
             type="submit"
             disabled={loading || !isFormValid}
-            className="w-full bg-gray-900 hover:bg-gray-800 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition-colors mt-8"
+            className="w-full bg-primary hover:bg-primary/90 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition-colors mt-8"
           >
             {loading ? "Signing in..." : "SIGN IN"}
           </button>
         </form>
 
         {/* Create Org */}
-        <div className="border-t border-gray-200 pt-6">
-          <p className="text-gray-600 text-sm text-center">
+        <div className="border-t border-border pt-6">
+          <p className="text-muted-foreground text-sm text-center">
             Do you want to manage your projects?{" "}
             <Link
               to="/create-organization"
-              className="font-semibold text-gray-900 hover:underline"
+              className="font-semibold text-foreground hover:underline"
             >
               Create Organization
             </Link>

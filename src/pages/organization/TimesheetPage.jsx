@@ -1,3 +1,4 @@
+import RequestState from "@/components/common/RequestState";
 import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -15,8 +16,12 @@ export default function TimesheetPage() {
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [monthlyDetails, setMonthlyDetails] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
+    let cancelled = false;
     const fetchDetails = async () => {
       try {
         const res = await assort_api.get(
@@ -28,15 +33,23 @@ export default function TimesheetPage() {
             },
           },
         );
-        setMonthlyDetails(res.data || {});
+        if (!cancelled) {
+          setMonthlyDetails(res.data || {});
+          setError(false);
+        }
       } catch (error) {
         console.log(error);
-        setMonthlyDetails({});
+        if (!cancelled) setError(true);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchDetails();
-  }, [currentDate]);
+    return () => {
+      cancelled = true;
+    };
+  }, [currentDate, attempt]);
 
   const monthName = currentDate.toLocaleString("default", {
     month: "long",
@@ -65,12 +78,14 @@ export default function TimesheetPage() {
   }, [daysInMonth, firstDay]);
 
   const previousMonth = () => {
+    setLoading(true);
     setCurrentDate((prev) => {
       return new Date(prev.getFullYear(), prev.getMonth() - 1);
     });
   };
 
   const nextMonth = () => {
+    setLoading(true);
     setCurrentDate((prev) => {
       return new Date(prev.getFullYear(), prev.getMonth() + 1);
     });
@@ -104,12 +119,13 @@ export default function TimesheetPage() {
     <div className="min-h-full space-y-5 p-3 sm:space-y-6 sm:p-4">
       {/* HEADER */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-lg font-semibold text-zinc-900 sm:text-xl">
-          Monthly Log Stats
+        <p className="text-lg font-semibold text-foreground sm:text-xl">
+          Your time, at a glance
         </p>
 
-        <div className="flex items-center justify-between gap-2 rounded-2xl bg-black p-1.5 sm:gap-3 sm:p-2">
+        <div className="flex items-center justify-between gap-2 rounded-2xl bg-primary p-1.5 sm:gap-3 sm:p-2">
           <button
+            aria-label="Previous month"
             onClick={previousMonth}
             className="flex h-10 w-10 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-white transition hover:bg-zinc-100"
           >
@@ -121,6 +137,7 @@ export default function TimesheetPage() {
           </div>
 
           <button
+            aria-label="Next month"
             onClick={nextMonth}
             className="flex h-10 w-10 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-white transition hover:bg-zinc-100"
           >
@@ -129,59 +146,117 @@ export default function TimesheetPage() {
         </div>
       </div>
 
-      {/* SUMMARY */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-4">
-        <div className="rounded-2xl border bg-white p-3 sm:p-5">
-          <p className="text-xs text-zinc-500 sm:text-sm">Logged</p>
-          <p className="mt-1 text-lg font-semibold text-zinc-900 sm:mt-2 sm:text-2xl truncate">
-            {monthlyDetails?.total_hours ?? 0}h
-          </p>
-        </div>
+      {loading ? (
+        <RequestState loading title="Loading timesheet" />
+      ) : error ? (
+        <RequestState
+          error
+          title="Unable to load timesheet"
+          description="Your recorded hours could not be retrieved."
+          onRetry={() => {
+            setLoading(true);
+            setAttempt((n) => n + 1);
+          }}
+        />
+      ) : (
+        <>
+          {/* SUMMARY */}
+          <div className="grid grid-cols-3 gap-2 sm:gap-4">
+            <div className="rounded-2xl border bg-white p-3 sm:p-5">
+              <p className="text-xs text-muted-foreground sm:text-sm">Logged</p>
+              <p className="mt-1 text-lg font-semibold text-foreground sm:mt-2 sm:text-2xl truncate">
+                {monthlyDetails?.total_hours ?? 0}h
+              </p>
+            </div>
 
-        <div className="rounded-2xl border bg-white p-3 sm:p-5">
-          <p className="text-xs text-zinc-500 sm:text-sm">Approved</p>
-          <p className="mt-1 text-lg font-semibold text-zinc-900 sm:mt-2 sm:text-2xl truncate">
-            {monthlyDetails?.approved_hours ?? 0}h
-          </p>
-        </div>
+            <div className="rounded-2xl border bg-white p-3 sm:p-5">
+              <p className="text-xs text-muted-foreground sm:text-sm">
+                Approved
+              </p>
+              <p className="mt-1 text-lg font-semibold text-foreground sm:mt-2 sm:text-2xl truncate">
+                {monthlyDetails?.approved_hours ?? 0}h
+              </p>
+            </div>
 
-        <div className="rounded-2xl border bg-white p-3 sm:p-5">
-          <p className="text-xs text-zinc-500 sm:text-sm">Pending</p>
-          <p className="mt-1 text-lg font-semibold text-zinc-900 sm:mt-2 sm:text-2xl truncate">
-            {monthlyDetails?.pending_hours ?? 0}h
-          </p>
-        </div>
-      </div>
-
-      {/* CALENDAR */}
-      <div className="rounded-2xl border bg-white/80 backdrop-blur-sm overflow-x-auto">
-        <div className="min-w-[700px] sm:min-w-0">
-          {/* WEEK HEADER */}
-          <div className="grid grid-cols-7 border-b bg-zinc-50 sticky top-0 z-10">
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-              <div
-                key={d}
-                className="border-r p-2 text-center text-[11px] font-medium text-zinc-500 sm:p-3 sm:text-sm"
-              >
-                {d}
-              </div>
-            ))}
+            <div className="rounded-2xl border bg-white p-3 sm:p-5">
+              <p className="text-xs text-muted-foreground sm:text-sm">
+                Pending
+              </p>
+              <p className="mt-1 text-lg font-semibold text-foreground sm:mt-2 sm:text-2xl truncate">
+                {monthlyDetails?.pending_hours ?? 0}h
+              </p>
+            </div>
           </div>
 
-          {/* GRID */}
-          <div className="grid grid-cols-7">
-            {days.map((day, idx) => {
+          <div className="space-y-2 sm:hidden" aria-label="Daily time logs">
+            {days.filter(Boolean).map((day) => {
               const data = getDayData(day);
-
-              const total = data?.total_hours || 0;
-              const approved = data?.approved_hours || 0;
-
               return (
                 <button
-                  key={idx}
-                  disabled={!day}
+                  key={day}
+                  disabled={!data?.logs_count}
                   onClick={() => handleDayClick(data)}
-                  className={`
+                  className="flex w-full items-center justify-between rounded-xl border bg-card p-4 text-left enabled:hover:border-primary disabled:cursor-default"
+                >
+                  <span className="font-medium">
+                    {new Date(
+                      currentDate.getFullYear(),
+                      currentDate.getMonth(),
+                      day,
+                    ).toLocaleDateString(undefined, {
+                      weekday: "short",
+                      day: "numeric",
+                      month: "short",
+                    })}
+                  </span>
+                  <span className="text-right text-sm">
+                    <span className="block font-semibold">
+                      {data?.total_hours ? data.total_hours + "h" : "No logs"}
+                    </span>
+                    {data?.pending_hours > 0 && (
+                      <span className="text-amber-700">
+                        {data.pending_hours}h pending
+                      </span>
+                    )}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          {/* CALENDAR */}
+          <div className="hidden sm:block rounded-2xl border bg-white/80 backdrop-blur-sm overflow-x-auto">
+            <div className="min-w-0">
+              {/* WEEK HEADER */}
+              <div className="grid grid-cols-7 border-b bg-zinc-50 sticky top-0 z-10">
+                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+                  <div
+                    key={d}
+                    className="border-r p-2 text-center text-[11px] font-medium text-muted-foreground sm:p-3 sm:text-sm"
+                  >
+                    {d}
+                  </div>
+                ))}
+              </div>
+
+              {/* GRID */}
+              <div className="grid grid-cols-7">
+                {days.map((day, idx) => {
+                  const data = getDayData(day);
+
+                  const total = data?.total_hours || 0;
+                  const approved = data?.approved_hours || 0;
+
+                  return (
+                    <button
+                      key={idx}
+                      disabled={!day || !data?.logs_count}
+                      aria-label={
+                        day
+                          ? `${day} ${monthName}, ${total} hours, ${approved} approved`
+                          : undefined
+                      }
+                      onClick={() => handleDayClick(data)}
+                      className={`
                     min-h-[90px] sm:min-h-[140px]
                     border-b border-r p-1 sm:p-2
                     text-left transition-all
@@ -192,65 +267,67 @@ export default function TimesheetPage() {
                     }
                     ${day ? getIntensity(total) : ""}
                   `}
-                >
-                  {day && (
-                    <div className="flex h-full flex-col">
-                      {/* TOP */}
-                      <div className="flex items-start justify-between gap-1">
-                        <span className="text-xs font-semibold text-zinc-900 sm:text-sm">
-                          {day}
-                        </span>
+                    >
+                      {day && (
+                        <div className="flex h-full flex-col">
+                          {/* TOP */}
+                          <div className="flex items-start justify-between gap-1">
+                            <span className="text-xs font-semibold text-foreground sm:text-sm">
+                              {day}
+                            </span>
 
-                        {total ? (
-                          <span className="text-[10px] sm:text-xs text-zinc-500">
-                            {total}h
-                          </span>
-                        ) : null}
-                      </div>
-
-                      {/* BODY */}
-                      {total ? (
-                        <div className="mt-2 flex flex-1 flex-col justify-between">
-                          <div className="space-y-1">
-                            <div className="rounded-md border bg-white/90 px-1.5 py-1 text-[9px] sm:text-xs text-zinc-700">
-                              <p>Logs: {data?.logs_count ?? 0}</p>
-                              <p>Approved: {approved}h</p>
-                            </div>
+                            {total ? (
+                              <span className="text-[10px] sm:text-xs text-muted-foreground">
+                                {total}h
+                              </span>
+                            ) : null}
                           </div>
 
-                          <div className="mt-2">
-                            {data?.pending_hours > 0 && (
-                              <div className="mt-1 flex justify-between text-[9px] sm:text-xs text-zinc-500">
-                                <p>Pending</p>
-                                <p>{data.pending_hours}h</p>
+                          {/* BODY */}
+                          {total ? (
+                            <div className="mt-2 flex flex-1 flex-col justify-between">
+                              <div className="space-y-1">
+                                <div className="rounded-md border bg-white/90 px-1.5 py-1 text-[9px] sm:text-xs text-zinc-700">
+                                  <p>Logs: {data?.logs_count ?? 0}</p>
+                                  <p>Approved: {approved}h</p>
+                                </div>
                               </div>
-                            )}
 
-                            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-zinc-200">
-                              <div
-                                className="h-full rounded-full bg-black transition-all"
-                                style={{
-                                  width: total
-                                    ? `${(approved / total) * 100}%`
-                                    : "0%",
-                                }}
-                              />
+                              <div className="mt-2">
+                                {data?.pending_hours > 0 && (
+                                  <div className="mt-1 flex justify-between text-[9px] sm:text-xs text-muted-foreground">
+                                    <p>Pending</p>
+                                    <p>{data.pending_hours}h</p>
+                                  </div>
+                                )}
+
+                                <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-zinc-200">
+                                  <div
+                                    className="h-full rounded-full bg-primary transition-all"
+                                    style={{
+                                      width: total
+                                        ? `${(approved / total) * 100}%`
+                                        : "0%",
+                                    }}
+                                  />
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="mt-2 text-[10px] sm:text-xs text-zinc-400">
-                          No logs
+                          ) : (
+                            <div className="mt-2 text-[10px] sm:text-xs text-zinc-400">
+                              No logs
+                            </div>
+                          )}
                         </div>
                       )}
-                    </div>
-                  )}
-                </button>
-              );
-            })}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }

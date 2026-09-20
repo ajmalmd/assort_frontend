@@ -8,7 +8,7 @@ const CTAFooter = () => {
   return (
     <>
       {/* CTA Section */}
-      <section className="bg-gray-900 text-white py-24 px-4 sm:px-6 lg:px-8">
+      <section className="bg-primary text-white py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto text-center space-y-8">
           <h2 className="text-4xl sm:text-5xl font-bold leading-tight">
             Ready to Unify Your Team?
@@ -21,7 +21,7 @@ const CTAFooter = () => {
 
           <Link to="/create-organization">
             <Button
-              className="bg-white hover:bg-gray-100 text-gray-900 rounded-full px-8 py-6 text-base font-semibold inline-flex items-center gap-2 transition"
+              className="bg-white hover:bg-gray-100 text-foreground rounded-full px-8 py-6 text-base font-semibold inline-flex items-center gap-2 transition"
               onClick={() => navigate("/create-organization")}
             >
               Get Started - Manage Projects
@@ -32,27 +32,27 @@ const CTAFooter = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-100 border-t border-gray-200 py-16 px-4 sm:px-6 lg:px-8">
+      <footer className="bg-gray-100 border-t border-border py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
             {/* Brand */}
             <div className="col-span-2 md:col-span-1">
-              <h3 className="font-bold text-gray-900 mb-4 text-lg">Assort</h3>
-              <p className="text-sm text-gray-600">
+              <h3 className="font-bold text-foreground mb-4 text-lg">Assort</h3>
+              <p className="text-sm text-muted-foreground">
                 Unify projects. Empower teams.
               </p>
             </div>
 
             {/* Product */}
             <div>
-              <h4 className="font-semibold text-gray-900 mb-4 text-sm">
+              <h4 className="font-semibold text-foreground mb-4 text-sm">
                 Product
               </h4>
               <ul className="space-y-2">
                 <li>
                   <a
                     href="#features"
-                    className="text-sm text-gray-600 hover:text-gray-900 transition"
+                    className="text-sm text-muted-foreground hover:text-foreground transition"
                   >
                     Features
                   </a>
@@ -60,7 +60,7 @@ const CTAFooter = () => {
                 <li>
                   <a
                     href="#pricing"
-                    className="text-sm text-gray-600 hover:text-gray-900 transition"
+                    className="text-sm text-muted-foreground hover:text-foreground transition"
                   >
                     Pricing
                   </a>
@@ -70,14 +70,14 @@ const CTAFooter = () => {
 
             {/* Company */}
             <div>
-              <h4 className="font-semibold text-gray-900 mb-4 text-sm">
+              <h4 className="font-semibold text-foreground mb-4 text-sm">
                 Company
               </h4>
               <ul className="space-y-2">
                 <li>
                   <Link
                     to="/about"
-                    className="text-sm text-gray-600 hover:text-gray-900 transition"
+                    className="text-sm text-muted-foreground hover:text-foreground transition"
                   >
                     About
                   </Link>
@@ -85,7 +85,7 @@ const CTAFooter = () => {
                 <li>
                   <Link
                     to="/contact"
-                    className="text-sm text-gray-600 hover:text-gray-900 transition"
+                    className="text-sm text-muted-foreground hover:text-foreground transition"
                   >
                     Contact
                   </Link>
@@ -95,14 +95,14 @@ const CTAFooter = () => {
 
             {/* Legal */}
             <div>
-              <h4 className="font-semibold text-gray-900 mb-4 text-sm">
+              <h4 className="font-semibold text-foreground mb-4 text-sm">
                 Legal
               </h4>
               <ul className="space-y-2">
                 <li>
                   <Link
                     to="/privacy"
-                    className="text-sm text-gray-600 hover:text-gray-900 transition"
+                    className="text-sm text-muted-foreground hover:text-foreground transition"
                   >
                     Privacy
                   </Link>
@@ -110,7 +110,7 @@ const CTAFooter = () => {
                 <li>
                   <Link
                     to="/terms"
-                    className="text-sm text-gray-600 hover:text-gray-900 transition"
+                    className="text-sm text-muted-foreground hover:text-foreground transition"
                   >
                     Terms
                   </Link>
@@ -120,8 +120,8 @@ const CTAFooter = () => {
           </div>
 
           {/* Bottom */}
-          <div className="border-t border-gray-200 pt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <p className="text-sm text-gray-600">
+          <div className="border-t border-border pt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <p className="text-sm text-muted-foreground">
               © {year} Assort. All rights reserved.
             </p>
           </div>

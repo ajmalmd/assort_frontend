@@ -10,7 +10,6 @@ import {
   Send,
 } from "lucide-react";
 
-import DotsBg from "@/assets/images/DotsBg.png";
 
 import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
@@ -125,18 +124,15 @@ const TicketDetailPage = () => {
 
   return (
     <div
-      className="min-h-screen bg-repeat bg-gray-400"
-      style={{
-        backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url(${DotsBg})`,
-      }}
+      className="min-h-screen bg-background"
     >
       {/* Header */}
-      <div className="border-b border-gray-200 bg-white">
+      <div className="border-b border-border bg-white">
         <div className="mx-auto flex items-center gap-2 px-4 py-4 text-gray-700 lg:px-8">
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="transition-colors hover:text-gray-900"
+            className="transition-colors hover:text-foreground"
           >
             <ArrowLeft size={20} />
           </button>

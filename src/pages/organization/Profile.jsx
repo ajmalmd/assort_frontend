@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router";
 import OrganizationProfilePage from "./OrganizationProfilePage";
 import MemberProfilePage from "./MemberProfilePage";
-import DotsBg from "@/assets/images/DotsBg.png";
 import { ArrowLeft } from "lucide-react";
 import { useAuthState } from "@/redux/hooks";
 
@@ -21,17 +20,14 @@ const Profile = () => {
 
   return (
     <div
-      className="min-h-screen bg-repeat bg-gray-400"
-      style={{
-        backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url(${DotsBg})`,
-      }}
+      className="min-h-screen bg-background"
     >
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white border-b border-border">
         <div className=" mx-auto px-4 lg:px-8 py-4 flex items-center text-gray-700 gap-2">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center hover:text-gray-900 font-medium transition-colors"
+            className="flex items-center hover:text-foreground font-medium transition-colors"
           >
             <ArrowLeft size={20} />
           </button>

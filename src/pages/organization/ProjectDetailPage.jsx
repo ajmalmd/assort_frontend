@@ -1,3 +1,4 @@
+import RequestState from "@/components/common/RequestState";
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, ListChevronsDownUp } from "lucide-react";
@@ -28,6 +29,8 @@ export default function ProjectDetailPage() {
   const [project, setProject] = useState(null);
   const [phases, setPhases] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   const navigate = useNavigate();
   const { projectId } = useParams();
@@ -38,6 +41,7 @@ export default function ProjectDetailPage() {
 
     const fetchProjectDetail = async () => {
       setLoading(true);
+      setError(false);
       try {
         const res = await assort_api.get(`${APP_POINTS.PROJECTS + projectId}/`);
 
@@ -69,13 +73,14 @@ export default function ProjectDetailPage() {
         setPhases(phases || []);
       } catch (error) {
         console.error("Failed to fetch project:", error);
+        setError(true);
       } finally {
         setLoading(false);
       }
     };
 
     fetchProjectDetail();
-  }, [projectId]);
+  }, [projectId, attempt]);
 
   const handlePhaseReorder = (reorderedPhases) => {
     setPhases(reorderedPhases);
@@ -149,8 +154,18 @@ export default function ProjectDetailPage() {
   }, []);
 
   if (loading) {
-    return <div className="text-center py-10">Loading...</div>;
+    return <RequestState loading title="Loading project" />;
   }
+
+  if (error)
+    return (
+      <RequestState
+        error
+        title="Unable to load project"
+        description="Please try again to retrieve this project."
+        onRetry={() => setAttempt((n) => n + 1)}
+      />
+    );
 
   if (!project) {
     return (
@@ -204,8 +219,8 @@ export default function ProjectDetailPage() {
             </div>
           )}
 
-          <div className="space-y-4 p-2 bg-gray-500/10 rounded-xl">
-            <div className="font-normal pt-2 pl-2 text-xl">Phases</div>
+          <div className="space-y-4 p-3 bg-muted/60 rounded-2xl">
+            <div className="font-semibold pt-2 pl-2 text-lg">Phases</div>
             {phases.length === 0 && (
               <p className="text-sm text-muted-foreground text-center">
                 No phases yet

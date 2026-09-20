@@ -107,9 +107,9 @@ const OrganizationProfilePage = () => {
   return (
     <div className="max-w-6xl mx-auto px-4 lg:px-8 py-8 space-y-6">
       {/* Organization Information */}
-      <div className="bg-white rounded-lg border border-gray-200 p-8">
+      <div className="bg-white rounded-lg border border-border p-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-foreground">
             Organization Information
           </h2>
 
@@ -245,13 +245,13 @@ const OrganizationProfilePage = () => {
                 setIsEditing(false);
                 fetchData();
               }}
-              className="px-6 py-2 bg-gray-100 text-gray-900 font-medium rounded-lg hover:bg-gray-200 transition-colors"
+              className="px-6 py-2 bg-gray-100 text-foreground font-medium rounded-lg hover:bg-gray-200 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSaveChanges}
-              className="px-6 py-2 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
+              className="px-6 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-colors"
             >
               Save Changes
             </button>
@@ -260,31 +260,31 @@ const OrganizationProfilePage = () => {
       </div>
 
       {/* Organization Statistics */}
-      <div className="bg-white rounded-lg border border-gray-200 p-8">
-        <h2 className="text-lg font-semibold text-gray-900 mb-6">
+      <div className="bg-white rounded-lg border border-border p-8">
+        <h2 className="text-lg font-semibold text-foreground mb-6">
           Organization Statistics
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <div>
-            <p className="text-3xl font-bold text-gray-900">
+            <p className="text-3xl font-bold text-foreground">
               {statistics.members_count}
             </p>
-            <p className="text-sm text-gray-600 mt-1">Total Members</p>
+            <p className="text-sm text-muted-foreground mt-1">Total Members</p>
           </div>
           <div>
-            <p className="text-3xl font-bold text-gray-900">0</p>
-            <p className="text-sm text-gray-600 mt-1">Projects</p>
+            <p className="text-3xl font-bold text-foreground">0</p>
+            <p className="text-sm text-muted-foreground mt-1">Projects</p>
           </div>
           <div>
-            <p className="text-3xl font-bold text-gray-900">0</p>
-            <p className="text-sm text-gray-600 mt-1">Departments</p>
+            <p className="text-3xl font-bold text-foreground">0</p>
+            <p className="text-sm text-muted-foreground mt-1">Departments</p>
           </div>
         </div>
       </div>
 
       {/* Subscription Information */}
-      <div className="bg-white rounded-lg border border-gray-200 p-8">
-        <h2 className="text-lg font-semibold text-gray-900 mb-6">
+      <div className="bg-white rounded-lg border border-border p-8">
+        <h2 className="text-lg font-semibold text-foreground mb-6">
           Subscription Information
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -294,18 +294,18 @@ const OrganizationProfilePage = () => {
               Current Plan
             </label>
             <div className="flex items-center gap-3">
-              <p className="text-lg font-semibold text-gray-900">
+              <p className="text-lg font-semibold text-foreground">
                 {subscription.current_plan}
               </p>
               <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded">
                 {subscription.status}
               </span>
             </div>
-            <p className="text-sm text-gray-600 mt-4">Members Limit</p>
-            <p className="text-lg font-semibold text-gray-900 mt-1">
+            <p className="text-sm text-muted-foreground mt-4">Members Limit</p>
+            <p className="text-lg font-semibold text-foreground mt-1">
               {statistics.members_count}/{subscription.members_limit}
             </p>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               {Number(subscription.members_limit) -
                 Number(statistics.members_count)}{" "}
               slots available
@@ -317,16 +317,16 @@ const OrganizationProfilePage = () => {
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Billing Cycle
             </label>
-            <p className="text-lg font-semibold text-gray-900">
+            <p className="text-lg font-semibold text-foreground">
               {formatEnum(subscription.billing_cycle)}
             </p>
-            <p className="text-sm text-gray-600 mt-2">
+            <p className="text-sm text-muted-foreground mt-2">
               Ends on {subscription.end_date}
             </p>
             <p className="text-sm font-medium text-gray-700 mt-4">
               Monthly Cost
             </p>
-            <p className="text-lg font-semibold text-gray-900 mt-1">
+            <p className="text-lg font-semibold text-foreground mt-1">
               {subscription.plan_cost}
             </p>
           </div>
@@ -368,7 +368,7 @@ const OrganizationProfilePage = () => {
         {showDeleteConfirm && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 max-w-sm mx-auto">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-foreground mb-2">
                 Delete Organization
               </h3>
               <p className="text-sm text-gray-700 mb-6">

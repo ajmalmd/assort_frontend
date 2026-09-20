@@ -36,10 +36,10 @@ const FeaturesSection = () => {
       <div className="max-w-7xl mx-auto">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900">
+          <h2 className="text-4xl font-bold text-foreground">
             Powerful Features for Modern Teams
           </h2>
-          <p className="text-lg text-gray-600 mt-4 max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground mt-4 max-w-2xl mx-auto">
             Everything you need to structure work, collaborate effectively, and
             move faster — all in one unified platform.
           </p>
@@ -49,7 +49,7 @@ const FeaturesSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {features.map((feature, index) => (
             <div key={index} className="space-y-6">
-              <h3 className="text-2xl font-semibold text-gray-900">
+              <h3 className="text-2xl font-semibold text-foreground">
                 {feature.title}
               </h3>
 
@@ -61,7 +61,9 @@ const FeaturesSection = () => {
                         <Check className="h-4 w-4 text-gray-700" />
                       </div>
                     </div>
-                    <span className="text-gray-600 text-base">{item}</span>
+                    <span className="text-muted-foreground text-base">
+                      {item}
+                    </span>
                   </li>
                 ))}
               </ul>
