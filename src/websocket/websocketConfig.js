@@ -1,6 +1,7 @@
 import { getAccessToken } from "@/api/authStore";
+import config from "@/config";
 
-export const SOCKET_HOST = import.meta.env.VITE_SOCKET_URL || "localhost:8000";
+const SOCKET_HOST = config.socketHost;
 
 export const getWsProtocol = () =>
   window.location.protocol === "https:" ? "wss" : "ws";

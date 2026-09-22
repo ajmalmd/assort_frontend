@@ -1,10 +1,10 @@
 const config = {
   appName: "Assort",
   version: "1.0.0",
-  hostUrl: "http://localhost:5173/",
-  backendUrl: "http://localhost:8000/",
-  apiUrl: "http://localhost:8000/api/",
-  mediaUrl: "http://localhost:8000",
+
+  apiUrl: import.meta.env.VITE_API_URL,
+  mediaUrl: import.meta.env.VITE_MEDIA_URL,
+  socketHost: import.meta.env.VITE_SOCKET_HOST,
 };
 
 export default config;
