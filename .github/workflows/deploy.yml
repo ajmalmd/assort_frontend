@@ -1,0 +1,87 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+        env:
+          VITE_API_URL: https://api.assort.ajml.online/api/
+          VITE_MEDIA_URL: https://api.assort.ajml.online
+          VITE_SOCKET_HOST: api.assort.ajml.online
+
+      - name: Setup SSH
+        shell: bash
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/assort_deploy
+          chmod 600 ~/.ssh/assort_deploy
+
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Deploy to server
+        shell: bash
+        run: |
+          tar -czf dist.tar.gz dist
+
+          scp \
+            -i ~/.ssh/assort_deploy \
+            -o StrictHostKeyChecking=yes \
+            dist.tar.gz \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/tmp/assort-frontend-dist.tar.gz"
+
+          ssh \
+            -i ~/.ssh/assort_deploy \
+            -o StrictHostKeyChecking=yes \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            'bash -s' <<'EOF'
+
+          set -e
+
+          echo "Preparing frontend deployment..."
+
+          rm -rf /opt/assort/frontend/dist_new
+          mkdir -p /opt/assort/frontend/dist_new
+
+          tar -xzf /tmp/assort-frontend-dist.tar.gz \
+            -C /opt/assort/frontend/dist_new \
+            --strip-components=1
+
+          chmod -R 755 /opt/assort/frontend/dist_new
+
+          rm -rf /opt/assort/frontend/dist
+          mv /opt/assort/frontend/dist_new /opt/assort/frontend/dist
+
+          rm -f /tmp/assort-frontend-dist.tar.gz
+
+          echo "Frontend deployment complete."
+
+          EOF
