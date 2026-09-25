@@ -251,10 +251,6 @@ export function ProjectUpdatesTab({ projectId }) {
       setPreviewFile(file);
       return;
     }
-
-    if (isPdf(file.file_type) && file.download_url) {
-      window.open(file.preview_url, "_blank", "noopener,noreferrer");
-    }
   };
 
   const handleDownload = async (file) => {
@@ -631,19 +627,6 @@ export function ProjectUpdatesTab({ projectId }) {
                             </div>
 
                             <div className="flex shrink-0 items-center gap-1">
-                              {isPdf(file.file_type) && (
-                                <Button
-                                  type="button"
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-8 w-8"
-                                  onClick={() => handlePreview(file)}
-                                  title="View file"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                              )}
-
                               <Button
                                 type="button"
                                 size="icon"
