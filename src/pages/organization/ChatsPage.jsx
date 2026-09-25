@@ -2,14 +2,10 @@ import { useState } from "react";
 import ChatSidebar from "@/components/organization/ChatsPage/ChatSidebar";
 import Chat from "@/components/organization/ChatsPage/Chat";
 import CallDetails from "@/components/organization/ChatsPage/CallDetails";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuthState } from "@/redux/hooks";
-import { isOrgOwnerorAdmin } from "@/appFunctions";
 
-function MyChat() {
+export default function ChatsPage() {
   const [activeTab, setActiveTab] = useState("messages");
   const [selectedRoom, setSelectedRoom] = useState({});
-
   return (
     <div className="flex h-[calc(100dvh-7rem)] min-h-0 overflow-hidden border rounded-xl">
       <ChatSidebar
@@ -32,27 +28,5 @@ function MyChat() {
         )}
       </div>
     </div>
-  );
-}
-
-export default function ChatPage() {
-  const { activeOrganization } = useAuthState();
-  return isOrgOwnerorAdmin(activeOrganization.role) ? (
-    <Tabs defaultValue="myChat" className="w-full">
-      <TabsList className="grid grid-cols-2">
-        <TabsTrigger value="myChat">My Chats</TabsTrigger>
-        <TabsTrigger value="orgChat">Org Chats</TabsTrigger>
-      </TabsList>
-
-      <TabsContent value="myChat">
-        <MyChat />
-      </TabsContent>
-
-      <TabsContent value="orgChat">
-        <div>Manage Chat</div>
-      </TabsContent>
-    </Tabs>
-  ) : (
-    <MyChat />
   );
 }

@@ -163,7 +163,7 @@ const AdminOrganizationListPage = () => {
                   <TableHead className="text-center">Organization</TableHead>
                   <TableHead className="text-center">Email</TableHead>
                   <TableHead className="text-center">Members</TableHead>
-                  <TableHead className="text-center">Projects</TableHead>
+                  {/* <TableHead className="text-center">Projects</TableHead> */}
                   <TableHead className="text-center">Status</TableHead>
                   <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
@@ -179,7 +179,7 @@ const AdminOrganizationListPage = () => {
                     </TableCell>
 
                     <TableCell>{org.number_of_members || 0}</TableCell>
-                    <TableCell>{org.projects || 0}</TableCell>
+                    {/* <TableCell>{org.projects || 0}</TableCell> */}
 
                     <TableCell>
                       <Badge variant={org.is_active ? "default" : "secondary"}>
