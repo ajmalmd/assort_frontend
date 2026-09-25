@@ -253,7 +253,7 @@ export function ProjectUpdatesTab({ projectId }) {
     }
 
     if (isPdf(file.file_type) && file.download_url) {
-      window.open(file.download_url, "_blank", "noopener,noreferrer");
+      window.open(file.preview_url, "_blank", "noopener,noreferrer");
     }
   };
 
