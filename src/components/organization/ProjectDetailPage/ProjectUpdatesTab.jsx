@@ -264,23 +264,17 @@ export function ProjectUpdatesTab({ projectId }) {
     }
 
     try {
-      const response = await fetch(file.download_url);
+      const response = await assort_api.get(file.download_url, {
+        responseType: "blob",
+      });
 
-      if (!response.ok) {
-        throw new Error(`Download failed: ${response.status}`);
-      }
-
-      const blob = await response.blob();
-      const objectUrl = URL.createObjectURL(blob);
+      const objectUrl = URL.createObjectURL(response.data);
 
       const anchor = document.createElement("a");
-
       anchor.href = objectUrl;
       anchor.download = file.file_name || "download";
-      anchor.style.display = "none";
 
       document.body.appendChild(anchor);
-
       anchor.click();
       anchor.remove();
 
@@ -478,7 +472,6 @@ export function ProjectUpdatesTab({ projectId }) {
       {/* Feed */}
       {!isLoading && updates.length > 0 && (
         <div className="relative">
-
           <div className="space-y-6">
             {updates.map((update) => {
               const images =
@@ -644,7 +637,7 @@ export function ProjectUpdatesTab({ projectId }) {
                                   size="icon"
                                   variant="ghost"
                                   className="h-8 w-8"
-                                  onClick={() => openFile(file)}
+                                  onClick={() => handlePreview(file)}
                                   title="View file"
                                 >
                                   <Eye className="h-4 w-4" />
