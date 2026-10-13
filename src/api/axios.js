@@ -86,8 +86,8 @@ assort_api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    const isLoginRequest = originalRequest.url?.includes("login");
-    const isRefreshRequest = originalRequest.url?.includes(
+    const isLoginRequest = originalRequest?.url?.includes("login");
+    const isRefreshRequest = originalRequest?.url?.includes(
       APP_POINTS.REFRESH_TOKEN,
     );
 

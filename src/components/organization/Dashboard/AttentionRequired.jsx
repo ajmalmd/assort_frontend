@@ -23,16 +23,6 @@ const attentionConfig = {
     icon: BriefcaseBusiness,
   },
 
-  projects_without_manager: {
-    label: "Projects Without Manager",
-    icon: UserX,
-  },
-
-  unassigned_jobs: {
-    label: "Unassigned Jobs",
-    icon: UserX,
-  },
-
   pending_timesheets: {
     label: "Pending Timesheets",
     icon: Clock,
