@@ -4,7 +4,6 @@ import { Routes, Route, useNavigate } from "react-router";
 import assort_api from "./api/axios";
 import { APP_POINTS } from "./api/apiConfig";
 import {
-  clearAccessToken,
   getActiveOrgId,
   setAccessToken,
 } from "./api/authStore";
@@ -108,7 +107,6 @@ function AppRoutes() {
         }
       } catch (err) {
         console.log(err);
-        clearAccessToken();
       } finally {
         setAuthReady(true);
       }
