@@ -27,14 +27,6 @@ const AdminDashboardPage = () => {
     fetchData();
   }, []);
 
-  // const {
-  //   summary,
-  //   revenueBreakdown,
-  //   organizationStats,
-  //   memberStats,
-  //   topOrganizations,
-  //   // topMembers
-  // } = dashboardData;
   const summary = dashboardData?.summary;
   const revenueBreakdown = dashboardData?.revenueBreakdown;
   const organizationStats = dashboardData?.organizationStats;
@@ -46,28 +38,28 @@ const AdminDashboardPage = () => {
   const statCards = [
     {
       label: "Total Revenue",
-      value: `₹${summary?.totalRevenue}`,
+      value: `₹${summary?.totalRevenue || 0}`,
       subtext: "This month",
       icon: IndianRupee,
       color: "text-green-600",
     },
     {
       label: "Total Organizations",
-      value: summary?.activeOrganizations,
-      subtext: `${summary?.activeOrganizations} Active`,
+      value: summary?.activeOrganizations || 0,
+      subtext: `${summary?.activeOrganizations || 0} Active`,
       icon: Building2,
       color: "text-blue-600",
     },
     {
       label: "Active Members",
-      value: summary?.totalMembers,
-      subtext: `${summary?.multiOrgMembers} Multi-org`,
+      value: summary?.totalMembers || 0,
+      subtext: `${summary?.multiOrgMembers || 0} Multi-org`,
       icon: Users,
       color: "text-purple-600",
     },
     {
       label: "MRR Growth",
-      value: `${summary?.mrrGrowth}%`,
+      value: `${summary?.mrrGrowth || 0}%`,
       subtext: "vs last month",
       icon: summary?.mrrGrowth > 0 ? TrendingUp : TrendingDown,
       color: "text-orange-600",
