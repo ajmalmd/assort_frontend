@@ -21,7 +21,7 @@ import toast from "react-hot-toast";
 import { formatDate_MmmDD_YYYY, formatEnum, getInitials } from "@/appFunctions";
 import { useNavigate, useParams } from "react-router";
 import assort_api from "@/api/axios";
-import { APP_POINTS, MEDIA_URL } from "@/api/apiConfig";
+import { APP_POINTS } from "@/api/apiConfig";
 
 const UserDetailPage = () => {
   const [user, setUser] = useState({ organizations: [] });

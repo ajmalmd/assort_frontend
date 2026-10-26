@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Eye, FileText, Download } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { MEDIA_URL } from "@/api/apiConfig";
 
 const formatMessageDate = (dateString) => {
   const date = new Date(dateString);
@@ -44,7 +43,7 @@ const formatMessageDate = (dateString) => {
 function AttachmentCard({ attachment }) {
   const [showPreview, setShowPreview] = useState(false);
 
-  const fileUrl = MEDIA_URL + attachment.url;
+  const fileUrl = attachment.url;
 
   const handleDownload = async (e) => {
     e.preventDefault();

@@ -15,7 +15,7 @@ import { useNavigate, useParams } from "react-router";
 import BackButton from "@/components/ui/backButton";
 import { formatDate_MmmDD_YYYY, formatEnum, getInitials } from "@/appFunctions";
 import assort_api from "@/api/axios";
-import { APP_POINTS, MEDIA_URL } from "@/api/apiConfig";
+import { APP_POINTS } from "@/api/apiConfig";
 
 const getRoleColor = (role) => {
   switch (role) {
@@ -42,7 +42,7 @@ const OrganizationDetailPage = () => {
     const fetchDetails = async () => {
       try {
         const res = await assort_api.get(
-          `${APP_POINTS.PLATFORM}organizations/${id}`,
+          `${APP_POINTS.PLATFORM}organizations/${id}/`,
         );
         setOrganization(res.data);
       } catch (error) {

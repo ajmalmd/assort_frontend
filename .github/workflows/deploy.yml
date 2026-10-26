@@ -35,7 +35,6 @@ jobs:
         run: pnpm build
         env:
           VITE_API_URL: https://api.assort.ajml.online/api/
-          VITE_MEDIA_URL: https://api.assort.ajml.online
           VITE_SOCKET_HOST: api.assort.ajml.online
 
       - name: Setup SSH

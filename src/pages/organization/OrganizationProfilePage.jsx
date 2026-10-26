@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { AlertTriangle, Upload } from "lucide-react";
 import { formatEnum, getInitials } from "@/appFunctions";
 import assort_api from "@/api/axios";
-import { APP_POINTS, MEDIA_URL } from "@/api/apiConfig";
+import { APP_POINTS } from "@/api/apiConfig";
 import toast from "react-hot-toast";
 import { logout } from "@/api/utility";
 
@@ -135,7 +135,7 @@ const OrganizationProfilePage = () => {
                 <img
                   src={
                     typeof profile.logo === "string"
-                      ? MEDIA_URL + profile.logo
+                      ? profile.logo
                       : URL.createObjectURL(profile.logo)
                   }
                   alt="logo"
