@@ -4,11 +4,14 @@ import { logout } from "@/api/utility";
 import { useNavigate } from "react-router";
 import { getInitials } from "@/appFunctions";
 import { Badge } from "../ui/badge";
+import { useAppDispatch } from "@/redux/hooks";
+import { clearLoginData } from "@/redux/slices/authSlice";
 
 export function ProfileMenu({ user, canSwitch, totalUnread }) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -28,6 +31,7 @@ export function ProfileMenu({ user, canSwitch, totalUnread }) {
 
   const handleLogout = async () => {
     await logout(false);
+    dispatch(clearLoginData());
   };
 
   return (

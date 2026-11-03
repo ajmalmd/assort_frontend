@@ -7,7 +7,7 @@ import { APP_POINTS } from "@/api/apiConfig";
 import assort_api from "@/api/axios";
 import toast from "react-hot-toast";
 import { useAppDispatch, useAuthState } from "@/redux/hooks";
-import { setLoginData } from "@/redux/slices/authSlice";
+import { clearLoginData, setLoginData } from "@/redux/slices/authSlice";
 
 export default function CompleteProfilePage() {
   const navigate = useNavigate();
@@ -129,15 +129,16 @@ export default function CompleteProfilePage() {
     }
   };
 
-  const handleLogout = async () => await logout(false);
+  const handleLogout = async () => {
+    await logout(false);
+    dispatch(clearLoginData());
+  };
 
   // Prevent render crash while loading
   if (!activeOrganization) return null;
 
   return (
-    <div
-      className="min-h-screen flex bg-background py-12 px-4 sm:px-6 lg:px-8"
-    >
+    <div className="min-h-screen flex bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto">
         <div className="mb-8 flex items-start justify-between">
           <div>
@@ -212,7 +213,10 @@ export default function CompleteProfilePage() {
 
               {/* Name */}
               <div className="mb-6">
-                <label htmlFor="organization-name" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="organization-name"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Organization Name
                 </label>
                 <input
@@ -225,7 +229,10 @@ export default function CompleteProfilePage() {
 
               {/* Email */}
               <div className="mb-6">
-                <label htmlFor="organization-email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="organization-email"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Contact Email
                 </label>
                 <input
@@ -244,24 +251,24 @@ export default function CompleteProfilePage() {
                 <label className="space-y-2 text-sm font-medium">
                   City
                   <input
-                  name="city"
-                  value={formData.city}
-                  onChange={handleInputChange}
-                  placeholder="City"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  required
-                />
+                    name="city"
+                    value={formData.city}
+                    onChange={handleInputChange}
+                    placeholder="City"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    required
+                  />
                 </label>
                 <label className="space-y-2 text-sm font-medium">
                   Country
                   <input
-                  name="country"
-                  value={formData.country}
-                  onChange={handleInputChange}
-                  placeholder="Country"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  required
-                />
+                    name="country"
+                    value={formData.country}
+                    onChange={handleInputChange}
+                    placeholder="Country"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    required
+                  />
                 </label>
               </div>
             </div>

@@ -48,7 +48,7 @@ const authSlice = createSlice({
       }
     },
 
-    logout: (state) => {
+    clearLoginData: (state) => {
       state.user = null;
       state.organizations = [];
       state.activeOrganization = null;
@@ -63,7 +63,7 @@ export const {
   setLoginData,
   switchOrganization,
   setActiveOrganization,
-  logout,
+  clearLoginData,
 } = authSlice.actions;
 
 export default authSlice.reducer;

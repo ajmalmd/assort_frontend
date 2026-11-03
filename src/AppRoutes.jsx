@@ -6,11 +6,16 @@ import { APP_POINTS } from "./api/apiConfig";
 import {
   getActiveOrgId,
   setAccessToken,
+  clearAccessToken,
 } from "./api/authStore";
 
 import { getPostLoginRoute } from "./utils/authRedirect";
 import { useAppDispatch } from "./redux/hooks";
-import { setLoginData, setActiveOrganization } from "./redux/slices/authSlice";
+import {
+  setLoginData,
+  setActiveOrganization,
+  clearLoginData,
+} from "./redux/slices/authSlice";
 
 import Landing from "./pages/Landing";
 import LogoutPage from "./pages/auth/LogoutPage";
@@ -107,13 +112,29 @@ function AppRoutes() {
         }
       } catch (err) {
         console.log(err);
+        clearAccessToken();
+        dispatch(clearLoginData());
       } finally {
         setAuthReady(true);
       }
     };
 
     initializeAuth();
-  }, []);
+
+    // Handle browser Back/Forward restoration from BFCache.
+    const handlePageShow = (event) => {
+      if (event.persisted) {
+        setAuthReady(false);
+        initializeAuth();
+      }
+    };
+
+    window.addEventListener("pageshow", handlePageShow);
+
+    return () => {
+      window.removeEventListener("pageshow", handlePageShow);
+    };
+  }, [dispatch, navigate]);
 
   if (!authReady) return null;
 

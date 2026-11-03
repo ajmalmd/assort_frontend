@@ -5,8 +5,11 @@ import assort_api from "@/api/axios";
 import { APP_POINTS } from "@/api/apiConfig";
 import toast from "react-hot-toast";
 import { logout } from "@/api/utility";
+import { useAppDispatch } from "@/redux/hooks";
+import { clearLoginData } from "@/redux/slices/authSlice";
 
 const OrganizationProfilePage = () => {
+  const dispatch = useAppDispatch();
   const [profile, setProfile] = useState({
     title: "",
     email: "",
@@ -100,6 +103,7 @@ const OrganizationProfilePage = () => {
         toast.error("Couldn't delete organization");
       }
       await logout();
+      dispatch(clearLoginData());
     } catch (error) {
       console.log("Logout error", error);
     }
