@@ -7,6 +7,7 @@ import {
   getActiveOrgId,
   setAccessToken,
   clearAccessToken,
+  hasSession,
 } from "./api/authStore";
 
 import { getPostLoginRoute } from "./utils/authRedirect";
@@ -74,6 +75,11 @@ function AppRoutes() {
 
   useEffect(() => {
     const initializeAuth = async () => {
+      if (!hasSession()) {
+        setAuthReady(true);
+        return;
+      }
+
       try {
         const response = await assort_api.post(APP_POINTS.REFRESH_TOKEN);
         const { access, is_admin, user, organizations } = response.data;
