@@ -11,6 +11,8 @@ import { useNotificationSocket } from "@/websocket/useNotificationSocket";
 export default function NotificationProvider({ children }) {
   const { activeOrganization } = useAuthState();
 
+  const organizationId = activeOrganization?.id;
+
   const [notifications, setNotifications] = useState([]);
 
   const [summary, setSummary] = useState({
@@ -19,36 +21,35 @@ export default function NotificationProvider({ children }) {
   });
 
   const [loading, setLoading] = useState(false);
-
   const [connected, setConnected] = useState(false);
 
   const fetchNotifications = useCallback(async () => {
-    if (!activeOrganization?.id) return;
+    if (!organizationId) return;
 
     const response = await assort_api.get(APP_POINTS.NOTIFICATIONS);
 
     setNotifications(response.data);
-  }, [activeOrganization]);
+  }, [organizationId]);
 
   const fetchSummary = useCallback(async () => {
-    if (!activeOrganization?.id) return;
+    if (!organizationId) return;
 
     const response = await assort_api.get(
       `${APP_POINTS.NOTIFICATIONS}summary/`,
     );
 
     const organization = response.data.organizations.find(
-      (org) => org.organization_id === activeOrganization.id,
+      (org) => org.organization_id === organizationId,
     );
 
     setSummary({
       organization_unread: organization?.unread || 0,
       total_unread: response.data.total_unread,
     });
-  }, [activeOrganization]);
+  }, [organizationId]);
 
   const initialize = useCallback(async () => {
-    if (!activeOrganization?.id) return;
+    if (!organizationId) return;
 
     setLoading(true);
 
@@ -57,9 +58,19 @@ export default function NotificationProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }, [activeOrganization, fetchNotifications, fetchSummary]);
+  }, [organizationId, fetchNotifications, fetchSummary]);
 
+  // Initialize only when organization changes
   useEffect(() => {
+    if (!organizationId) {
+      setNotifications([]);
+      setSummary({
+        organization_unread: 0,
+        total_unread: 0,
+      });
+      return;
+    }
+
     setNotifications([]);
     setSummary({
       organization_unread: 0,
@@ -67,13 +78,11 @@ export default function NotificationProvider({ children }) {
     });
 
     initialize();
-  }, [initialize]);
+  }, [organizationId, initialize]);
 
   useNotificationSocket({
     onConnected: () => {
       setConnected(true);
-
-      initialize();
     },
 
     onDisconnected: () => {
@@ -91,9 +100,7 @@ export default function NotificationProvider({ children }) {
     },
 
     onNotificationDeleted: ({ notification_id }) => {
-      setNotifications((prev) =>
-        prev.filter((notification) => notification.id !== notification_id),
-      );
+      setNotifications((prev) => prev.filter((n) => n.id !== notification_id));
     },
 
     onNotificationSummaryUpdated: ({ summary }) => {
@@ -109,10 +116,7 @@ export default function NotificationProvider({ children }) {
     setNotifications((prev) =>
       prev.map((notification) =>
         notification.id === notificationId
-          ? {
-              ...notification,
-              is_read: true,
-            }
+          ? { ...notification, is_read: true }
           : notification,
       ),
     );
@@ -136,9 +140,7 @@ export default function NotificationProvider({ children }) {
   const clearReadNotifications = async () => {
     await assort_api.delete(`${APP_POINTS.NOTIFICATIONS}clear/`);
 
-    setNotifications((prev) =>
-      prev.filter((notification) => !notification.is_read),
-    );
+    setNotifications((prev) => prev.filter((n) => !n.is_read));
   };
 
   const value = useMemo(
@@ -147,10 +149,8 @@ export default function NotificationProvider({ children }) {
       summary,
       connected,
       loading,
-
       fetchNotifications,
       fetchSummary,
-
       markRead,
       markAllRead,
       deleteNotification,

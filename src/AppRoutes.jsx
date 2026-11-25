@@ -118,8 +118,6 @@ function AppRoutes() {
         }
       } catch (err) {
         console.log(err);
-        clearAccessToken();
-        dispatch(clearLoginData());
       } finally {
         setAuthReady(true);
       }
