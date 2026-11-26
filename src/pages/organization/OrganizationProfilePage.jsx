@@ -59,6 +59,11 @@ const OrganizationProfilePage = () => {
   };
 
   const handleSaveChanges = async () => {
+    if (!profile.title.trim()) {
+      toast.error("Organization name is required");
+      return;
+    }
+    
     try {
       const formData = new FormData();
 
@@ -88,7 +93,11 @@ const OrganizationProfilePage = () => {
       setIsEditing(false);
     } catch (error) {
       console.log(error);
-      toast.error("Couldn't update profile");
+
+      const errorMessage =
+        error.response?.data?.message || "Couldn't update profile";
+
+      toast.error(errorMessage);
     }
   };
 

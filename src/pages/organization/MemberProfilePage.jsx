@@ -42,6 +42,11 @@ const MemberProfilePage = () => {
   };
 
   const handleSaveChanges = async () => {
+    if (!profile.full_name.trim()) {
+      toast.error("Name is required");
+      return;
+    }
+
     try {
       const formData = new FormData();
 
@@ -70,7 +75,11 @@ const MemberProfilePage = () => {
       setIsEditing(false);
     } catch (error) {
       console.log(error);
-      toast.error("Couldn't update profile");
+
+      const errorMessage =
+        error.response?.data?.message || "Couldn't update profile";
+
+      toast.error(errorMessage);
     }
   };
 
@@ -177,7 +186,7 @@ const MemberProfilePage = () => {
                 type="text"
                 value={profile.full_name}
                 disabled={!isEditing}
-                onChange={(e) => handleChange("name", e.target.value)}
+                onChange={(e) => handleChange("full_name", e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
                 placeholder="e.g., John Doe"
               />
